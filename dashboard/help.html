@@ -77,7 +77,7 @@ main{padding:40px;max-width:1200px;margin:0 auto}
 <body>
 <header>
   <div class="logo"><span class="logo-main">Keith's PokeBS</span><span class="logo-sub">Help</span></div>
-  <div style="font-family:'DM Mono',monospace;font-size:.65rem;color:var(--muted)">v5.7.1 — Apr 2026</div>
+  <div style="font-family:'DM Mono',monospace;font-size:.65rem;color:var(--muted)">v5.9 — Apr 2026</div>
 </header>
 <nav class="nav-bar">
   <a class="nav-link" href="dashboard.html">&#128225; Tracker</a>
@@ -106,6 +106,197 @@ main{padding:40px;max-width:1200px;margin:0 auto}
 
 
 
+<!-- ═══ v5.9 ════════════════════════════════════════════════════════ -->
+<div class="version-block">
+  <div class="version-header">
+    <div class="version-number">v5.9</div>
+    <div class="version-date">Apr 26, 2026</div>
+    <span class="version-tag tag-major">Major</span>
+    <span class="version-tag tag-feature">Invest Backend</span>
+    <span class="version-tag tag-security">Data Safety</span>
+    <div class="version-line"></div>
+  </div>
+  <div class="change-list">
+
+    <div class="change-item">
+      <div class="change-icon">&#128190;</div>
+      <div class="change-body">
+        <div class="change-title">Investment portfolio backed by SQLite (no more localStorage fragility)</div>
+        <div class="change-desc">The Invest page now persists every purchase to data/invest.db on the server side. Browser data wipes, profile corruption, or "Clear site data" no longer destroy your purchase log. localStorage retained as a read-only offline cache that activates if tracker.py is down. One-time auto-migration from the legacy pokebs_invest_v1 key runs on first load.</div>
+        <div class="change-file">plugins/invest_store.py (new), data/invest.db (new)</div>
+      </div>
+    </div>
+
+    <div class="change-item">
+      <div class="change-icon">&#128640;</div>
+      <div class="change-body">
+        <div class="change-title">Local HTTP API server on 127.0.0.1:8765</div>
+        <div class="change-desc">A new daemon thread inside tracker.py serves /api/invest/* and /api/market/* endpoints to the dashboard. CORS allowlist locked to http://localhost:8080 and http://127.0.0.1:8080. Requests from disallowed origins are rejected with 403 and logged as a tripwire. ThreadingHTTPServer with stdlib BaseHTTPRequestHandler — no new dependencies.</div>
+        <div class="change-file">plugins/api_server.py (new)</div>
+      </div>
+    </div>
+
+    <div class="change-item">
+      <div class="change-icon">&#9889;</div>
+      <div class="change-body">
+        <div class="change-title">Centralized market data refresh — pokemontcg.io request rate cut by ~80%</div>
+        <div class="change-desc">All market value lookups now flow through one chokepoint with a 12-hour cache. Previously the Invest page hit pokemontcg.io on every page load, often re-fetching values that had not changed. Sealed products now also auto-refresh from the MSRP table as a floor value. Graded items remain manual-only (no free pricing API supports them).</div>
+        <div class="change-file">plugins/market_data_refresh.py (new), data/market_cache.db (new)</div>
+      </div>
+    </div>
+
+    <div class="change-item">
+      <div class="change-icon">&#128257;</div>
+      <div class="change-body">
+        <div class="change-title">Manual refresh button with 1-hour cooldown</div>
+        <div class="change-desc">Header of the Invest page now has a Refresh button that triggers an immediate market value refresh of all items. Cooldown is enforced server-side (cannot be bypassed by spamming). Button shows live countdown ("Refresh (45m)") while cooled down. Cooldown state survives page reloads since it lives in tracker.py memory.</div>
+        <div class="change-file">dashboard/invest.html, plugins/market_data_refresh.py</div>
+      </div>
+    </div>
+
+    <div class="change-item">
+      <div class="change-icon">&#128202;</div>
+      <div class="change-body">
+        <div class="change-title">"N/A" rendering for unvalued items (no more misleading $0)</div>
+        <div class="change-desc">When a purchase has no market value yet, the Market Value column now reads "N/A" instead of $0.00. The KPI bar's Market Value, Total P/L, and P/L % similarly show "N/A" rather than misleading 0% returns. P/L % is now computed against cost basis of valued items only, so a fresh unvalued purchase does not dilute return numbers.</div>
+        <div class="change-file">dashboard/invest.html, plugins/invest_store.py</div>
+      </div>
+    </div>
+
+    <div class="change-item">
+      <div class="change-icon">&#128230;</div>
+      <div class="change-body">
+        <div class="change-title">Snapshot history with 730-day retention</div>
+        <div class="change-desc">Every market value change is recorded as a snapshot with timestamp and source ('pokemontcg.io' / 'msrp_estimate' / 'manual'). Two-year retention by default, pruned weekly Mon 03:00. Delta-detection prevents duplicate writes — re-running a refresh with unchanged values does not bloat the table. Foundation for future trend charts and tax-season lookback.</div>
+        <div class="change-file">plugins/invest_store.py (market_snapshots table)</div>
+      </div>
+    </div>
+
+    <div class="change-item">
+      <div class="change-icon">&#128272;</div>
+      <div class="change-body">
+        <div class="change-title">Offline mode + connection tripwire</div>
+        <div class="change-desc">If tracker.py is not running, the Invest page falls back to localStorage cache and shows an "OFFLINE -- read-only" badge. Edit and delete buttons disabled in this mode. When the API is reachable, all CORS-rejected requests are logged with origin and path so unexpected access attempts are visible in the tracker log.</div>
+        <div class="change-file">dashboard/invest.html, plugins/api_server.py</div>
+      </div>
+    </div>
+
+    <div class="change-item">
+      <div class="change-icon">&#129514;</div>
+      <div class="change-body">
+        <div class="change-title">Diagnostic test suite + operator README</div>
+        <div class="change-desc">tests/test_invest_store.py runs 11 unit tests against a temporary database (does not touch your real data) covering schema, CRUD, KPI math, snapshot pruning, validation, and the manual-override-beats-auto-value rule. README.md added at project root with daily-operations cheat sheet, folder map, common gotchas, security checklist, and a glossary.</div>
+        <div class="change-file">tests/test_invest_store.py (new), README.md (new)</div>
+      </div>
+    </div>
+
+    <div class="change-item">
+      <div class="change-icon">&#128296;</div>
+      <div class="change-body">
+        <div class="change-title">Three new plugins registered, no tracker.py changes</div>
+        <div class="change-desc">plugins.py extended with InvestStore_Plugin, MarketDataRefresh_Plugin, and ApiServer_Plugin wrappers. Boot order matters: InvestStore initializes the database first, MarketDataRefresh schedules the 12h refresh + Monday 03:00 prune, ApiServer binds 127.0.0.1:8765 last so the other two are ready when the API gets its first call. tracker.py itself unchanged.</div>
+        <div class="change-file">plugins.py</div>
+      </div>
+    </div>
+
+    <div class="change-item">
+      <div class="change-icon">&#128203;</div>
+      <div class="change-body">
+        <div class="change-title">Next priority: v6.0 unified scheduler (per next-session list)</div>
+        <div class="change-desc">Now that the Invest page architecture is layered (storage / refresh / API / UI), the next major effort is a unified scheduler in tracker.py that lets every plugin register jobs with a central coordinator. This will enforce stagger windows, shared API rate limits, and drop-window awareness across all plugins, eliminating today's situation where each plugin manages its own retries and backoff in isolation.</div>
+        <div class="change-file">tracker.py (planned for v6.0)</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══ v5.8 ════════════════════════════════════════════════════════ -->
+<div class="version-block">
+  <div class="version-header">
+    <div class="version-number">v5.8</div>
+    <div class="version-date">Apr 26, 2026</div>
+    <span class="version-tag tag-major">Major</span>
+    <span class="version-tag tag-security">Security Hardening</span>
+    <div class="version-line"></div>
+  </div>
+  <div class="change-list">
+
+    <div class="change-item">
+      <div class="change-icon">&#128274;</div>
+      <div class="change-body">
+        <div class="change-title">Project moved off Desktop and OneDrive</div>
+        <div class="change-desc">Source code relocated to a path outside any cloud-sync folder. Windows OneDrive Known Folder Move was silently uploading config and data files. New location keeps everything strictly local. Existing OneDrive history will auto-decay over ~30 days.</div>
+        <div class="change-file">project root</div>
+      </div>
+    </div>
+
+    <div class="change-item">
+      <div class="change-icon">&#128274;</div>
+      <div class="change-body">
+        <div class="change-title">Secrets moved to %LOCALAPPDATA%\tcg_tracker\config.json</div>
+        <div class="change-desc">ntfy topic, home ZIP, city, and anchor locations now live in a per-user AppData config file outside the repo. shared.py exports load_local_config(), get_ntfy_topic(), and ConfigError for downstream modules. tracker.py fails loudly if config is missing -- no silent fallbacks to placeholder values.</div>
+        <div class="change-file">shared.py, tools/setup_config.py (new), tracker.py</div>
+      </div>
+    </div>
+
+    <div class="change-item">
+      <div class="change-icon">&#128274;</div>
+      <div class="change-body">
+        <div class="change-title">Browser profile relocated to AppData</div>
+        <div class="change-desc">Persistent Playwright browser profile (with retailer login cookies) moved from the project folder to %LOCALAPPDATA%\tcg_tracker\browser_profile\. Eliminates the risk of accidentally committing browser cookies to git, and keeps them off OneDrive entirely.</div>
+        <div class="change-file">shared.py BROWSER_PROFILE</div>
+      </div>
+    </div>
+
+    <div class="change-item">
+      <div class="change-icon">&#128272;</div>
+      <div class="change-body">
+        <div class="change-title">ntfy topic rotated and hardened</div>
+        <div class="change-desc">Old topic was compromised. New topic uses 16+ random characters with no personal information. Topic is masked in log output as "tcre****-123" so anyone reading the log file cannot see the full string. send_ntfy() now fails loudly on placeholder topics rather than silently swallowing alerts.</div>
+        <div class="change-file">config.json (new), tracker.py log filter</div>
+      </div>
+    </div>
+
+    <div class="change-item">
+      <div class="change-icon">&#128274;</div>
+      <div class="change-body">
+        <div class="change-title">HTTP dashboard server bound to 127.0.0.1 only</div>
+        <div class="change-desc">"python -m http.server 8080 --bind 127.0.0.1" enforced as the canonical command. Without --bind, the dashboard would be reachable from any device on the local Wi-Fi network. The README and FAQ updated to call out the --bind flag explicitly.</div>
+        <div class="change-file">README guidance, help.html FAQ</div>
+      </div>
+    </div>
+
+    <div class="change-item">
+      <div class="change-icon">&#128296;</div>
+      <div class="change-body">
+        <div class="change-title">Interactive setup tool -- tools/setup_config.py</div>
+        <div class="change-desc">First-run setup script walks you through ntfy topic, ZIP, city, and anchor locations. Validates input, masks sensitive values during the review step, and writes to %LOCALAPPDATA%. Supports --show (view current config) and --validate (check without changes) flags.</div>
+        <div class="change-file">tools/setup_config.py (new)</div>
+      </div>
+    </div>
+
+    <div class="change-item">
+      <div class="change-icon">&#129514;</div>
+      <div class="change-body">
+        <div class="change-title">Diagnostic test -- tests/test_config.py</div>
+        <div class="change-desc">Verifies config file exists, parses cleanly, has all required keys, and the ntfy publish round-trip succeeds. Run after any config change. --no-ntfy flag skips the network test for offline diagnostics. Exit code 0 = all checks pass, non-zero = at least one failed.</div>
+        <div class="change-file">tests/test_config.py (new)</div>
+      </div>
+    </div>
+
+    <div class="change-item">
+      <div class="change-icon">&#128203;</div>
+      <div class="change-body">
+        <div class="change-title">.gitignore hardened against data leakage</div>
+        <div class="change-desc">Five data files were accidentally tracked: future_events.json, price_history.json, restock_history.json, status_snapshot.json, store_inventory.json. Removed via git rm --cached. .gitignore extended with explicit root-level JSON blocks plus __pycache__ directories. INTERNAL/ folder confirmed clean -- NTFY.txt not in repo.</div>
+        <div class="change-file">.gitignore</div>
+      </div>
+    </div>
+
+  </div>
+</div>
 
     <!-- ═══ v5.7.1 ═══════════════════════════════════════════════════════ -->
     <div class="version-block">

@@ -49,6 +49,9 @@ ENABLED_PLUGINS = [
     "restock_reminder_plugin",   # Daily 8:30 AM restock reminder (#8)
     "price_history_plugin",      # Hourly price logging to SQLite + Excel export (#5)
     "costco_tracker_plugin",     # Costco online + warehouse monitor Cherry Hill/Princeton NJ
+    "invest_store_plugin",
+    "market_data_refresh_plugin",
+    "api_server_plugin",
 ]
 
 
@@ -290,6 +293,60 @@ class CostcoTracker_Plugin(Plugin):
         if hasattr(self, "_tracker"):
             self._tracker.stop()
 
+class InvestStore_Plugin(Plugin):
+    name = "invest_store"
+    version = "1.0"
+    description = "SQLite-backed investment portfolio store (replaces localStorage)"
+
+    def start(self, config, products, schedule):
+        try:
+            from invest_store import InvestStore
+            self._store = InvestStore(config, products)
+            self._store.start(schedule)
+            log.info("  [invest_store] Started -- invest.db ready at data/invest.db")
+        except Exception as e:
+            log.warning(f"  [invest_store] Failed to start: {e}")
+
+    def stop(self):
+        log.info("  [invest_store] Stopped")
+
+
+class MarketDataRefresh_Plugin(Plugin):
+    name = "market_data_refresh"
+    version = "1.0"
+    description = "12-hour market value refresh: pokemontcg.io + sealed MSRP estimates"
+
+    def start(self, config, products, schedule):
+        try:
+            from market_data_refresh import MarketDataRefresh
+            self._refresher = MarketDataRefresh(config, products)
+            self._refresher.start(schedule)
+            log.info("  [market_data_refresh] Started -- every 12h, weekly prune Mon 03:00")
+        except Exception as e:
+            log.warning(f"  [market_data_refresh] Failed to start: {e}")
+
+    def stop(self):
+        log.info("  [market_data_refresh] Stopped")
+
+
+class ApiServer_Plugin(Plugin):
+    name = "api_server"
+    version = "1.0"
+    description = "Local HTTP API on 127.0.0.1:8765 -- serves the invest dashboard"
+
+    def start(self, config, products, schedule):
+        try:
+            from api_server import ApiServer
+            self._api = ApiServer(config, products)
+            self._api.start(schedule)
+            log.info("  [api_server] Started -- listening on http://127.0.0.1:8765")
+        except Exception as e:
+            log.warning(f"  [api_server] Failed to start: {e}")
+
+    def stop(self):
+        if hasattr(self, "_api"):
+            self._api.stop()
+        log.info("  [api_server] Stopped")
 
 # ─────────────────────────────────────────────
 # PLUGIN REGISTRY
@@ -306,6 +363,9 @@ _PLUGIN_CLASSES = {
     "restock_reminder_plugin": RestockReminder_Plugin,
     "price_history_plugin":    PriceHistory_Plugin,
     "costco_tracker_plugin":   CostcoTracker_Plugin,
+    "invest_store_plugin":         InvestStore_Plugin,
+    "market_data_refresh_plugin":  MarketDataRefresh_Plugin,
+    "api_server_plugin":           ApiServer_Plugin,
 }
 
 _loaded_plugins: list[Plugin] = []
