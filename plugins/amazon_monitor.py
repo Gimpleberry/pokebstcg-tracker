@@ -233,50 +233,64 @@ class AmazonMSRPMonitor:
         log.info("[amazon_monitor] Scheduled - checking every 15 minutes")
 
     def _check_all(self) -> None:
-        """Check all watched Amazon products."""
-        try:
-            from playwright.sync_api import sync_playwright, TimeoutError as PWTimeout
-        except ImportError:
-            log.warning("[amazon_monitor] Playwright not installed - skipping")
-            return
+        """Check all watched Amazon products. Runs in a thread to avoid
+        sync_playwright conflict with the tracker's asyncio event loop."""
+        import threading
+        import concurrent.futures
 
-        log.debug(f"[amazon_monitor] Checking {len(self.watch_list)} products...")
+        done = concurrent.futures.Future()
 
-        try:
-            with sync_playwright() as p:
-                context = p.chromium.launch_persistent_context(
-                    BROWSER_PROFILE,
-                    headless=True,
-                    args=[
-                        "--disable-blink-features=AutomationControlled",
-                        "--no-sandbox",
-                        "--disable-dev-shm-usage",
-                        "--disable-gpu",
-                        "--blink-settings=imagesEnabled=false",
-                    ],
-                    user_agent=HEADERS["User-Agent"],
-                )
+        def _run():
+            try:
+                from playwright.sync_api import sync_playwright
+            except ImportError:
+                log.warning("[amazon_monitor] Playwright not installed - skipping")
+                done.set_result(None)
+                return
 
-                page = context.new_page()
+            log.debug(f"[amazon_monitor] Checking {len(self.watch_list)} products...")
 
-                # Block images, fonts, media to reduce load
-                page.route("**/*", lambda r: r.abort()
-                    if r.request.resource_type in ("image", "media", "font", "stylesheet")
-                    else r.continue_()
-                )
+            try:
+                with sync_playwright() as p:
+                    context = p.chromium.launch_persistent_context(
+                        BROWSER_PROFILE,
+                        headless=True,
+                        args=[
+                            "--disable-blink-features=AutomationControlled",
+                            "--no-sandbox",
+                            "--disable-dev-shm-usage",
+                            "--disable-gpu",
+                            "--blink-settings=imagesEnabled=false",
+                        ],
+                        user_agent=HEADERS["User-Agent"],
+                    )
 
-                for name, asin, msrp_override in self.watch_list:
-                    try:
-                        self._check_product(page, name, asin, msrp_override)
-                        time.sleep(4)  # Polite delay between products
-                    except Exception as e:
-                        log.debug(f"[amazon_monitor] Error checking {name}: {e}")
+                    page = context.new_page()
 
-                page.close()
-                context.close()
+                    # Block images, fonts, media to reduce load
+                    page.route("**/*", lambda r: r.abort()
+                        if r.request.resource_type in ("image", "media", "font", "stylesheet")
+                        else r.continue_()
+                    )
 
-        except Exception as e:
-            log.warning(f"[amazon_monitor] Session error: {e}")
+                    for name, asin, msrp_override in self.watch_list:
+                        try:
+                            self._check_product(page, name, asin, msrp_override)
+                            time.sleep(4)  # Polite delay between products
+                        except Exception as e:
+                            log.debug(f"[amazon_monitor] Error checking {name}: {e}")
+
+                    page.close()
+                    context.close()
+
+            except Exception as e:
+                log.warning(f"[amazon_monitor] Session error: {e}")
+            finally:
+                done.set_result(None)
+
+        t = threading.Thread(target=_run, daemon=True, name="amz_check_all")
+        t.start()
+        t.join(timeout=300)  # Max 5 minutes for full check cycle
 
     def _check_product(self, page, name: str, asin: str, msrp_override) -> None:
         """Check a single Amazon product page."""

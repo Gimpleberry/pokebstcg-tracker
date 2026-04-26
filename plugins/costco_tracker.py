@@ -183,51 +183,59 @@ class CostcoTracker:
     # -- Online check ---------------------------------------------------------
 
     def _check_all_online(self) -> None:
-        """Check all tracked Costco products for online availability."""
+        """Check all tracked Costco products for online availability.
+        Runs in a thread to avoid sync_playwright conflict with asyncio loop."""
         if not self.active:
             return
 
-        try:
-            from playwright.sync_api import sync_playwright, TimeoutError as PWTimeout
-        except ImportError:
-            log.warning("[costco] Playwright not installed")
-            return
+        import threading
 
-        log.debug(f"[costco] Checking {len(self.active)} products online...")
+        def _run():
+            try:
+                from playwright.sync_api import sync_playwright
+            except ImportError:
+                log.warning("[costco] Playwright not installed")
+                return
 
-        try:
-            with sync_playwright() as p:
-                context = p.chromium.launch_persistent_context(
-                    BROWSER_PROFILE,
-                    headless=True,
-                    args=[
-                        "--disable-blink-features=AutomationControlled",
-                        "--no-sandbox",
-                        "--disable-dev-shm-usage",
-                        "--disable-gpu",
-                        "--blink-settings=imagesEnabled=false",
-                    ],
-                    user_agent=HEADERS["User-Agent"],
-                )
+            log.debug(f"[costco] Checking {len(self.active)} products online...")
 
-                page = context.new_page()
-                page.route("**/*", lambda r: r.abort()
-                    if r.request.resource_type in ("image", "media", "font", "stylesheet")
-                    else r.continue_()
-                )
+            try:
+                with sync_playwright() as p:
+                    context = p.chromium.launch_persistent_context(
+                        BROWSER_PROFILE,
+                        headless=True,
+                        args=[
+                            "--disable-blink-features=AutomationControlled",
+                            "--no-sandbox",
+                            "--disable-dev-shm-usage",
+                            "--disable-gpu",
+                            "--blink-settings=imagesEnabled=false",
+                        ],
+                        user_agent=HEADERS["User-Agent"],
+                    )
 
-                for product in self.active:
-                    try:
-                        self._check_single(page, product)
-                        time.sleep(3)
-                    except Exception as e:
-                        log.debug(f"[costco] Error checking {product['name']}: {e}")
+                    page = context.new_page()
+                    page.route("**/*", lambda r: r.abort()
+                        if r.request.resource_type in ("image", "media", "font", "stylesheet")
+                        else r.continue_()
+                    )
 
-                page.close()
-                context.close()
+                    for product in self.active:
+                        try:
+                            self._check_single(page, product)
+                            time.sleep(3)
+                        except Exception as e:
+                            log.debug(f"[costco] Error checking {product['name']}: {e}")
 
-        except Exception as e:
-            log.warning(f"[costco] Playwright session error: {e}")
+                    page.close()
+                    context.close()
+
+            except Exception as e:
+                log.warning(f"[costco] Playwright session error: {e}")
+
+        t = threading.Thread(target=_run, daemon=True, name="costco_check_all")
+        t.start()
+        t.join(timeout=300)  # Max 5 minutes for full check cycle
 
     def _check_single(self, page, product: dict) -> None:
         """Check one Costco product page for availability."""
