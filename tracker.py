@@ -1128,7 +1128,10 @@ def main():
 
     # ── Load all plugins via plugin coordinator ──
     import plugins as plugin_system
-    loaded = plugin_system.load_plugins(CONFIG, PRODUCTS, schedule)
+    from scheduler import Scheduler
+    scheduler = Scheduler(schedule)
+    loaded = plugin_system.load_plugins(CONFIG, PRODUCTS, scheduler)
+    scheduler.boot_ready()
 
     # ── Wrap run_checks to broadcast events to plugins ──
     _original_run_checks = run_checks
