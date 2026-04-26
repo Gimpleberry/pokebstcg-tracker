@@ -69,3 +69,5 @@ v2
 v3
 v4
 PROJECT_KNOWLEDGE.txt 
+apply_v*.py 
+*.bak       
