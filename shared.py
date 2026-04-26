@@ -41,11 +41,37 @@ def _find_root() -> str:
 ROOT_DIR        = _find_root()
 OUTPUT_DIR      = ROOT_DIR   # legacy alias
 DATA_DIR        = os.path.join(ROOT_DIR, "data")
-BROWSER_PROFILE = os.path.join(ROOT_DIR, ".browser_profile")
+
+
+def _appdata_dir():
+    """
+    Return the per-user app-data directory for tcg_tracker.
+
+    Windows:  %LOCALAPPDATA%\\tcg_tracker
+    macOS:    ~/Library/Application Support/tcg_tracker
+    Linux:    ~/.config/tcg_tracker  (or $XDG_CONFIG_HOME/tcg_tracker)
+
+    This directory is OUTSIDE any cloud-sync path on Windows
+    (OneDrive Known Folder Move excludes %LOCALAPPDATA%).
+    """
+    appdata = os.environ.get("LOCALAPPDATA")
+    if appdata:
+        return os.path.join(appdata, "tcg_tracker")
+
+    if os.path.isdir(os.path.expanduser("~/Library/Application Support")):
+        return os.path.expanduser("~/Library/Application Support/tcg_tracker")
+
+    xdg = os.environ.get("XDG_CONFIG_HOME") or os.path.expanduser("~/.config")
+    return os.path.join(xdg, "tcg_tracker")
+
+
+APPDATA_DIR     = _appdata_dir()
+CONFIG_PATH     = os.path.join(APPDATA_DIR, "config.json")
+BROWSER_PROFILE = os.path.join(APPDATA_DIR, "browser_profile")
 
 # Ensure data/ exists on first import
 os.makedirs(DATA_DIR, exist_ok=True)
-log.debug(f"[shared] ROOT_DIR={ROOT_DIR} | DATA_DIR={DATA_DIR}")
+log.debug(f"[shared] ROOT_DIR={ROOT_DIR} | DATA_DIR={DATA_DIR} | APPDATA_DIR={APPDATA_DIR}")
 
 
 # ── HTTP Headers ─────────────────────────────────────────────────────────────
@@ -61,6 +87,81 @@ HEADERS = {
 }
 
 HEADERS_JSON = {**HEADERS, "Accept": "application/json"}
+
+
+# -- Local config (lives in AppData, not in the repo) ---------------------
+
+# Cached config - loaded once per process
+_local_config_cache = None
+
+# Required keys - missing any of these raises a clear error
+REQUIRED_CONFIG_KEYS = ("ntfy_topic", "home_zip", "home_city")
+
+# Default values for optional keys
+CONFIG_DEFAULTS = {
+    "notify_push":              True,
+    "check_interval_minutes":   3,
+    "log_file":                 "tcg_tracker.log",
+    "_schema_version":          1,
+}
+
+
+class ConfigError(RuntimeError):
+    """Raised when local config is missing, malformed, or incomplete."""
+    pass
+
+
+def load_local_config(force_reload=False):
+    """
+    Load the local config from CONFIG_PATH.  Cached after first read.
+    Raises ConfigError with a clear, actionable message on failure.
+    Returns a fresh dict copy on each call.
+    """
+    global _local_config_cache
+
+    if _local_config_cache is not None and not force_reload:
+        return dict(_local_config_cache)
+
+    import json
+
+    if not os.path.exists(CONFIG_PATH):
+        raise ConfigError(
+            "Local config not found at: " + CONFIG_PATH + "\n\n"
+            "Run the setup script to create it:\n"
+            "    python tools/setup_config.py\n"
+        )
+
+    try:
+        with open(CONFIG_PATH, encoding="utf-8") as f:
+            cfg = json.load(f)
+    except json.JSONDecodeError as e:
+        raise ConfigError(
+            "Local config is malformed JSON: " + CONFIG_PATH + "\n"
+            "  Error: " + str(e) + "\n"
+            "  Fix the file or re-run: python tools/setup_config.py"
+        )
+    except Exception as e:
+        raise ConfigError("Could not read " + CONFIG_PATH + ": " + str(e))
+
+    missing = [k for k in REQUIRED_CONFIG_KEYS if not cfg.get(k)]
+    if missing:
+        raise ConfigError(
+            "Local config missing required keys: " + str(missing) + "\n"
+            "  File: " + CONFIG_PATH + "\n"
+            "  Re-run: python tools/setup_config.py"
+        )
+
+    for key, default in CONFIG_DEFAULTS.items():
+        cfg.setdefault(key, default)
+
+    _local_config_cache = cfg
+    log.debug("[shared] Loaded local config from " + CONFIG_PATH)
+    return dict(cfg)
+
+
+def get_ntfy_topic():
+    """Convenience accessor - returns the ntfy topic from local config."""
+    return load_local_config()["ntfy_topic"]
 
 
 # ── MSRP Table ───────────────────────────────────────────────────────────────

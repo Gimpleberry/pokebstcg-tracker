@@ -24,40 +24,68 @@ from email.mime.multipart import MIMEMultipart
 # ─────────────────────────────────────────────
 # CONFIGURATION - Edit this section
 # ─────────────────────────────────────────────
+# -- CONFIG ----------------------------------------------------------------
+# Sensitive values (ntfy topic, location, email credentials) live in
+# %LOCALAPPDATA%\tcg_tracker\config.json - NOT in this source file.
+#
+# To set up the local config:    python tools/setup_config.py
+# To rotate any sensitive value: edit config.json directly, then restart.
+# To enable email notifications: edit config.json to fill in
+#                                 email_sender, email_password,
+#                                 email_recipient, then set
+#                                 notify_email below to True.
+# --------------------------------------------------------------------------
+
+from shared import load_local_config, ConfigError, DATA_DIR
+
+try:
+    _local_cfg = load_local_config()
+except ConfigError as e:
+    print("\n" + "=" * 60)
+    print("  TCG Tracker - Configuration Error")
+    print("=" * 60)
+    print("\n" + str(e) + "\n")
+    print("=" * 60 + "\n")
+    raise SystemExit(1)
+
 CONFIG = {
-    # How often to check (in minutes)
-    "check_interval_minutes": 3,
+    # -- Operational settings (overridable via config.json) -------------
+    "check_interval_minutes": _local_cfg["check_interval_minutes"],
+    "request_timeout":        15,
+    "delay_between_requests": 3,
+    "history_file":           "restock_history.json",
 
-    # ── Notification Methods (set to True to enable) ──
-    "notify_email": False,
-    "notify_sms": False,       # Requires Twilio
-    "notify_push": True,       # Uses ntfy.sh (free, no account needed)
+    # -- Log file (absolute path, runnable from any working directory) --
+    "log_file": os.path.join(DATA_DIR, "tcg_tracker.log"),
 
-    # ── Email Settings (Gmail example) ──
-    "email_sender": "your_email@gmail.com",
-    "email_password": "your_app_password",   # Use Gmail App Password
-    "email_recipient": "your_email@gmail.com",
+    # -- Notification methods --------------------------------------------
+    "notify_push":  _local_cfg["notify_push"],
+    "notify_email": False,   # Set True after filling email_* in config.json
+
+    # -- ntfy.sh push (sensitive: from config.json) ----------------------
+    "ntfy_topic":   _local_cfg["ntfy_topic"],
+
+    # -- Email settings --------------------------------------------------
+    # Operational (inline defaults, not sensitive)
     "smtp_host": "smtp.gmail.com",
     "smtp_port": 587,
+    # Sensitive (from config.json - empty until you fill them in)
+    "email_sender":    _local_cfg.get("email_sender",    ""),
+    "email_password":  _local_cfg.get("email_password",  ""),
+    "email_recipient": _local_cfg.get("email_recipient", ""),
 
-    # ── Twilio SMS Settings ──
-    "twilio_account_sid": "YOUR_SID",
-    "twilio_auth_token": "YOUR_TOKEN",
-    "twilio_from": "+1XXXXXXXXXX",
-    "twilio_to": "+1XXXXXXXXXX",
-
-    # ── ntfy.sh Push Notification ──
-    # Visit https://ntfy.sh - pick any unique topic name (keep it private)
-    "ntfy_topic": "tcg-drops-keith-1995",
-
-    # ── Request Settings ──
-    "request_timeout": 15,
-    "delay_between_requests": 3,  # seconds, be polite
-
-    # ── Log file ──
-    "log_file": "data/tcg_tracker.log",
-    "history_file": "restock_history.json",
+    # -- Location (from config.json) -------------------------------------
+    # Currently informational; plugins will migrate to read these in
+    # future sessions instead of using their own hardcoded constants.
+    "home_zip":         _local_cfg["home_zip"],
+    "home_city":        _local_cfg["home_city"],
+    "anchor_locations": _local_cfg["anchor_locations"],
 }
+
+# NOTE: Do NOT add hardcoded fallbacks for sensitive values.  If config
+# is missing, load_local_config() raises and we exit cleanly above.
+# Silent fallbacks would mask configuration mistakes and re-introduce
+# hardcoded secrets.
 
 # ─────────────────────────────────────────────
 # TCG PRODUCTS TO TRACK

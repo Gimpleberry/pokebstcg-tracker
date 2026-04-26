@@ -153,7 +153,7 @@ async def open_and_stage_cart(product: dict, config: dict):
             user_agent=(
                 "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
                 "AppleWebKit/537.36 (KHTML, like Gecko) "
-                "Chrome/124.0.0.0 Safari/537.36"
+                "Chrome/147.0.0.0 Safari/537.36"
             ),
         )
 
@@ -378,11 +378,11 @@ if __name__ == "__main__":
     if args.setup:
         # Setup mode - just open the browser at the retailer homepage for login
         retailer_homes = {
-            "target":        "https://www.target.com/account",
-            "walmart":       "https://www.walmart.com/account",
+            "target":        "https://www.target.com/login",
+            "walmart":       "https://www.walmart.com/account/login",
             "bestbuy":       "https://www.bestbuy.com/identity/signin",
             "pokemoncenter": "https://www.pokemoncenter.com/account/login",
-            "amazon":        "https://www.amazon.com/ap/signin",
+            "amazon":        "https://www.amazon.com/",
             "costco":        "https://www.costco.com/LogonForm",
         }
         url = retailer_homes.get(args.retailer, f"https://www.{args.retailer}.com")
@@ -404,7 +404,7 @@ if __name__ == "__main__":
                     user_agent=(
                         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
                         "AppleWebKit/537.36 (KHTML, like Gecko) "
-                        "Chrome/124.0.0.0 Safari/537.36"
+                        "Chrome/147.0.0.0 Safari/537.36"
                     ),
                 )
                 page = await context.new_page()
@@ -420,7 +420,7 @@ if __name__ == "__main__":
                     await context.close()
                 except Exception:
                     pass
-            print(f"\n✅ {args.retailer} session saved to .browser_profile/")
+            print(f"\n✅ {args.retailer} session saved to {BROWSER_PROFILE}")
 
         asyncio.run(setup_browser())
 
