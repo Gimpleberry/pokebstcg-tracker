@@ -77,7 +77,7 @@ main{padding:40px;max-width:1200px;margin:0 auto}
 <body>
 <header>
   <div class="logo"><span class="logo-main">Keith's PokeBS</span><span class="logo-sub">Help</span></div>
-  <div style="font-family:'DM Mono',monospace;font-size:.65rem;color:var(--muted)">v5.2 — Apr 2026</div>
+  <div style="font-family:'DM Mono',monospace;font-size:.65rem;color:var(--muted)">v5.7.1 — Apr 2026</div>
 </header>
 <nav class="nav-bar">
   <a class="nav-link" href="dashboard.html">&#128225; Tracker</a>
@@ -103,6 +103,178 @@ main{padding:40px;max-width:1200px;margin:0 auto}
   <!-- CHANGELOG -->
   <!-- ══════════════════════════════════════════ -->
   <div id="tab-changelog" class="tab-content active">
+
+
+
+
+    <!-- ═══ v5.7.1 ═══════════════════════════════════════════════════════ -->
+    <div class="version-block">
+      <div class="version-header">
+        <div class="version-number">v5.7.1</div>
+        <div class="version-date">Apr 26, 2026</div>
+        <span class="version-tag tag-fix">Fix</span>
+        <span class="version-tag tag-feature">Alt Retailers</span>
+        <div class="version-line"></div>
+      </div>
+      <div class="change-list">
+        <div class="change-item">
+          <div class="change-icon">&#128465;</div>
+          <div class="change-body">
+            <div class="change-title">Five Below + TJ Maxx removed from alt retailer monitor</div>
+            <div class="change-desc">Five Below's site is fully JS-rendered (BeautifulSoup returns nothing useful) and TJ Maxx throws an SSL handshake error on every request. Both dropped from coverage rather than generating noise. Alternative coverage: Burlington, Ollie's, GameStop, Dollar General, ALDI remain.</div>
+            <div class="change-file">plugins/alternative_retailers.py</div>
+          </div>
+        </div>
+        <div class="change-item">
+          <div class="change-icon">&#128197;</div>
+          <div class="change-body">
+            <div class="change-title">Schedule updated — Mon / Wed / Fri at 09:00</div>
+            <div class="change-desc">Was Tue/Fri only. Added Monday to catch weekend restocks, and Wednesday to align with Walmart Wednesday drop day. All three runs benefit from the deduplication layer so you only get alerted on genuinely new finds.</div>
+            <div class="change-file">plugins.py — AltRetailer_Plugin</div>
+          </div>
+        </div>
+        <div class="change-item">
+          <div class="change-icon">&#9989;</div>
+          <div class="change-body">
+            <div class="change-title">Clean 5-scraper run confirmed</div>
+            <div class="change-desc">Burlington, Ollie's, GameStop, Dollar General, ALDI all complete without errors. ALDI correctly detects Spring season active. GameStop returns 0 (JS-rendered, expected) without raising exceptions. Deduplication active — 6 total found, 0 re-alerted on second run.</div>
+            <div class="change-file">plugins/alternative_retailers.py</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ v5.7 ════════════════════════════════════════════════════════ -->
+    <div class="version-block">
+      <div class="version-header">
+        <div class="version-number">v5.7</div>
+        <div class="version-date">Apr 26, 2026</div>
+        <span class="version-tag tag-major">Major</span>
+        <span class="version-tag tag-feature">Binder + Dashboard</span>
+        <span class="version-tag tag-security">Security</span>
+        <div class="version-line"></div>
+      </div>
+      <div class="change-list">
+
+        <div class="change-item">
+          <div class="change-icon">&#128274;</div>
+          <div class="change-body">
+            <div class="change-title">Security — 5 data files untracked from git</div>
+            <div class="change-desc">future_events.json, price_history.json, restock_history.json, status_snapshot.json, and store_inventory.json were accidentally committed to the repo. Removed with git rm --cached, .gitignore hardened with explicit root-level JSON blocks. INTERNAL/ folder confirmed clean — NTFY.txt not in repo. __pycache__ directories also untracked.</div>
+            <div class="change-file">.gitignore</div>
+          </div>
+        </div>
+
+        <div class="change-item">
+          <div class="change-icon">&#128194;</div>
+          <div class="change-body">
+            <div class="change-title">Binder v3 — complete overhaul</div>
+            <div class="change-desc">Full rebuild of the collection binder with 11 sets, type color-coding, type filter, jump-to-card, bulk check, National Pokédex, and trainer tracker. Set selector converted from tab bar to dropdown. localStorage migration ensures previous collection data is never lost on upgrades.</div>
+            <div class="change-file">dashboard/binder.html</div>
+          </div>
+        </div>
+
+        <div class="change-item">
+          <div class="change-icon">&#127777;</div>
+          <div class="change-body">
+            <div class="change-title">Binder — 11 sets, newest first</div>
+            <div class="change-desc">Added Phantasmal Flames (ME02), Mega Evolution (ME01), Prismatic Evolutions (SV8.5), Surging Sparks (SV8), and Stellar Crown (SV7) to the binder. All sets ordered reverse-chronological. Full card lists scraped from JustInBasil, Serebii, and Bulbapedia. Total: Chaos Rising, Phantasmal Flames, Mega Evolution, Perfect Order, Ascended Heroes, Destined Rivals, Black Bolt, Journey Together, Prismatic Evolutions, Surging Sparks, Stellar Crown.</div>
+            <div class="change-file">dashboard/binder.html</div>
+          </div>
+        </div>
+
+        <div class="change-item">
+          <div class="change-icon">&#127809;</div>
+          <div class="change-body">
+            <div class="change-title">Binder — National Pokédex (all 1,025)</div>
+            <div class="change-desc">New Pokédex tab shows all 1,025 Pokémon sorted by Dex number. Pokémon with cards in your sets show the set name, rarity tier, and type color. Pokémon with no TCG cards in your sets appear grayed out but visible. Stat line shows caught count, total, and how many species have cards in your sets. Fully live-linked — checking a card in the binder instantly updates the Pokédex.</div>
+            <div class="change-file">dashboard/binder.html</div>
+          </div>
+        </div>
+
+        <div class="change-item">
+          <div class="change-icon">&#127942;</div>
+          <div class="change-body">
+            <div class="change-title">Binder — Trainer tracker (A-Z)</div>
+            <div class="change-desc">Separate Trainers toggle within the Pokédex tab tracks all trainer cards across your sets, deduplicated by name and sorted A-Z. Shows which sets each trainer appears in and their best available rarity. Lights up green when you own any version of that trainer card.</div>
+            <div class="change-file">dashboard/binder.html</div>
+          </div>
+        </div>
+
+        <div class="change-item">
+          <div class="change-icon">&#127744;</div>
+          <div class="change-body">
+            <div class="change-title">Binder — type color-coding + type filter</div>
+            <div class="change-desc">Every card now has a left-border accent in its energy type color: green (Grass), red (Fire), blue (Water), yellow (Lightning), purple (Psychic), orange (Fighting), gray (Darkness/Metal/Trainer), teal (Dragon). Type filter buttons in the controls bar let you narrow the view to one or more types, stackable with the All/Have/Need filter.</div>
+            <div class="change-file">dashboard/binder.html</div>
+          </div>
+        </div>
+
+        <div class="change-item">
+          <div class="change-icon">&#128269;</div>
+          <div class="change-body">
+            <div class="change-title">Binder — jump-to-card + bulk check</div>
+            <div class="change-desc">Type any card number in the Jump box and the page smooth-scrolls to that card. Bulk Check marks every card in the first unchecked rarity section. Each rarity section also has its own Check All button for granular control.</div>
+            <div class="change-file">dashboard/binder.html</div>
+          </div>
+        </div>
+
+        <div class="change-item">
+          <div class="change-icon">&#128190;</div>
+          <div class="change-body">
+            <div class="change-title">Binder — localStorage migration (v1 → v2)</div>
+            <div class="change-desc">Previous binder used keithpokebsv1_ storage keys. Rebuild changed them to keithpokebsv2_. load() now checks for the old v1 key if v2 is missing and silently migrates data on first load — no manual action needed, no collection data lost.</div>
+            <div class="change-file">dashboard/binder.html</div>
+          </div>
+        </div>
+
+        <div class="change-item">
+          <div class="change-icon">&#128197;</div>
+          <div class="change-body">
+            <div class="change-title">calendar.html — 4-week rolling TCG calendar</div>
+            <div class="change-desc">New page showing upcoming TCG events in a 4-week rolling window with countdown strip, grid/list toggle, and event modal with full details. Loads from data/future_events.json. future.html now redirects here.</div>
+            <div class="change-file">dashboard/calendar.html (new), dashboard/future.html (redirect)</div>
+          </div>
+        </div>
+
+        <div class="change-item">
+          <div class="change-icon">&#128506;</div>
+          <div class="change-body">
+            <div class="change-title">local.html — store radar page</div>
+            <div class="change-desc">New page covering every store within reach: Consumer Square local stores (Target, Walmart, Best Buy, GameStop, Five Below), Costco anchors (Cherry Hill #1142, Princeton #0482), alt retailers (Marshalls, Ollie's, ALDI), and Pokemon vending machines (Hamilton Mall, Cumberland Mall). Each store has a visit plan with best day, best time, and restock pattern notes.</div>
+            <div class="change-file">dashboard/local.html (new)</div>
+          </div>
+        </div>
+
+        <div class="change-item">
+          <div class="change-icon">&#128200;</div>
+          <div class="change-body">
+            <div class="change-title">invest.html — purchase log and portfolio tracker</div>
+            <div class="change-desc">New page for logging sealed product, single card, and graded card purchases. KPI bar shows total spent, current market value, unrealized gain/loss, and ROI. Set breakdown chart, spending trend chart, pokemontcg.io auto-fetch for card prices. All data in localStorage. CSV export included.</div>
+            <div class="change-file">dashboard/invest.html (new)</div>
+          </div>
+        </div>
+
+        <div class="change-item">
+          <div class="change-icon">&#9874;</div>
+          <div class="change-body">
+            <div class="change-title">Nav v3 verified across all 11 pages</div>
+            <div class="change-desc">patch_nav_v3.py run against all dashboard pages to confirm canonical nav bar. All 11 pages verified. future.html shows expected WARN (redirect stub with no nav block).</div>
+            <div class="change-file">patch_nav_v3.py</div>
+          </div>
+        </div>
+
+        <div class="change-item">
+          <div class="change-icon">&#128640;</div>
+          <div class="change-body">
+            <div class="change-title">Alt retailer expansion — Burlington, Dollar General, deduplication</div>
+            <div class="change-desc">Burlington Coat Factory and Dollar General added to the alternative retailer monitor. History-based deduplication added so you only receive alerts for genuinely new finds — same product won't ping you again on the next scheduled run. TCG keyword list expanded to cover all current sets.</div>
+            <div class="change-file">plugins/alternative_retailers.py</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
 
 
     <div class="version-block">
