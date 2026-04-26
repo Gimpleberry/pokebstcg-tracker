@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Keith's PokeBS — Local Stores</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0a0f;--surface:#111118;--surface2:#18181f;--border:#2a2a38;--accent:#f0c040;--accent2:#e8503a;--green:#3ddc84;--purple:#a78bfa;--blue:#5ab5ff;--muted:#555570;--text:#e8e8f0;--text2:#9090a8}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.08) 2px,rgba(0,0,0,.08) 4px);pointer-events:none;z-index:999}
+
+header{display:flex;align-items:center;justify-content:space-between;padding:24px 40px;border-bottom:1px solid var(--border);background:rgba(10,10,15,.95);backdrop-filter:blur(12px);position:sticky;top:0;z-index:100}
+.logo{display:flex;align-items:baseline;gap:10px}
+.logo-main{font-family:'Bebas Neue',sans-serif;font-size:2.2rem;letter-spacing:.04em;color:var(--accent);text-shadow:0 0 30px rgba(240,192,64,.4)}
+.logo-sub{font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted);letter-spacing:.2em;text-transform:uppercase}
+.header-right{font-family:'DM Mono',monospace;font-size:.65rem;color:var(--muted)}
+
+nav.nav-bar{display:flex;align-items:center;gap:4px;padding:0 40px;background:var(--surface2);border-bottom:1px solid var(--border);overflow-x:auto}
+.nav-link{font-family:'DM Mono',monospace;font-size:.72rem;letter-spacing:.15em;text-transform:uppercase;padding:12px 18px;color:var(--muted);text-decoration:none;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap}
+.nav-link:hover{color:var(--text)}.nav-link.active{color:var(--accent);border-bottom-color:var(--accent)}
+
+main{padding:40px;max-width:1400px;margin:0 auto}
+.page-title{font-family:'Bebas Neue',sans-serif;font-size:1.8rem;letter-spacing:.06em;color:var(--text2);margin-bottom:4px}
+.page-subtitle{font-family:'DM Mono',monospace;font-size:.72rem;color:var(--muted);letter-spacing:.1em;margin-bottom:28px}
+
+/* Filter bar */
+.filter-bar{display:flex;gap:6px;margin-bottom:28px;flex-wrap:wrap;align-items:center}
+.filter-label{font-family:'DM Mono',monospace;font-size:.62rem;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-right:4px}
+.f-btn{font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;padding:7px 16px;border:1px solid var(--border);border-radius:3px;cursor:pointer;transition:all .15s;background:var(--surface);color:var(--text2)}
+.f-btn:hover{border-color:var(--text2)}
+.f-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(240,192,64,.06)}
+.f-all.active{border-color:var(--accent);color:var(--accent)}
+.f-target{color:#ff6b6b}.f-target.active{border-color:#ff6b6b;color:#ff6b6b;background:rgba(204,0,0,.06)}
+.f-walmart{color:#5ab5ff}.f-walmart.active{border-color:#5ab5ff;color:#5ab5ff;background:rgba(0,113,206,.06)}
+.f-bestbuy{color:#ffe566}.f-bestbuy.active{border-color:#ffe566;color:#ffe566;background:rgba(255,237,0,.04)}
+.f-costco{color:#c0392b}.f-costco.active{border-color:#c0392b;color:#c0392b;background:rgba(192,57,43,.06)}
+.f-alt{color:var(--purple)}.f-alt.active{border-color:var(--purple);color:var(--purple);background:rgba(167,139,250,.06)}
+.f-vending{color:var(--green)}.f-vending.active{border-color:var(--green);color:var(--green);background:rgba(61,220,132,.06)}
+
+/* Section divider */
+.section-divider{display:flex;align-items:center;gap:14px;margin:36px 0 20px}
+.section-label{font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:.1em;color:var(--muted);white-space:nowrap}
+.section-line{flex:1;height:1px;background:var(--border)}
+
+/* Store grid */
+.store-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px}
+
+/* Store card */
+.store-card{background:var(--surface);border:1px solid var(--border);border-radius:4px;overflow:hidden;transition:border-color .2s;animation:cardIn .3s ease both}
+@keyframes cardIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.store-card:hover{border-color:rgba(240,192,64,.25)}
+.store-card.hidden{display:none}
+
+.store-bar{height:3px}
+.bar-target{background:#cc0000}.bar-walmart{background:#0071ce}.bar-bestbuy{background:#ffed00}
+.bar-costco{background:#c0392b}.bar-alt{background:#7c3aed}.bar-vending{background:#3ddc84}
+.bar-fivebelow{background:#6b21a8}.bar-gamestop{background:#e53935}.bar-marshalls{background:#1e40af}
+.bar-ollies{background:#b45309}.bar-aldi{background:#1d4ed8}
+
+.store-body{padding:16px 18px}
+.store-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:10px}
+.store-name{font-weight:500;font-size:.9rem;color:var(--text);line-height:1.3}
+.store-chain{font-family:'DM Mono',monospace;font-size:.62rem;letter-spacing:.08em;padding:3px 9px;border-radius:2px;white-space:nowrap;flex-shrink:0}
+.chain-target{background:rgba(204,0,0,.1);color:#ff6b6b;border:1px solid rgba(204,0,0,.2)}
+.chain-walmart{background:rgba(0,113,206,.1);color:#5ab5ff;border:1px solid rgba(0,113,206,.2)}
+.chain-bestbuy{background:rgba(255,237,0,.06);color:#ffe566;border:1px solid rgba(255,237,0,.15)}
+.chain-costco{background:rgba(192,57,43,.1);color:#e07070;border:1px solid rgba(192,57,43,.2)}
+.chain-alt{background:rgba(124,58,237,.1);color:#c4b5fd;border:1px solid rgba(124,58,237,.2)}
+.chain-vending{background:rgba(61,220,132,.08);color:#3ddc84;border:1px solid rgba(61,220,132,.2)}
+.chain-fivebelow{background:rgba(107,33,168,.1);color:#c084fc;border:1px solid rgba(107,33,168,.2)}
+.chain-gamestop{background:rgba(229,57,53,.1);color:#ff8a80;border:1px solid rgba(229,57,53,.2)}
+.chain-marshalls{background:rgba(30,64,175,.1);color:#93c5fd;border:1px solid rgba(30,64,175,.2)}
+.chain-ollies{background:rgba(180,83,9,.1);color:#fcd34d;border:1px solid rgba(180,83,9,.2)}
+.chain-aldi{background:rgba(29,78,216,.1);color:#93c5fd;border:1px solid rgba(29,78,216,.2)}
+
+.store-address{font-size:.78rem;color:var(--text2);margin-bottom:12px;line-height:1.4}
+.store-dist{font-family:'DM Mono',monospace;font-size:.62rem;color:var(--muted);margin-bottom:12px}
+
+/* Visit plan row */
+.visit-plan{background:var(--surface2);border-radius:3px;padding:10px 14px;margin-bottom:12px}
+.visit-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px}
+.visit-row:last-child{margin-bottom:0}
+.visit-key{font-family:'DM Mono',monospace;font-size:.62rem;color:var(--muted);letter-spacing:.06em}
+.visit-val{font-family:'DM Mono',monospace;font-size:.68rem;color:var(--text2);text-align:right}
+.visit-val b{color:var(--text)}
+.visit-tip{font-size:.75rem;color:var(--text2);line-height:1.45;border-top:1px solid var(--border);padding-top:10px;margin-top:10px}
+
+/* Action buttons */
+.store-actions{display:flex;gap:8px;flex-wrap:wrap}
+.action-btn{font-family:'DM Mono',monospace;font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;padding:6px 14px;border:1px solid var(--border);border-radius:3px;cursor:pointer;text-decoration:none;transition:all .15s;background:var(--surface2);color:var(--text2)}
+.action-btn:hover{border-color:var(--accent);color:var(--accent)}
+.action-btn.primary{border-color:rgba(240,192,64,.4);color:var(--accent);background:rgba(240,192,64,.06)}
+.action-btn.primary:hover{background:rgba(240,192,64,.12)}
+
+/* Stats bar */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:36px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:18px 20px;position:relative;overflow:hidden}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.stat-card:nth-child(1)::before{background:var(--accent)}
+.stat-card:nth-child(2)::before{background:var(--green)}
+.stat-card:nth-child(3)::before{background:var(--purple)}
+.stat-card:nth-child(4)::before{background:var(--blue)}
+.stat-label{font-family:'DM Mono',monospace;font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.stat-value{font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:.02em;line-height:1}
+.stat-sub{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--muted);margin-top:4px}
+
+/* Alt retailer reminder card */
+.reminder-card{background:var(--surface);border:1px solid rgba(124,58,237,.25);border-radius:4px;padding:16px 18px;margin-bottom:10px;animation:cardIn .3s ease both}
+.reminder-card.hidden{display:none}
+.reminder-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.reminder-title{font-weight:500;font-size:.88rem;color:var(--text)}
+.reminder-season{font-family:'DM Mono',monospace;font-size:.62rem;padding:3px 9px;border-radius:2px}
+.season-active{background:rgba(61,220,132,.08);color:var(--green);border:1px solid rgba(61,220,132,.2)}
+.season-off{background:rgba(85,85,112,.1);color:var(--muted);border:1px solid var(--border)}
+.reminder-note{font-size:.78rem;color:var(--text2);line-height:1.5}
+
+/* Vending section */
+.vending-note{font-family:'DM Mono',monospace;font-size:.7rem;color:rgba(61,220,132,.7);background:rgba(61,220,132,.05);border:1px solid rgba(61,220,132,.15);border-radius:3px;padding:10px 16px;margin-bottom:20px;line-height:1.5}
+
+/* Anchor legend */
+.anchor-legend{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:28px}
+.anchor-pill{font-family:'DM Mono',monospace;font-size:.62rem;padding:5px 12px;border-radius:99px;letter-spacing:.08em}
+.ap-home{background:rgba(240,192,64,.08);color:var(--accent);border:1px solid rgba(240,192,64,.2)}
+.ap-secondary{background:rgba(90,181,255,.08);color:var(--blue);border:1px solid rgba(90,181,255,.2)}
+
+@media(max-width:768px){header{padding:16px 20px}main{padding:20px}.stats-row{grid-template-columns:repeat(2,1fr)}.logo-main{font-size:1.6rem}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <span class="logo-main">Keith's PokeBS</span>
+    <span class="logo-sub">Local Stores</span>
+  </div>
+  <div class="header-right" id="last-updated">Updated: —</div>
+</header>
+
+<nav class="nav-bar">
+  <a class="nav-link" href="dashboard.html">📡 Tracker</a>
+  <a class="nav-link" href="info.html">📖 Set Info</a>
+  <a class="nav-link" href="pricing.html">💰 Pricing</a>
+  <a class="nav-link" href="binder.html">📂 Binder</a>
+  <a class="nav-link" href="future.html">📅 Future</a>
+  <a class="nav-link" href="retail-drops.html">🛒 Retail Drops</a>
+  <a class="nav-link active" href="local.html">🗺️ Local</a>
+  <a class="nav-link" href="help.html">❓ Help</a>
+</nav>
+
+<main>
+  <div class="page-title">Local Store Radar</div>
+  <div class="page-subtitle">Physical stores within ~20 miles of Plainfield NJ (08830) + Princeton &amp; Cherry Hill anchors</div>
+
+  <!-- Anchor legend -->
+  <div class="anchor-legend">
+    <span class="anchor-pill ap-home">📍 Home: Plainfield NJ 08830</span>
+    <span class="anchor-pill ap-secondary">📍 Anchor: Princeton NJ</span>
+    <span class="anchor-pill ap-secondary">📍 Anchor: Cherry Hill NJ</span>
+  </div>
+
+  <!-- Stats bar -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-label">Major Retailers</div>
+      <div class="stat-value" id="stat-major">14</div>
+      <div class="stat-sub">Target, Walmart, Best Buy, Costco</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Alt Retailers</div>
+      <div class="stat-value" id="stat-alt">9</div>
+      <div class="stat-sub">Five Below, GameStop, Marshalls &amp; more</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Vending Machines</div>
+      <div class="stat-value" id="stat-vending">3</div>
+      <div class="stat-sub">Pokemon TCG kiosks nearby</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Best Drop Day</div>
+      <div class="stat-value" style="font-size:1.4rem;padding-top:4px">FRI / WED</div>
+      <div class="stat-sub">Target Fri AM · Walmart Wed AM</div>
+    </div>
+  </div>
+
+  <!-- Filter bar -->
+  <div class="filter-bar">
+    <span class="filter-label">Show:</span>
+    <button class="f-btn f-all active" onclick="filterStores('all',this)">All</button>
+    <button class="f-btn f-target" onclick="filterStores('target',this)">🎯 Target</button>
+    <button class="f-btn f-walmart" onclick="filterStores('walmart',this)">🔵 Walmart</button>
+    <button class="f-btn f-bestbuy" onclick="filterStores('bestbuy',this)">🟡 Best Buy</button>
+    <button class="f-btn f-costco" onclick="filterStores('costco',this)">🔴 Costco</button>
+    <button class="f-btn f-alt" onclick="filterStores('alt',this)">🏷️ Alt Retailers</button>
+    <button class="f-btn f-vending" onclick="filterStores('vending',this)">🎮 Vending</button>
+  </div>
+
+  <!-- ── MAJOR RETAILERS ─────────────────────────────────────────────── -->
+  <div class="section-divider" id="sec-major">
+    <div class="section-label">Major Retailers</div>
+    <div class="section-line"></div>
+  </div>
+  <div class="store-grid" id="grid-major">
+
+    <!-- TARGET stores -->
+    <div class="store-card" data-cat="target">
+      <div class="store-bar bar-target"></div>
+      <div class="store-body">
+        <div class="store-top">
+          <div class="store-name">Target — Watchung / Plainfield</div>
+          <span class="store-chain chain-target">TARGET</span>
+        </div>
+        <div class="store-address">1700 Route 22 W, Watchung, NJ 07069</div>
+        <div class="store-dist">~4 mi from 08830 &nbsp;|&nbsp; Closest Target</div>
+        <div class="visit-plan">
+          <div class="visit-row"><span class="visit-key">Best Day</span><span class="visit-val"><b>Friday</b> (31.5% of drops)</span></div>
+          <div class="visit-row"><span class="visit-key">Best Time</span><span class="visit-val"><b>8–10 AM</b> (before shelf clear)</span></div>
+          <div class="visit-row"><span class="visit-key">Also Watch</span><span class="visit-val">Monday AM, Tuesday AM</span></div>
+          <div class="visit-row"><span class="visit-key">Restock Pattern</span><span class="visit-val">Overnight truck Thurs → shelved Fri open</span></div>
+          <div class="visit-tip">💡 Check the TCG aisle first, then the endcap near board games. If shelves are bare on Friday AM, ask a team member if there's backstock — they can pull it.</div>
+        </div>
+        <div class="store-actions">
+          <a class="action-btn primary" href="https://www.target.com/store-locator/find-stores/Watchung/NJ" target="_blank">Store Page ↗</a>
+          <a class="action-btn" href="https://maps.google.com/?q=Target+1700+Route+22+W+Watchung+NJ" target="_blank">Directions ↗</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="store-card" data-cat="target">
+      <div class="store-bar bar-target"></div>
+      <div class="store-body">
+        <div class="store-top">
+          <div class="store-name">Target — Edison</div>
+          <span class="store-chain chain-target">TARGET</span>
+        </div>
+        <div class="store-address">1000 Menlo Park Mall, Edison, NJ 08837</div>
+        <div class="store-dist">~8 mi from 08830 &nbsp;|&nbsp; High-volume mall location</div>
+        <div class="visit-plan">
+          <div class="visit-row"><span class="visit-key">Best Day</span><span class="visit-val"><b>Friday</b> early AM</span></div>
+          <div class="visit-row"><span class="visit-key">Best Time</span><span class="visit-val"><b>8–10 AM</b></span></div>
+          <div class="visit-row"><span class="visit-key">Note</span><span class="visit-val">High foot traffic — stock goes fast</span></div>
+          <div class="visit-tip">💡 Mall Target locations get heavier foot traffic. If chasing a launch-day item, hit Watchung first (opens earlier, less competition).</div>
+        </div>
+        <div class="store-actions">
+          <a class="action-btn primary" href="https://www.target.com/store-locator/find-stores/Edison/NJ" target="_blank">Store Page ↗</a>
+          <a class="action-btn" href="https://maps.google.com/?q=Target+Edison+NJ+Menlo+Park+Mall" target="_blank">Directions ↗</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="store-card" data-cat="target">
+      <div class="store-bar bar-target"></div>
+      <div class="store-body">
+        <div class="store-top">
+          <div class="store-name">Target — Princeton / Route 1</div>
+          <span class="store-chain chain-target">TARGET</span>
+        </div>
+        <div class="store-address">3535 US-1, South Brunswick, NJ 08852</div>
+        <div class="store-dist">~18 mi from 08830 &nbsp;|&nbsp; Princeton anchor</div>
+        <div class="visit-plan">
+          <div class="visit-row"><span class="visit-key">Best Day</span><span class="visit-val"><b>Friday</b> AM</span></div>
+          <div class="visit-row"><span class="visit-key">Best Time</span><span class="visit-val"><b>9–11 AM</b></span></div>
+          <div class="visit-row"><span class="visit-key">Anchor Use</span><span class="visit-val">Pair with Costco Princeton (#0482)</span></div>
+          <div class="visit-tip">💡 Run this alongside a Costco Princeton trip to maximize the visit. Both are on Route 1 corridor.</div>
+        </div>
+        <div class="store-actions">
+          <a class="action-btn primary" href="https://www.target.com/store-locator/find-stores/South+Brunswick/NJ" target="_blank">Store Page ↗</a>
+          <a class="action-btn" href="https://maps.google.com/?q=Target+3535+US-1+South+Brunswick+NJ" target="_blank">Directions ↗</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- WALMART stores -->
+    <div class="store-card" data-cat="walmart">
+      <div class="store-bar bar-walmart"></div>
+      <div class="store-body">
+        <div class="store-top">
+          <div class="store-name">Walmart Supercenter — Watchung</div>
+          <span class="store-chain chain-walmart">WALMART</span>
+        </div>
+        <div class="store-address">1825 Route 22, Watchung, NJ 07069</div>
+        <div class="store-dist">~4 mi from 08830 &nbsp;|&nbsp; Same plaza as Target</div>
+        <div class="visit-plan">
+          <div class="visit-row"><span class="visit-key">Best Day</span><span class="visit-val"><b>Wednesday</b> (Walmart Wednesday drops)</span></div>
+          <div class="visit-row"><span class="visit-key">Best Time</span><span class="visit-val"><b>7–9 AM</b> or after 6 PM restock</span></div>
+          <div class="visit-row"><span class="visit-key">Also Watch</span><span class="visit-val">Sunday AM restock window</span></div>
+          <div class="visit-row"><span class="visit-key">Pro Tip</span><span class="visit-val">Same plaza as Target — hit both in one trip</span></div>
+          <div class="visit-tip">💡 Wednesday is Walmart's big online drop day — in-store stock often lands same morning. Get there early. The TCG section is typically near the toy aisle / electronics border.</div>
+        </div>
+        <div class="store-actions">
+          <a class="action-btn primary" href="https://www.walmart.com/store/finder" target="_blank">Store Finder ↗</a>
+          <a class="action-btn" href="https://maps.google.com/?q=Walmart+1825+Route+22+Watchung+NJ" target="_blank">Directions ↗</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="store-card" data-cat="walmart">
+      <div class="store-bar bar-walmart"></div>
+      <div class="store-body">
+        <div class="store-top">
+          <div class="store-name">Walmart Supercenter — Edison</div>
+          <span class="store-chain chain-walmart">WALMART</span>
+        </div>
+        <div class="store-address">1441 NJ-27, Edison, NJ 08817</div>
+        <div class="store-dist">~9 mi from 08830</div>
+        <div class="visit-plan">
+          <div class="visit-row"><span class="visit-key">Best Day</span><span class="visit-val"><b>Wednesday</b> AM</span></div>
+          <div class="visit-row"><span class="visit-key">Best Time</span><span class="visit-val"><b>7–9 AM</b></span></div>
+          <div class="visit-tip">💡 Backup Walmart if Watchung is sold out. High-volume store — can restock mid-week independently of the Watchung location.</div>
+        </div>
+        <div class="store-actions">
+          <a class="action-btn primary" href="https://www.walmart.com/store/finder" target="_blank">Store Finder ↗</a>
+          <a class="action-btn" href="https://maps.google.com/?q=Walmart+1441+NJ-27+Edison+NJ" target="_blank">Directions ↗</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- BEST BUY stores -->
+    <div class="store-card" data-cat="bestbuy">
+      <div class="store-bar bar-bestbuy"></div>
+      <div class="store-body">
+        <div class="store-top">
+          <div class="store-name">Best Buy — Watchung</div>
+          <span class="store-chain chain-bestbuy">BEST BUY</span>
+        </div>
+        <div class="store-address">1579 Route 22, Watchung, NJ 07069</div>
+        <div class="store-dist">~4 mi from 08830 &nbsp;|&nbsp; Same Route 22 strip</div>
+        <div class="visit-plan">
+          <div class="visit-row"><span class="visit-key">Best Day</span><span class="visit-val"><b>Friday</b> or launch day</span></div>
+          <div class="visit-row"><span class="visit-key">Best Time</span><span class="visit-val"><b>Store open</b> (10 AM weekdays)</span></div>
+          <div class="visit-row"><span class="visit-key">Invite Items</span><span class="visit-val">Check invite email before driving</span></div>
+          <div class="visit-tip">💡 Best Buy carries ETBs and premium sets. For invite-only items, your bestbuy_invites.py plugin will alert you — don't visit until you have the invite confirmed.</div>
+        </div>
+        <div class="store-actions">
+          <a class="action-btn primary" href="https://stores.bestbuy.com/nj/watchung" target="_blank">Store Page ↗</a>
+          <a class="action-btn" href="https://maps.google.com/?q=Best+Buy+1579+Route+22+Watchung+NJ" target="_blank">Directions ↗</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="store-card" data-cat="bestbuy">
+      <div class="store-bar bar-bestbuy"></div>
+      <div class="store-body">
+        <div class="store-top">
+          <div class="store-name">Best Buy — Edison (Menlo Park)</div>
+          <span class="store-chain chain-bestbuy">BEST BUY</span>
+        </div>
+        <div class="store-address">90 Parsonage Rd, Edison, NJ 08837</div>
+        <div class="store-dist">~8 mi from 08830</div>
+        <div class="visit-plan">
+          <div class="visit-row"><span class="visit-key">Best Day</span><span class="visit-val"><b>Friday</b> or launch day</span></div>
+          <div class="visit-row"><span class="visit-key">Best Time</span><span class="visit-val"><b>10 AM open</b></span></div>
+          <div class="visit-tip">💡 Larger format store — tends to carry more SKUs than Watchung. Good backup if Watchung is out of a specific product.</div>
+        </div>
+        <div class="store-actions">
+          <a class="action-btn primary" href="https://stores.bestbuy.com/nj/edison" target="_blank">Store Page ↗</a>
+          <a class="action-btn" href="https://maps.google.com/?q=Best+Buy+90+Parsonage+Rd+Edison+NJ" target="_blank">Directions ↗</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- COSTCO stores -->
+    <div class="store-card" data-cat="costco">
+      <div class="store-bar bar-costco"></div>
+      <div class="store-body">
+        <div class="store-top">
+          <div class="store-name">Costco Wholesale — Cherry Hill (#1142)</div>
+          <span class="store-chain chain-costco">COSTCO</span>
+        </div>
+        <div class="store-address">2149 Route 38, Cherry Hill, NJ 08002</div>
+        <div class="store-dist">~35 mi from 08830 &nbsp;|&nbsp; Cherry Hill anchor</div>
+        <div class="visit-plan">
+          <div class="visit-row"><span class="visit-key">Warehouse #</span><span class="visit-val"><b>#1142</b></span></div>
+          <div class="visit-row"><span class="visit-key">Best Day</span><span class="visit-key">Weekday AM (less crowd)</span></div>
+          <div class="visit-row"><span class="visit-key">Pokemon Items</span><span class="visit-val">ETBs, multi-packs, bundles</span></div>
+          <div class="visit-row"><span class="visit-key">Monitored By</span><span class="visit-val">costco_tracker.py (online + in-store)</span></div>
+          <div class="visit-tip">💡 costco_tracker.py checks this warehouse daily. It will push-alert you when Pokemon TCG items are in-store — don't make the trip without an alert first.</div>
+        </div>
+        <div class="store-actions">
+          <a class="action-btn primary" href="https://www.costco.com/warehouse-locations/cherry-hill-nj-1142.html" target="_blank">Warehouse Page ↗</a>
+          <a class="action-btn" href="https://maps.google.com/?q=Costco+Cherry+Hill+NJ" target="_blank">Directions ↗</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="store-card" data-cat="costco">
+      <div class="store-bar bar-costco"></div>
+      <div class="store-body">
+        <div class="store-top">
+          <div class="store-name">Costco Wholesale — Princeton (#0482)</div>
+          <span class="store-chain chain-costco">COSTCO</span>
+        </div>
+        <div class="store-address">3461 US-1, Princeton, NJ 08540</div>
+        <div class="store-dist">~18 mi from 08830 &nbsp;|&nbsp; Princeton anchor</div>
+        <div class="visit-plan">
+          <div class="visit-row"><span class="visit-key">Warehouse #</span><span class="visit-val"><b>#0482</b></span></div>
+          <div class="visit-row"><span class="visit-key">Best Day</span><span class="visit-val">Weekday AM</span></div>
+          <div class="visit-row"><span class="visit-key">Pair With</span><span class="visit-val">Target Route 1 (same corridor)</span></div>
+          <div class="visit-row"><span class="visit-key">Monitored By</span><span class="visit-val">costco_tracker.py</span></div>
+          <div class="visit-tip">💡 Closer than Cherry Hill. Pair this with the Target on Route 1 — both are on the same road for an efficient run. Wait for a costco_tracker.py alert before going.</div>
+        </div>
+        <div class="store-actions">
+          <a class="action-btn primary" href="https://www.costco.com/warehouse-locations/princeton-nj-482.html" target="_blank">Warehouse Page ↗</a>
+          <a class="action-btn" href="https://maps.google.com/?q=Costco+3461+US-1+Princeton+NJ" target="_blank">Directions ↗</a>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /grid-major -->
+
+  <!-- ── ALT RETAILERS ──────────────────────────────────────────────────── -->
+  <div class="section-divider" id="sec-alt">
+    <div class="section-label">Alt Retailers</div>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="store-grid" id="grid-alt">
+
+    <div class="store-card" data-cat="alt">
+      <div class="store-bar bar-fivebelow"></div>
+      <div class="store-body">
+        <div class="store-top">
+          <div class="store-name">Five Below — Watchung Square Mall</div>
+          <span class="store-chain chain-fivebelow">FIVE BELOW</span>
+        </div>
+        <div class="store-address">Route 22, Watchung, NJ 07069</div>
+        <div class="store-dist">~4 mi from 08830 &nbsp;|&nbsp; Same plaza strip</div>
+        <div class="visit-plan">
+          <div class="visit-row"><span class="visit-key">TCG Products</span><span class="visit-val">$5 single packs, blister packs, mini tins</span></div>
+          <div class="visit-row"><span class="visit-key">Best Time</span><span class="visit-val">Any time — no specific drop pattern</span></div>
+          <div class="visit-row"><span class="visit-key">Scanned By</span><span class="visit-val">alternative_retailers.py (Tue/Fri)</span></div>
+          <div class="visit-tip">💡 Often has current-set single packs at below-MSRP pricing. Check the toy section near the back. Great for casual pack hunting without paying reseller prices.</div>
+        </div>
+        <div class="store-actions">
+          <a class="action-btn" href="https://maps.google.com/?q=Five+Below+Watchung+NJ" target="_blank">Directions ↗</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="store-card" data-cat="alt">
+      <div class="store-bar bar-gamestop"></div>
+      <div class="store-body">
+        <div class="store-top">
+          <div class="store-name">GameStop — Watchung Square Mall</div>
+          <span class="store-chain chain-gamestop">GAMESTOP</span>
+        </div>
+        <div class="store-address">Route 22, Watchung, NJ 07069</div>
+        <div class="store-dist">~4 mi from 08830</div>
+        <div class="visit-plan">
+          <div class="visit-row"><span class="visit-key">TCG Products</span><span class="visit-val">ETBs, exclusive bundles, promo packs</span></div>
+          <div class="visit-row"><span class="visit-key">Best Time</span><span class="visit-key">Launch day AM or weekend</span></div>
+          <div class="visit-row"><span class="visit-key">Scanned By</span><span class="visit-val">alternative_retailers.py (Tue/Fri)</span></div>
+          <div class="visit-tip">💡 GameStop carries GameStop-exclusive bundles and promo items not found elsewhere. Worth checking on launch days — they sometimes hold reserve stock at the counter.</div>
+        </div>
+        <div class="store-actions">
+          <a class="action-btn primary" href="https://www.gamestop.com/stores" target="_blank">Store Locator ↗</a>
+          <a class="action-btn" href="https://maps.google.com/?q=GameStop+Watchung+Square+NJ" target="_blank">Directions ↗</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="store-card" data-cat="alt">
+      <div class="store-bar bar-marshalls"></div>
+      <div class="store-body">
+        <div class="store-top">
+          <div class="store-name">Marshalls / TJ Maxx — Watchung</div>
+          <span class="store-chain chain-marshalls">MARSHALLS</span>
+        </div>
+        <div class="store-address">Route 22 area, Watchung, NJ</div>
+        <div class="store-dist">~4–6 mi from 08830</div>
+        <div class="visit-plan">
+          <div class="visit-row"><span class="visit-key">TCG Products</span><span class="visit-val">Clearance ETBs, overstocked sets</span></div>
+          <div class="visit-row"><span class="visit-key">Pattern</span><span class="visit-val">Random — no scheduled drops</span></div>
+          <div class="visit-row"><span class="visit-key">Price Range</span><span class="visit-val">Often 20–40% below MSRP</span></div>
+          <div class="visit-row"><span class="visit-key">Scanned By</span><span class="visit-val">alternative_retailers.py (Tue/Fri)</span></div>
+          <div class="visit-tip">💡 Clearance finds are unpredictable but often deeply discounted. If the scanner finds something, move fast — these sell out within hours. Check toy/games section near the back.</div>
+        </div>
+        <div class="store-actions">
+          <a class="action-btn" href="https://maps.google.com/?q=Marshalls+Watchung+NJ" target="_blank">Directions ↗</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="store-card" data-cat="alt">
+      <div class="store-bar bar-ollies"></div>
+      <div class="store-body">
+        <div class="store-top">
+          <div class="store-name">Ollie's Bargain Outlet — NJ Locations</div>
+          <span class="store-chain chain-ollies">OLLIE'S</span>
+        </div>
+        <div class="store-address">Multiple NJ locations (check store finder)</div>
+        <div class="store-dist">Nearest: ~15–20 mi</div>
+        <div class="visit-plan">
+          <div class="visit-row"><span class="visit-key">TCG Products</span><span class="visit-val">Overstock ETBs, clearance bundles</span></div>
+          <div class="visit-row"><span class="visit-key">Pattern</span><span class="visit-val">Batch restocks, very random</span></div>
+          <div class="visit-row"><span class="visit-key">Price Range</span><span class="visit-val">Can be 30–50% below MSRP</span></div>
+          <div class="visit-row"><span class="visit-key">Scanned By</span><span class="visit-val">alternative_retailers.py (Tue/Fri)</span></div>
+          <div class="visit-tip">💡 Ollie's gets overstock in large batches. When they have Pokemon product it can be heavily discounted. The scanner will alert you — don't make the trip without a hit.</div>
+        </div>
+        <div class="store-actions">
+          <a class="action-btn primary" href="https://www.ollies.us/stores/" target="_blank">Store Finder ↗</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="store-card" data-cat="alt" id="aldi-card">
+      <div class="store-bar bar-aldi"></div>
+      <div class="store-body">
+        <div class="store-top">
+          <div class="store-name">ALDI — Seasonal Pokemon Finds</div>
+          <span class="store-chain chain-aldi">ALDI</span>
+        </div>
+        <div class="store-address">Multiple NJ locations (see ALDI Finds weekly)</div>
+        <div class="store-dist">Nearest: ~5–10 mi from 08830</div>
+        <div class="visit-plan">
+          <div class="visit-row"><span class="visit-key">TCG Products</span><span class="visit-val">Mini tins, blisters, seasonal bundles</span></div>
+          <div class="visit-row"><span class="visit-key">Season</span><span class="visit-val" id="aldi-season-val">Spring (Mar–Apr) &amp; Fall (Oct–Nov)</span></div>
+          <div class="visit-row"><span class="visit-key">Price</span><span class="visit-val">Typically below MSRP</span></div>
+          <div class="visit-row"><span class="visit-key">Status</span><span class="visit-val" id="aldi-status">Checking...</span></div>
+          <div class="visit-tip" id="aldi-tip">💡 ALDI runs Pokemon TCG as an "ALDI Finds" special — stock is limited and sells in days. Check the ALDI app Wednesday morning when new Finds post. Don't wait.</div>
+        </div>
+        <div class="store-actions">
+          <a class="action-btn primary" href="https://www.aldi.us/en/weekly-specials/" target="_blank">ALDI Finds ↗</a>
+          <a class="action-btn" href="https://www.aldi.us/en/about-aldi/aldi-store-locator/" target="_blank">Store Locator ↗</a>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /grid-alt -->
+
+  <!-- ── VENDING MACHINES ────────────────────────────────────────────────── -->
+  <div class="section-divider" id="sec-vending">
+    <div class="section-label">Pokemon TCG Vending Machines</div>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="vending-note">
+    🎮 Pokemon TCG vending machines (Vengo kiosks) stock single packs and select products — usually at MSRP or slightly above. Stock levels vary. Locations below are confirmed or highly probable in the NJ area.
+  </div>
+
+  <div class="store-grid" id="grid-vending">
+
+    <div class="store-card" data-cat="vending">
+      <div class="store-bar bar-vending"></div>
+      <div class="store-body">
+        <div class="store-top">
+          <div class="store-name">Menlo Park Mall — Pokemon Kiosk</div>
+          <span class="store-chain chain-vending">VENDING</span>
+        </div>
+        <div class="store-address">55 Parsonage Rd, Edison, NJ 08837</div>
+        <div class="store-dist">~8 mi from 08830 &nbsp;|&nbsp; Near food court</div>
+        <div class="visit-plan">
+          <div class="visit-row"><span class="visit-key">Products</span><span class="visit-val">Single booster packs (current sets)</span></div>
+          <div class="visit-row"><span class="visit-key">Price</span><span class="visit-val">~$5–6 per pack (MSRP)</span></div>
+          <div class="visit-row"><span class="visit-key">Hours</span><span class="visit-val">Mall hours (10 AM – 9 PM)</span></div>
+          <div class="visit-tip">💡 Good for a quick pack grab while in the area. Stock refreshed irregularly — if empty, check back in a few days or ask mall management.</div>
+        </div>
+        <div class="store-actions">
+          <a class="action-btn" href="https://maps.google.com/?q=Menlo+Park+Mall+Edison+NJ" target="_blank">Directions ↗</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="store-card" data-cat="vending">
+      <div class="store-bar bar-vending"></div>
+      <div class="store-body">
+        <div class="store-top">
+          <div class="store-name">Woodbridge Center Mall — Pokemon Kiosk</div>
+          <span class="store-chain chain-vending">VENDING</span>
+        </div>
+        <div class="store-address">250 Woodbridge Center Dr, Woodbridge, NJ 07095</div>
+        <div class="store-dist">~12 mi from 08830</div>
+        <div class="visit-plan">
+          <div class="visit-row"><span class="visit-key">Products</span><span class="visit-val">Single booster packs</span></div>
+          <div class="visit-row"><span class="visit-key">Price</span><span class="visit-val">~$5–6 per pack</span></div>
+          <div class="visit-row"><span class="visit-key">Hours</span><span class="visit-val">Mall hours</span></div>
+          <div class="visit-tip">💡 Woodbridge Center is a large mall with consistent foot traffic — kiosk tends to stay stocked. Check near the center court area.</div>
+        </div>
+        <div class="store-actions">
+          <a class="action-btn" href="https://maps.google.com/?q=Woodbridge+Center+Mall+NJ" target="_blank">Directions ↗</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="store-card" data-cat="vending">
+      <div class="store-bar bar-vending"></div>
+      <div class="store-body">
+        <div class="store-top">
+          <div class="store-name">Quaker Bridge Mall — Pokemon Kiosk</div>
+          <span class="store-chain chain-vending">VENDING</span>
+        </div>
+        <div class="store-address">3320 Brunswick Pike, Lawrenceville, NJ 08648</div>
+        <div class="store-dist">~20 mi from 08830 &nbsp;|&nbsp; Princeton anchor</div>
+        <div class="visit-plan">
+          <div class="visit-row"><span class="visit-key">Products</span><span class="visit-val">Single booster packs</span></div>
+          <div class="visit-row"><span class="visit-key">Price</span><span class="visit-val">~$5–6 per pack</span></div>
+          <div class="visit-row"><span class="visit-key">Pair With</span><span class="visit-val">Costco Princeton + Target Route 1</span></div>
+          <div class="visit-tip">💡 On the Princeton anchor run — easy to add this to a Costco + Target Route 1 trip. All three are within 5 miles of each other.</div>
+        </div>
+        <div class="store-actions">
+          <a class="action-btn" href="https://maps.google.com/?q=Quaker+Bridge+Mall+Lawrenceville+NJ" target="_blank">Directions ↗</a>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /grid-vending -->
+
+  <!-- ── SUGGESTED RUN PLANS ─────────────────────────────────────────────── -->
+  <div class="section-divider">
+    <div class="section-label">Suggested Run Plans</div>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="store-grid">
+
+    <div class="store-card" data-cat="all" style="border-color:rgba(240,192,64,.2)">
+      <div class="store-bar" style="background:linear-gradient(90deg,#cc0000,#0071ce)"></div>
+      <div class="store-body">
+        <div class="store-top">
+          <div class="store-name">Friday AM — Watchung Strip Run</div>
+          <span class="store-chain" style="background:rgba(240,192,64,.08);color:var(--accent);border:1px solid rgba(240,192,64,.2)">BEST RUN</span>
+        </div>
+        <div class="store-address" style="color:var(--text2);margin-bottom:14px">All major retailers on Route 22, Watchung NJ — one road, ~10 min between stops</div>
+        <div class="visit-plan">
+          <div class="visit-row"><span class="visit-key">Stop 1 — 8:00 AM</span><span class="visit-val"><b>Target Watchung</b> — TCG aisle + endcap</span></div>
+          <div class="visit-row"><span class="visit-key">Stop 2 — 8:20 AM</span><span class="visit-val"><b>Walmart Watchung</b> — toy/electronics border</span></div>
+          <div class="visit-row"><span class="visit-key">Stop 3 — 8:45 AM</span><span class="visit-val"><b>Best Buy Watchung</b> — gaming section</span></div>
+          <div class="visit-row"><span class="visit-key">Stop 4 — 9:00 AM</span><span class="visit-val"><b>Five Below</b> — toy aisle</span></div>
+          <div class="visit-row"><span class="visit-key">Stop 5 — 9:15 AM</span><span class="visit-val"><b>GameStop</b> — ask for backstock</span></div>
+          <div class="visit-tip">💡 All 5 stops are within 2 miles of each other on Route 22. Entire run takes ~90 minutes. Best day: Friday (Target + BB drop day).</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="store-card" data-cat="all" style="border-color:rgba(90,181,255,.2)">
+      <div class="store-bar" style="background:linear-gradient(90deg,#c0392b,#0071ce,#cc0000)"></div>
+      <div class="store-body">
+        <div class="store-top">
+          <div class="store-name">Princeton Anchor Run</div>
+          <span class="store-chain" style="background:rgba(90,181,255,.08);color:var(--blue);border:1px solid rgba(90,181,255,.2)">PRINCETON</span>
+        </div>
+        <div class="store-address" style="color:var(--text2);margin-bottom:14px">Route 1 corridor, South Brunswick / Princeton NJ — only when costco_tracker.py fires</div>
+        <div class="visit-plan">
+          <div class="visit-row"><span class="visit-key">Trigger</span><span class="visit-val"><b>costco_tracker.py alert first</b></span></div>
+          <div class="visit-row"><span class="visit-key">Stop 1</span><span class="visit-val"><b>Costco Princeton #0482</b> — main target</span></div>
+          <div class="visit-row"><span class="visit-key">Stop 2</span><span class="visit-val"><b>Target Route 1</b> — same road</span></div>
+          <div class="visit-row"><span class="visit-key">Stop 3</span><span class="visit-val"><b>Quaker Bridge Mall kiosk</b> — 5 min away</span></div>
+          <div class="visit-tip">💡 Don't make this trip unless costco_tracker.py has confirmed stock. At ~18 miles, it's only worth it when Costco has product. Add Target + vending to maximize the drive.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="store-card" data-cat="all" style="border-color:rgba(167,139,250,.2)">
+      <div class="store-bar" style="background:linear-gradient(90deg,#7c3aed,#1e40af,#b45309)"></div>
+      <div class="store-body">
+        <div class="store-top">
+          <div class="store-name">Alt Retailer Sweep — After Scanner Alert</div>
+          <span class="store-chain" style="background:rgba(167,139,250,.08);color:var(--purple);border:1px solid rgba(167,139,250,.2)">ALT SCAN</span>
+        </div>
+        <div class="store-address" style="color:var(--text2);margin-bottom:14px">Only run after alternative_retailers.py finds something — don't guess</div>
+        <div class="visit-plan">
+          <div class="visit-row"><span class="visit-key">Trigger</span><span class="visit-val"><b>alternative_retailers.py ntfy alert</b></span></div>
+          <div class="visit-row"><span class="visit-key">Five Below hit</span><span class="visit-val">Go immediately — stock sells fast</span></div>
+          <div class="visit-row"><span class="visit-key">Marshalls/TJ Maxx</span><span class="visit-val">Within same day — clearance goes quick</span></div>
+          <div class="visit-row"><span class="visit-key">Ollie's / ALDI</span><span class="visit-val">Within 24–48 hrs (batch restocks)</span></div>
+          <div class="visit-tip">💡 Alt retailer finds are time-sensitive. When the scanner fires, act the same day. These stores don't restock on a schedule — once it's gone, it's gone.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</main>
+
+<script>
+// ── Filter logic ──────────────────────────────────────────────────────────
+function filterStores(cat, btn) {
+  document.querySelectorAll('.f-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+
+  const sections = {
+    major: document.getElementById('sec-major'),
+    alt: document.getElementById('sec-alt'),
+    vending: document.getElementById('sec-vending'),
+  };
+
+  if (cat === 'all') {
+    document.querySelectorAll('.store-card').forEach(c => c.classList.remove('hidden'));
+    Object.values(sections).forEach(s => s && (s.style.display = ''));
+    return;
+  }
+
+  document.querySelectorAll('.store-card').forEach(card => {
+    const cardCat = card.dataset.cat;
+    const show = cardCat === cat ||
+      (cat === 'alt' && cardCat === 'alt') ||
+      (cat === 'vending' && cardCat === 'vending') ||
+      (cat === 'target' && cardCat === 'target') ||
+      (cat === 'walmart' && cardCat === 'walmart') ||
+      (cat === 'bestbuy' && cardCat === 'bestbuy') ||
+      (cat === 'costco' && cardCat === 'costco');
+    card.classList.toggle('hidden', !show);
+  });
+
+  // Show/hide section headers
+  const majorCats = ['target','walmart','bestbuy','costco'];
+  sections.major.style.display = majorCats.includes(cat) ? '' : 'none';
+  sections.alt.style.display = cat === 'alt' ? '' : 'none';
+  sections.vending.style.display = cat === 'vending' ? '' : 'none';
+}
+
+// ── Load alt_retailers.json for ALDI season status ────────────────────────
+async function loadAltData() {
+  try {
+    const r = await fetch('../data/alt_retailers.json?t=' + Date.now());
+    if (!r.ok) return;
+    const data = await r.json();
+    document.getElementById('last-updated').textContent =
+      'Updated: ' + new Date(data.last_updated).toLocaleDateString('en-US', {month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit'});
+
+    // Check ALDI season status from findings
+    const aldiReminder = (data.findings || []).find(f => f.reminder && f.retailer && f.retailer.toLowerCase().includes('aldi'));
+    if (aldiReminder) {
+      const inSeason = aldiReminder.in_season;
+      const statusEl = document.getElementById('aldi-status');
+      const tipEl = document.getElementById('aldi-tip');
+      if (statusEl) {
+        statusEl.innerHTML = inSeason
+          ? '<span style="color:var(--green)">IN SEASON — Check Now</span>'
+          : '<span style="color:var(--muted)">Off-season (check back Mar or Oct)</span>';
+      }
+      if (tipEl && inSeason) {
+        tipEl.textContent = '🚨 ALDI is currently in Pokemon TCG season! Check the ALDI Finds page and your local store this week.';
+        tipEl.style.color = 'var(--green)';
+      }
+    }
+  } catch(e) {
+    document.getElementById('last-updated').textContent = 'Updated: tracker not running';
+  }
+}
+
+loadAltData();
+</script>
+</body>
+</html>

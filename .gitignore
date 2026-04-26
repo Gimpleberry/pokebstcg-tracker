@@ -1,0 +1,37 @@
+# ── Keith's PokeBS — .gitignore ──────────────────────────────────────
+# Structure: tcg_tracker/ root with plugins/, dashboard/, data/, tests/
+
+# Browser profile — contains retailer login cookies (SENSITIVE)
+.browser_profile/
+
+# All generated runtime data (data/ folder)
+data/
+*.json
+*.log
+*.log.*
+
+# Exception — keep products_backup.txt and requirements.txt
+!products_backup.txt
+!requirements.txt
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Virtual environment
+venv/
+env/
+.venv/
+.env/
+
+# Runtime data (generated files)
+data/
