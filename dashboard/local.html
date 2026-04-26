@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Keith's PokeBS — Local Stores</title>
+<title>Keith's PokeBS -- Local Stores</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#0a0a0f;--surface:#111118;--surface2:#18181f;--border:#2a2a38;--accent:#f0c040;--accent2:#e8503a;--green:#3ddc84;--purple:#a78bfa;--blue:#5ab5ff;--muted:#555570;--text:#e8e8f0;--text2:#9090a8}
@@ -15,30 +15,46 @@ header{display:flex;align-items:center;justify-content:space-between;padding:24p
 .logo-main{font-family:'Bebas Neue',sans-serif;font-size:2.2rem;letter-spacing:.04em;color:var(--accent);text-shadow:0 0 30px rgba(240,192,64,.4)}
 .logo-sub{font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted);letter-spacing:.2em;text-transform:uppercase}
 .header-right{font-family:'DM Mono',monospace;font-size:.65rem;color:var(--muted)}
-nav.nav-bar{display:flex;align-items:center;gap:4px;padding:0 40px;background:var(--surface2);border-bottom:1px solid var(--border);overflow-x:auto}
+nav.nav-bar{display:flex;align-items:center;gap:4px;padding:0 40px;background:var(--surface2);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none}
+nav.nav-bar::-webkit-scrollbar{display:none}
 .nav-link{font-family:'DM Mono',monospace;font-size:.72rem;letter-spacing:.15em;text-transform:uppercase;padding:12px 18px;color:var(--muted);text-decoration:none;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap}
 .nav-link:hover{color:var(--text)}.nav-link.active{color:var(--accent);border-bottom-color:var(--accent)}
 main{padding:40px;max-width:1400px;margin:0 auto}
 .page-title{font-family:'Bebas Neue',sans-serif;font-size:1.8rem;letter-spacing:.06em;color:var(--text2);margin-bottom:4px}
-.page-subtitle{font-family:'DM Mono',monospace;font-size:.72rem;color:var(--muted);letter-spacing:.1em;margin-bottom:28px}
-.filter-bar{display:flex;gap:6px;margin-bottom:28px;flex-wrap:wrap;align-items:center}
+.page-subtitle{font-family:'DM Mono',monospace;font-size:.72rem;color:var(--muted);letter-spacing:.1em;margin-bottom:20px}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:36px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:18px 20px;position:relative;overflow:hidden}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.stat-card:nth-child(1)::before{background:var(--accent)}
+.stat-card:nth-child(2)::before{background:var(--green)}
+.stat-card:nth-child(3)::before{background:var(--purple)}
+.stat-card:nth-child(4)::before{background:var(--blue)}
+.stat-label{font-family:'DM Mono',monospace;font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.stat-value{font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:.02em;line-height:1}
+.stat-sub{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--muted);margin-top:4px}
+.anchor-legend{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:28px}
+.anchor-pill{font-family:'DM Mono',monospace;font-size:.62rem;padding:5px 12px;border-radius:99px;letter-spacing:.08em}
+.ap-home{background:rgba(240,192,64,.08);color:var(--accent);border:1px solid rgba(240,192,64,.2)}
+.ap-secondary{background:rgba(90,181,255,.08);color:var(--blue);border:1px solid rgba(90,181,255,.2)}
+.highlight-note{font-family:'DM Mono',monospace;font-size:.68rem;color:rgba(61,220,132,.8);background:rgba(61,220,132,.05);border:1px solid rgba(61,220,132,.15);border-radius:3px;padding:10px 16px;margin-bottom:24px;line-height:1.5}
+.vending-note{font-family:'DM Mono',monospace;font-size:.7rem;color:rgba(61,220,132,.7);background:rgba(61,220,132,.05);border:1px solid rgba(61,220,132,.15);border-radius:3px;padding:10px 16px;margin-bottom:20px;line-height:1.5}
+.filter-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:28px}
 .filter-label{font-family:'DM Mono',monospace;font-size:.62rem;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-right:4px}
-.f-btn{font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;padding:7px 16px;border:1px solid var(--border);border-radius:3px;cursor:pointer;transition:all .15s;background:var(--surface);color:var(--text2)}
-.f-btn:hover{border-color:var(--text2)}
-.f-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(240,192,64,.06)}
-.f-target.active{border-color:#ff6b6b;color:#ff6b6b;background:rgba(204,0,0,.06)}
-.f-walmart.active{border-color:#5ab5ff;color:#5ab5ff;background:rgba(0,113,206,.06)}
-.f-bestbuy.active{border-color:#ffe566;color:#ffe566;background:rgba(255,237,0,.04)}
-.f-costco.active{border-color:#e07070;color:#e07070;background:rgba(192,57,43,.06)}
-.f-alt.active{border-color:var(--purple);color:var(--purple);background:rgba(167,139,250,.06)}
-.f-vending.active{border-color:var(--green);color:var(--green);background:rgba(61,220,132,.06)}
-.section-divider{display:flex;align-items:center;gap:14px;margin:36px 0 20px}
-.section-label{font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:.1em;color:var(--muted);white-space:nowrap}
+.f-btn{font-family:'DM Mono',monospace;font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;padding:5px 14px;border:1px solid var(--border);border-radius:3px;background:var(--surface);color:var(--muted);cursor:pointer;transition:all .15s}
+.f-btn:hover{border-color:var(--accent);color:var(--accent)}
+.f-btn.active{background:rgba(240,192,64,.08);border-color:rgba(240,192,64,.4);color:var(--accent)}
+.f-target.active{background:rgba(204,0,0,.08);border-color:rgba(204,0,0,.3);color:#ff6b6b}
+.f-walmart.active{background:rgba(0,113,206,.08);border-color:rgba(0,113,206,.3);color:#5ab5ff}
+.f-bestbuy.active{background:rgba(255,237,0,.06);border-color:rgba(255,237,0,.2);color:#ffe566}
+.f-costco.active{background:rgba(192,57,43,.08);border-color:rgba(192,57,43,.3);color:#e07070}
+.f-alt.active{background:rgba(124,58,237,.08);border-color:rgba(124,58,237,.3);color:#c4b5fd}
+.f-vending.active{background:rgba(61,220,132,.08);border-color:rgba(61,220,132,.3);color:#3ddc84}
+.section-divider{display:flex;align-items:center;gap:16px;margin:32px 0 20px}
+.section-label{font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
 .section-line{flex:1;height:1px;background:var(--border)}
-.store-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px}
-.store-card{background:var(--surface);border:1px solid var(--border);border-radius:4px;overflow:hidden;transition:border-color .2s;animation:cardIn .3s ease both}
-@keyframes cardIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-.store-card:hover{border-color:rgba(240,192,64,.25)}
+.store-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px;margin-bottom:8px}
+.store-card{background:var(--surface);border:1px solid var(--border);border-radius:4px;overflow:hidden;transition:border-color .2s}
+.store-card:hover{border-color:#3a3a50}
 .store-card.hidden{display:none}
 .store-bar{height:3px}
 .bar-target{background:#cc0000}.bar-walmart{background:#0071ce}.bar-bestbuy{background:#ffed00}
@@ -74,29 +90,13 @@ main{padding:40px;max-width:1400px;margin:0 auto}
 .action-btn:hover{border-color:var(--accent);color:var(--accent)}
 .action-btn.primary{border-color:rgba(240,192,64,.4);color:var(--accent);background:rgba(240,192,64,.06)}
 .action-btn.primary:hover{background:rgba(240,192,64,.12)}
-.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:36px}
-.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:18px 20px;position:relative;overflow:hidden}
-.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
-.stat-card:nth-child(1)::before{background:var(--accent)}
-.stat-card:nth-child(2)::before{background:var(--green)}
-.stat-card:nth-child(3)::before{background:var(--purple)}
-.stat-card:nth-child(4)::before{background:var(--blue)}
-.stat-label{font-family:'DM Mono',monospace;font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
-.stat-value{font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:.02em;line-height:1}
-.stat-sub{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--muted);margin-top:4px}
-.anchor-legend{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:28px}
-.anchor-pill{font-family:'DM Mono',monospace;font-size:.62rem;padding:5px 12px;border-radius:99px;letter-spacing:.08em}
-.ap-home{background:rgba(240,192,64,.08);color:var(--accent);border:1px solid rgba(240,192,64,.2)}
-.ap-secondary{background:rgba(90,181,255,.08);color:var(--blue);border:1px solid rgba(90,181,255,.2)}
-.highlight-note{font-family:'DM Mono',monospace;font-size:.68rem;color:rgba(61,220,132,.8);background:rgba(61,220,132,.05);border:1px solid rgba(61,220,132,.15);border-radius:3px;padding:10px 16px;margin-bottom:24px;line-height:1.5}
-.vending-note{font-family:'DM Mono',monospace;font-size:.7rem;color:rgba(61,220,132,.7);background:rgba(61,220,132,.05);border:1px solid rgba(61,220,132,.15);border-radius:3px;padding:10px 16px;margin-bottom:20px;line-height:1.5}
 @media(max-width:768px){header{padding:16px 20px}main{padding:20px}.stats-row{grid-template-columns:repeat(2,1fr)}.logo-main{font-size:1.6rem}}
 </style>
 </head>
 <body>
 <header>
   <div class="logo"><span class="logo-main">Keith's PokeBS</span><span class="logo-sub">Local Stores</span></div>
-  <div class="header-right" id="last-updated">Updated: —</div>
+  <div class="header-right" id="last-updated">Updated: --</div>
 </header>
 <nav class="nav-bar">
   <a class="nav-link" href="dashboard.html">&#128225; Tracker</a>
@@ -115,13 +115,13 @@ main{padding:40px;max-width:1400px;margin:0 auto}
   <div class="page-subtitle">Physical stores near Mays Landing NJ (08330) + Princeton &amp; Cherry Hill anchors</div>
 
   <div class="anchor-legend">
-    <span class="anchor-pill ap-home">📍 Home: Mays Landing NJ 08330</span>
-    <span class="anchor-pill ap-secondary">📍 Anchor: Cherry Hill NJ (~35 mi)</span>
-    <span class="anchor-pill ap-secondary">📍 Anchor: Princeton NJ (~55 mi)</span>
+    <span class="anchor-pill ap-home">&#128205; Home: Mays Landing NJ 08330</span>
+    <span class="anchor-pill ap-secondary">&#128205; Anchor: Cherry Hill NJ (~35 mi)</span>
+    <span class="anchor-pill ap-secondary">&#128205; Anchor: Princeton NJ (~55 mi)</span>
   </div>
 
   <div class="highlight-note">
-    🏬 Good news — Target, Walmart, Best Buy, GameStop, and Five Below are all in Consumer Square / Hamilton Mall within 2 miles of home. One stop covers everything local.
+    &#127EB; Good news -- Target, Walmart, Best Buy, GameStop, and Five Below are all in Consumer Square / Hamilton Mall within 2 miles of home. One stop covers everything local.
   </div>
 
   <div class="stats-row">
@@ -133,7 +133,7 @@ main{padding:40px;max-width:1400px;margin:0 auto}
     <div class="stat-card">
       <div class="stat-label">Anchor Stores</div>
       <div class="stat-value">4</div>
-      <div class="stat-sub">2× Costco + Target + Walmart</div>
+      <div class="stat-sub">2x Costco + Target + Walmart</div>
     </div>
     <div class="stat-card">
       <div class="stat-label">Alt Retailers</div>
@@ -143,24 +143,24 @@ main{padding:40px;max-width:1400px;margin:0 auto}
     <div class="stat-card">
       <div class="stat-label">Best Drop Day</div>
       <div class="stat-value" style="font-size:1.3rem;padding-top:6px">FRI / WED</div>
-      <div class="stat-sub">Target Fri AM · Walmart Wed AM</div>
+      <div class="stat-sub">Target Fri AM -- Walmart Wed AM</div>
     </div>
   </div>
 
   <div class="filter-bar">
     <span class="filter-label">Show:</span>
     <button class="f-btn active" onclick="filterStores('all',this)">All</button>
-    <button class="f-btn f-target" onclick="filterStores('target',this)">🎯 Target</button>
-    <button class="f-btn f-walmart" onclick="filterStores('walmart',this)">🔵 Walmart</button>
-    <button class="f-btn f-bestbuy" onclick="filterStores('bestbuy',this)">🟡 Best Buy</button>
-    <button class="f-btn f-costco" onclick="filterStores('costco',this)">🔴 Costco</button>
-    <button class="f-btn f-alt" onclick="filterStores('alt',this)">🏷️ Alt Retailers</button>
-    <button class="f-btn f-vending" onclick="filterStores('vending',this)">🎮 Vending</button>
+    <button class="f-btn f-target" onclick="filterStores('target',this)">&#127919; Target</button>
+    <button class="f-btn f-walmart" onclick="filterStores('walmart',this)">&#128309; Walmart</button>
+    <button class="f-btn f-bestbuy" onclick="filterStores('bestbuy',this)">&#128993; Best Buy</button>
+    <button class="f-btn f-costco" onclick="filterStores('costco',this)">&#128308; Costco</button>
+    <button class="f-btn f-alt" onclick="filterStores('alt',this)">&#127991; Alt Retailers</button>
+    <button class="f-btn f-vending" onclick="filterStores('vending',this)">&#127918; Vending</button>
   </div>
 
   <!-- LOCAL STORES -->
   <div class="section-divider" id="sec-local">
-    <div class="section-label">Local — Consumer Square / Mays Landing</div>
+    <div class="section-label">Local -- Consumer Square / Mays Landing</div>
     <div class="section-line"></div>
   </div>
   <div class="store-grid" id="grid-local">
@@ -168,19 +168,19 @@ main{padding:40px;max-width:1400px;margin:0 auto}
     <div class="store-card" data-cat="target">
       <div class="store-bar bar-target"></div>
       <div class="store-body">
-        <div class="store-top"><div class="store-name">Target — Mays Landing</div><span class="store-chain chain-target">TARGET</span></div>
+        <div class="store-top"><div class="store-name">Target -- Mays Landing</div><span class="store-chain chain-target">TARGET</span></div>
         <div class="store-address">380 Consumer Square, Mays Landing, NJ 08330</div>
-        <div class="store-dist">~1.5 mi from home &nbsp;|&nbsp; Consumer Square plaza</div>
+        <div class="store-dist">~1.5 mi from home | Consumer Square plaza</div>
         <div class="visit-plan">
           <div class="visit-row"><span class="visit-key">Best Day</span><span class="visit-val"><b>Friday</b> (31.5% of drops)</span></div>
-          <div class="visit-row"><span class="visit-key">Best Time</span><span class="visit-val"><b>8–10 AM</b> (before shelf clear)</span></div>
+          <div class="visit-row"><span class="visit-key">Best Time</span><span class="visit-val"><b>8-10 AM</b> (before shelf clear)</span></div>
           <div class="visit-row"><span class="visit-key">Also Watch</span><span class="visit-val">Monday AM, Tuesday AM</span></div>
-          <div class="visit-row"><span class="visit-key">Restock Pattern</span><span class="visit-val">Overnight truck Thurs → shelved Fri open</span></div>
-          <div class="visit-tip">💡 Check the TCG aisle first, then the endcap near board games. Walmart is 1.2 mi away — easy to hit both in one trip on Wednesday/Friday morning.</div>
+          <div class="visit-row"><span class="visit-key">Restock Pattern</span><span class="visit-val">Overnight truck Thurs, shelved Fri open</span></div>
+          <div class="visit-tip">&#128161; Check the TCG aisle first, then the endcap near board games. Walmart is 1.2 mi away -- easy to hit both on Friday morning.</div>
         </div>
         <div class="store-actions">
-          <a class="action-btn primary" href="https://www.target.com/sl/mays-landing/1109" target="_blank">Store Page ↗</a>
-          <a class="action-btn" href="https://maps.google.com/?q=Target+380+Consumer+Square+Mays+Landing+NJ" target="_blank">Directions ↗</a>
+          <a class="action-btn primary" href="https://www.target.com/sl/mays-landing/1109" target="_blank">Store Page</a>
+          <a class="action-btn" href="https://maps.google.com/?q=Target+380+Consumer+Square+Mays+Landing+NJ" target="_blank">Directions</a>
         </div>
       </div>
     </div>
@@ -188,19 +188,19 @@ main{padding:40px;max-width:1400px;margin:0 auto}
     <div class="store-card" data-cat="walmart">
       <div class="store-bar bar-walmart"></div>
       <div class="store-body">
-        <div class="store-top"><div class="store-name">Walmart Supercenter — Mays Landing</div><span class="store-chain chain-walmart">WALMART</span></div>
+        <div class="store-top"><div class="store-name">Walmart Supercenter -- Mays Landing</div><span class="store-chain chain-walmart">WALMART</span></div>
         <div class="store-address">4620 Black Horse Pike, Mays Landing, NJ 08330</div>
-        <div class="store-dist">~1.2 mi from home &nbsp;|&nbsp; Black Horse Pike</div>
+        <div class="store-dist">~1.2 mi from home | Black Horse Pike</div>
         <div class="visit-plan">
           <div class="visit-row"><span class="visit-key">Best Day</span><span class="visit-val"><b>Wednesday</b> (Walmart Wednesday drops)</span></div>
-          <div class="visit-row"><span class="visit-key">Best Time</span><span class="visit-val"><b>7–9 AM</b> or after 6 PM restock</span></div>
+          <div class="visit-row"><span class="visit-key">Best Time</span><span class="visit-val"><b>7-9 AM</b> or after 6 PM restock</span></div>
           <div class="visit-row"><span class="visit-key">Also Watch</span><span class="visit-val">Sunday AM restock window</span></div>
-          <div class="visit-row"><span class="visit-key">Hours</span><span class="visit-val">6 AM – 11 PM daily</span></div>
-          <div class="visit-tip">💡 Closest major retailer to home. Wednesday is Walmart's big online drop day — in-store stock often lands same morning. Get there before 9 AM.</div>
+          <div class="visit-row"><span class="visit-key">Hours</span><span class="visit-val">6 AM - 11 PM daily</span></div>
+          <div class="visit-tip">&#128161; Closest major retailer to home. Wednesday is the big online drop day -- in-store stock often lands same morning. Get there before 9 AM.</div>
         </div>
         <div class="store-actions">
-          <a class="action-btn primary" href="https://www.walmart.com/store/2108-mays-landing-nj" target="_blank">Store Page ↗</a>
-          <a class="action-btn" href="https://maps.google.com/?q=Walmart+4620+Black+Horse+Pike+Mays+Landing+NJ" target="_blank">Directions ↗</a>
+          <a class="action-btn primary" href="https://www.walmart.com/store/2108-mays-landing-nj" target="_blank">Store Page</a>
+          <a class="action-btn" href="https://maps.google.com/?q=Walmart+4620+Black+Horse+Pike+Mays+Landing+NJ" target="_blank">Directions</a>
         </div>
       </div>
     </div>
@@ -208,19 +208,19 @@ main{padding:40px;max-width:1400px;margin:0 auto}
     <div class="store-card" data-cat="bestbuy">
       <div class="store-bar bar-bestbuy"></div>
       <div class="store-body">
-        <div class="store-top"><div class="store-name">Best Buy — Mays Landing (Hamilton Mall)</div><span class="store-chain chain-bestbuy">BEST BUY</span></div>
+        <div class="store-top"><div class="store-name">Best Buy -- Mays Landing (Hamilton Mall)</div><span class="store-chain chain-bestbuy">BEST BUY</span></div>
         <div class="store-address">100 Consumer Square, Mays Landing, NJ 08330</div>
-        <div class="store-dist">~1.5 mi from home &nbsp;|&nbsp; Consumer Square / Hamilton Mall</div>
+        <div class="store-dist">~1.5 mi from home | Consumer Square / Hamilton Mall</div>
         <div class="visit-plan">
           <div class="visit-row"><span class="visit-key">Best Day</span><span class="visit-val"><b>Friday</b> or launch day</span></div>
-          <div class="visit-row"><span class="visit-key">Best Time</span><span class="visit-val"><b>10 AM open</b> (Mon–Fri)</span></div>
+          <div class="visit-row"><span class="visit-key">Best Time</span><span class="visit-val"><b>10 AM open</b> (Mon-Fri)</span></div>
           <div class="visit-row"><span class="visit-key">Invite Items</span><span class="visit-val">Check invite email before driving</span></div>
           <div class="visit-row"><span class="visit-key">Phone</span><span class="visit-val">(609) 485-0500</span></div>
-          <div class="visit-tip">💡 Same Consumer Square as Target and GameStop — run all three in under 30 minutes. For invite-only drops, wait for the bestbuy_invites.py alert first.</div>
+          <div class="visit-tip">&#128161; Same Consumer Square as Target and GameStop -- run all three in under 30 minutes. For invite-only drops, wait for the bestbuy_invites.py alert first.</div>
         </div>
         <div class="store-actions">
-          <a class="action-btn primary" href="https://stores.bestbuy.com/nj/mays-landing/100-consumer-square-581.html" target="_blank">Store Page ↗</a>
-          <a class="action-btn" href="https://maps.google.com/?q=Best+Buy+100+Consumer+Square+Mays+Landing+NJ" target="_blank">Directions ↗</a>
+          <a class="action-btn primary" href="https://stores.bestbuy.com/nj/mays-landing/100-consumer-square-581.html" target="_blank">Store Page</a>
+          <a class="action-btn" href="https://maps.google.com/?q=Best+Buy+100+Consumer+Square+Mays+Landing+NJ" target="_blank">Directions</a>
         </div>
       </div>
     </div>
@@ -228,19 +228,19 @@ main{padding:40px;max-width:1400px;margin:0 auto}
     <div class="store-card" data-cat="alt">
       <div class="store-bar bar-gamestop"></div>
       <div class="store-body">
-        <div class="store-top"><div class="store-name">GameStop — Mays Landing</div><span class="store-chain chain-gamestop">GAMESTOP</span></div>
+        <div class="store-top"><div class="store-name">GameStop -- Mays Landing</div><span class="store-chain chain-gamestop">GAMESTOP</span></div>
         <div class="store-address">340 Consumer Square, Mays Landing, NJ 08330</div>
-        <div class="store-dist">~1.5 mi from home &nbsp;|&nbsp; Same Consumer Square as Target &amp; BB</div>
+        <div class="store-dist">~1.5 mi from home | Same Consumer Square as Target &amp; BB</div>
         <div class="visit-plan">
           <div class="visit-row"><span class="visit-key">TCG Products</span><span class="visit-val">ETBs, exclusive bundles, promo packs</span></div>
           <div class="visit-row"><span class="visit-key">Best Time</span><span class="visit-val">Launch day AM or weekend</span></div>
           <div class="visit-row"><span class="visit-key">Phone</span><span class="visit-val">(609) 407-1442</span></div>
           <div class="visit-row"><span class="visit-key">Scanned By</span><span class="visit-val">alternative_retailers.py (Tue/Fri)</span></div>
-          <div class="visit-tip">💡 Right next to Best Buy and Target in Consumer Square — zero extra travel. Worth a quick check whenever you're already in the plaza. Ask about backstock on launch days.</div>
+          <div class="visit-tip">&#128161; Right next to Best Buy and Target in Consumer Square -- zero extra travel. Worth a quick check whenever you're in the plaza. Ask about backstock on launch days.</div>
         </div>
         <div class="store-actions">
-          <a class="action-btn primary" href="https://www.gamestop.com/stores" target="_blank">Store Locator ↗</a>
-          <a class="action-btn" href="https://maps.google.com/?q=GameStop+340+Consumer+Square+Mays+Landing+NJ" target="_blank">Directions ↗</a>
+          <a class="action-btn primary" href="https://www.gamestop.com/stores" target="_blank">Store Locator</a>
+          <a class="action-btn" href="https://maps.google.com/?q=GameStop+340+Consumer+Square+Mays+Landing+NJ" target="_blank">Directions</a>
         </div>
       </div>
     </div>
@@ -248,237 +248,18 @@ main{padding:40px;max-width:1400px;margin:0 auto}
     <div class="store-card" data-cat="alt">
       <div class="store-bar bar-fivebelow"></div>
       <div class="store-body">
-        <div class="store-top"><div class="store-name">Five Below — Mays Landing</div><span class="store-chain chain-fivebelow">FIVE BELOW</span></div>
+        <div class="store-top"><div class="store-name">Five Below -- Mays Landing</div><span class="store-chain chain-fivebelow">FIVE BELOW</span></div>
         <div class="store-address">2271 Wrangleboro Road, Mays Landing, NJ 08330</div>
-        <div class="store-dist">~2 mi from home &nbsp;|&nbsp; Near Consumer Square</div>
+        <div class="store-dist">~2 mi from home | Near Consumer Square</div>
         <div class="visit-plan">
           <div class="visit-row"><span class="visit-key">TCG Products</span><span class="visit-val">$5 single packs, blister packs, mini tins</span></div>
-          <div class="visit-row"><span class="visit-key">Best Time</span><span class="visit-val">Any — no specific drop pattern</span></div>
+          <div class="visit-row"><span class="visit-key">Best Time</span><span class="visit-val">Any -- no specific drop pattern</span></div>
           <div class="visit-row"><span class="visit-key">Phone</span><span class="visit-val">(609) 677-1740</span></div>
           <div class="visit-row"><span class="visit-key">Scanned By</span><span class="visit-val">alternative_retailers.py (Tue/Fri)</span></div>
-          <div class="visit-tip">💡 Often has current-set single packs at below-MSRP pricing. Easy add-on to a Consumer Square run. Check the toy section near the back.</div>
+          <div class="visit-tip">&#128161; Often has current-set single packs at below-MSRP pricing. Easy add-on to a Consumer Square run. Check the toy section near the back.</div>
         </div>
         <div class="store-actions">
-          <a class="action-btn" href="https://maps.google.com/?q=Five+Below+2271+Wrangleboro+Road+Mays+Landing+NJ" target="_blank">Directions ↗</a>
-        </div>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- ANCHOR STORES -->
-  <div class="section-divider" id="sec-anchor">
-    <div class="section-label">Anchor Stores — Cherry Hill &amp; Princeton</div>
-    <div class="section-line"></div>
-  </div>
-  <div class="store-grid" id="grid-anchor">
-
-    <div class="store-card" data-cat="costco">
-      <div class="store-bar bar-costco"></div>
-      <div class="store-body">
-        <div class="store-top"><div class="store-name">Costco Wholesale — Cherry Hill (#1142)</div><span class="store-chain chain-costco">COSTCO</span></div>
-        <div class="store-address">2149 Route 38, Cherry Hill, NJ 08002</div>
-        <div class="store-dist">~35 mi from home &nbsp;|&nbsp; Cherry Hill anchor</div>
-        <div class="visit-plan">
-          <div class="visit-row"><span class="visit-key">Warehouse #</span><span class="visit-val"><b>#1142</b></span></div>
-          <div class="visit-row"><span class="visit-key">Best Day</span><span class="visit-val">Weekday AM (less crowd)</span></div>
-          <div class="visit-row"><span class="visit-key">Pokemon Items</span><span class="visit-val">ETBs, multi-packs, bundles</span></div>
-          <div class="visit-row"><span class="visit-key">Monitored By</span><span class="visit-val">costco_tracker.py (online + in-store)</span></div>
-          <div class="visit-tip">💡 Don't make the 35-mile trip without a costco_tracker.py alert first. When it fires, pair with a Target or Marshalls nearby in Cherry Hill to maximize the drive.</div>
-        </div>
-        <div class="store-actions">
-          <a class="action-btn primary" href="https://www.costco.com/warehouse-locations/cherry-hill-nj-1142.html" target="_blank">Warehouse Page ↗</a>
-          <a class="action-btn" href="https://maps.google.com/?q=Costco+2149+Route+38+Cherry+Hill+NJ" target="_blank">Directions ↗</a>
-        </div>
-      </div>
-    </div>
-
-    <div class="store-card" data-cat="target">
-      <div class="store-bar bar-target"></div>
-      <div class="store-body">
-        <div class="store-top"><div class="store-name">Target — Cherry Hill (Sicklerville)</div><span class="store-chain chain-target">TARGET</span></div>
-        <div class="store-address">487 Cross Keys Rd, Sicklerville, NJ 08081</div>
-        <div class="store-dist">~30 mi from home &nbsp;|&nbsp; Near Costco Cherry Hill</div>
-        <div class="visit-plan">
-          <div class="visit-row"><span class="visit-key">Best Day</span><span class="visit-val"><b>Friday</b> AM</span></div>
-          <div class="visit-row"><span class="visit-key">Pair With</span><span class="visit-val">Costco Cherry Hill #1142 (~8 mi away)</span></div>
-          <div class="visit-row"><span class="visit-key">Best Time</span><span class="visit-val"><b>8–10 AM</b></span></div>
-          <div class="visit-tip">💡 Add this to a Costco Cherry Hill run. Both are in the same general area — makes the 35-mile drive worth it if both have product.</div>
-        </div>
-        <div class="store-actions">
-          <a class="action-btn primary" href="https://www.target.com/store-locator/find-stores/Sicklerville/NJ" target="_blank">Store Page ↗</a>
-          <a class="action-btn" href="https://maps.google.com/?q=Target+487+Cross+Keys+Rd+Sicklerville+NJ" target="_blank">Directions ↗</a>
-        </div>
-      </div>
-    </div>
-
-    <div class="store-card" data-cat="costco">
-      <div class="store-bar bar-costco"></div>
-      <div class="store-body">
-        <div class="store-top"><div class="store-name">Costco Wholesale — Princeton (#0482)</div><span class="store-chain chain-costco">COSTCO</span></div>
-        <div class="store-address">3461 US-1, Princeton, NJ 08540</div>
-        <div class="store-dist">~55 mi from home &nbsp;|&nbsp; Princeton anchor</div>
-        <div class="visit-plan">
-          <div class="visit-row"><span class="visit-key">Warehouse #</span><span class="visit-val"><b>#0482</b></span></div>
-          <div class="visit-row"><span class="visit-key">Best Day</span><span class="visit-val">Weekday AM</span></div>
-          <div class="visit-row"><span class="visit-key">Pair With</span><span class="visit-val">Target Route 1 (same corridor)</span></div>
-          <div class="visit-row"><span class="visit-key">Monitored By</span><span class="visit-val">costco_tracker.py</span></div>
-          <div class="visit-tip">💡 55 miles — only worth the trip with a costco_tracker.py alert. Pair with the Target on Route 1 (same road) to make the most of the drive.</div>
-        </div>
-        <div class="store-actions">
-          <a class="action-btn primary" href="https://www.costco.com/warehouse-locations/princeton-nj-482.html" target="_blank">Warehouse Page ↗</a>
-          <a class="action-btn" href="https://maps.google.com/?q=Costco+3461+US-1+Princeton+NJ" target="_blank">Directions ↗</a>
-        </div>
-      </div>
-    </div>
-
-    <div class="store-card" data-cat="target">
-      <div class="store-bar bar-target"></div>
-      <div class="store-body">
-        <div class="store-top"><div class="store-name">Target — Route 1 / South Brunswick</div><span class="store-chain chain-target">TARGET</span></div>
-        <div class="store-address">3535 US-1, South Brunswick, NJ 08852</div>
-        <div class="store-dist">~55 mi from home &nbsp;|&nbsp; Princeton anchor</div>
-        <div class="visit-plan">
-          <div class="visit-row"><span class="visit-key">Best Day</span><span class="visit-val"><b>Friday</b> AM</span></div>
-          <div class="visit-row"><span class="visit-key">Pair With</span><span class="visit-val">Costco Princeton #0482 (same road)</span></div>
-          <div class="visit-row"><span class="visit-key">Best Time</span><span class="visit-val"><b>9–11 AM</b></span></div>
-          <div class="visit-tip">💡 Only worth the Princeton trip when Costco has confirmed stock. Add this as a 10-minute detour on the same Route 1 corridor.</div>
-        </div>
-        <div class="store-actions">
-          <a class="action-btn primary" href="https://www.target.com/store-locator/find-stores/South+Brunswick/NJ" target="_blank">Store Page ↗</a>
-          <a class="action-btn" href="https://maps.google.com/?q=Target+3535+US-1+South+Brunswick+NJ" target="_blank">Directions ↗</a>
-        </div>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- ALT RETAILERS -->
-  <div class="section-divider" id="sec-alt">
-    <div class="section-label">Alt Retailers</div>
-    <div class="section-line"></div>
-  </div>
-  <div class="store-grid" id="grid-alt">
-
-    <div class="store-card" data-cat="alt">
-      <div class="store-bar bar-marshalls"></div>
-      <div class="store-body">
-        <div class="store-top"><div class="store-name">Marshalls — Mays Landing area</div><span class="store-chain chain-marshalls">MARSHALLS</span></div>
-        <div class="store-address">Hamilton area, NJ (check store finder)</div>
-        <div class="store-dist">~5–10 mi from home</div>
-        <div class="visit-plan">
-          <div class="visit-row"><span class="visit-key">TCG Products</span><span class="visit-val">Clearance ETBs, overstocked sets</span></div>
-          <div class="visit-row"><span class="visit-key">Pattern</span><span class="visit-val">Random — no scheduled drops</span></div>
-          <div class="visit-row"><span class="visit-key">Price Range</span><span class="visit-val">Often 20–40% below MSRP</span></div>
-          <div class="visit-row"><span class="visit-key">Scanned By</span><span class="visit-val">alternative_retailers.py (Tue/Fri)</span></div>
-          <div class="visit-tip">💡 Clearance finds are unpredictable but deeply discounted when they appear. If the scanner fires, move same day — these go fast.</div>
-        </div>
-        <div class="store-actions">
-          <a class="action-btn primary" href="https://www.marshalls.com/us/store/stores/storeLocator.jsp" target="_blank">Store Finder ↗</a>
-        </div>
-      </div>
-    </div>
-
-    <div class="store-card" data-cat="alt">
-      <div class="store-bar bar-ollies"></div>
-      <div class="store-body">
-        <div class="store-top"><div class="store-name">Ollie's Bargain Outlet — NJ locations</div><span class="store-chain chain-ollies">OLLIE'S</span></div>
-        <div class="store-address">Multiple NJ locations (check store finder)</div>
-        <div class="store-dist">Nearest: ~15–20 mi from home</div>
-        <div class="visit-plan">
-          <div class="visit-row"><span class="visit-key">TCG Products</span><span class="visit-val">Overstock ETBs, clearance bundles</span></div>
-          <div class="visit-row"><span class="visit-key">Pattern</span><span class="visit-val">Batch restocks, very random</span></div>
-          <div class="visit-row"><span class="visit-key">Price Range</span><span class="visit-val">30–50% below MSRP when available</span></div>
-          <div class="visit-row"><span class="visit-key">Scanned By</span><span class="visit-val">alternative_retailers.py (Tue/Fri)</span></div>
-          <div class="visit-tip">💡 When Ollie's gets Pokemon product it can be heavily discounted. Don't make the trip without a scanner alert — stock comes in large unpredictable batches.</div>
-        </div>
-        <div class="store-actions">
-          <a class="action-btn primary" href="https://www.ollies.us/stores/" target="_blank">Store Finder ↗</a>
-        </div>
-      </div>
-    </div>
-
-    <div class="store-card" data-cat="alt">
-      <div class="store-bar bar-aldi"></div>
-      <div class="store-body">
-        <div class="store-top"><div class="store-name">ALDI — Seasonal Pokemon Finds</div><span class="store-chain chain-aldi">ALDI</span></div>
-        <div class="store-address">Multiple locations near Mays Landing</div>
-        <div class="store-dist">Nearest: ~5 mi from home</div>
-        <div class="visit-plan">
-          <div class="visit-row"><span class="visit-key">TCG Products</span><span class="visit-val">Mini tins, blisters, seasonal bundles</span></div>
-          <div class="visit-row"><span class="visit-key">Season</span><span class="visit-val">Spring (Mar–Apr) &amp; Fall (Oct–Nov)</span></div>
-          <div class="visit-row"><span class="visit-key">Status</span><span class="visit-val" id="aldi-status">Checking...</span></div>
-          <div class="visit-tip" id="aldi-tip">💡 ALDI runs Pokemon TCG as an "ALDI Finds" special — limited stock, sells in days. Check the ALDI app Wednesday morning when new Finds post.</div>
-        </div>
-        <div class="store-actions">
-          <a class="action-btn primary" href="https://www.aldi.us/en/weekly-specials/" target="_blank">ALDI Finds ↗</a>
-          <a class="action-btn" href="https://www.aldi.us/en/about-aldi/aldi-store-locator/" target="_blank">Store Locator ↗</a>
-        </div>
-      </div>
-    </div>
-
-    <div class="store-card" data-cat="alt">
-      <div class="store-bar" style="background:#1d4ed8"></div>
-      <div class="store-body">
-        <div class="store-top"><div class="store-name">BJ's Wholesale — Mays Landing</div><span class="store-chain chain-alt">BJ'S</span></div>
-        <div class="store-address">200 Wrangleboro Rd, Mays Landing, NJ 08330</div>
-        <div class="store-dist">~2 mi from home &nbsp;|&nbsp; Near Consumer Square</div>
-        <div class="visit-plan">
-          <div class="visit-row"><span class="visit-key">TCG Products</span><span class="visit-val">Bulk multi-packs, ETB bundles</span></div>
-          <div class="visit-row"><span class="visit-key">Pattern</span><span class="visit-val">Seasonal — less frequent than Costco</span></div>
-          <div class="visit-row"><span class="visit-key">Note</span><span class="visit-val">Membership required</span></div>
-          <div class="visit-tip">💡 BJ's is right next to Consumer Square — easy to check on a regular run. They occasionally carry Pokemon ETB multi-packs at competitive prices, similar to Costco.</div>
-        </div>
-        <div class="store-actions">
-          <a class="action-btn" href="https://maps.google.com/?q=BJs+Wholesale+200+Wrangleboro+Rd+Mays+Landing+NJ" target="_blank">Directions ↗</a>
-        </div>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- VENDING -->
-  <div class="section-divider" id="sec-vending">
-    <div class="section-label">Pokemon TCG Vending Machines</div>
-    <div class="section-line"></div>
-  </div>
-  <div class="vending-note">
-    🎮 Pokemon TCG vending machines (Vengo kiosks) stock single packs at ~MSRP. Nearest confirmed locations are in South Jersey malls. Stock levels vary — check before making a dedicated trip.
-  </div>
-  <div class="store-grid" id="grid-vending">
-
-    <div class="store-card" data-cat="vending">
-      <div class="store-bar bar-vending"></div>
-      <div class="store-body">
-        <div class="store-top"><div class="store-name">Hamilton Mall — Pokemon Kiosk</div><span class="store-chain chain-vending">VENDING</span></div>
-        <div class="store-address">4403 Black Horse Pike, Mays Landing, NJ 08330</div>
-        <div class="store-dist">~2 mi from home &nbsp;|&nbsp; On-site at Hamilton Mall</div>
-        <div class="visit-plan">
-          <div class="visit-row"><span class="visit-key">Products</span><span class="visit-val">Single booster packs (current sets)</span></div>
-          <div class="visit-row"><span class="visit-key">Price</span><span class="visit-val">~$5–6 per pack (MSRP)</span></div>
-          <div class="visit-row"><span class="visit-key">Hours</span><span class="visit-val">Mall hours (10 AM – 9 PM)</span></div>
-          <div class="visit-tip">💡 Most convenient vending option — Hamilton Mall is 2 miles from home and shares the Consumer Square / Black Horse Pike corridor with all your other stops.</div>
-        </div>
-        <div class="store-actions">
-          <a class="action-btn" href="https://maps.google.com/?q=Hamilton+Mall+Mays+Landing+NJ" target="_blank">Directions ↗</a>
-        </div>
-      </div>
-    </div>
-
-    <div class="store-card" data-cat="vending">
-      <div class="store-bar bar-vending"></div>
-      <div class="store-body">
-        <div class="store-top"><div class="store-name">Cumberland Mall — Pokemon Kiosk</div><span class="store-chain chain-vending">VENDING</span></div>
-        <div class="store-address">3849 S Delsea Dr, Vineland, NJ 08360</div>
-        <div class="store-dist">~25 mi from home</div>
-        <div class="visit-plan">
-          <div class="visit-row"><span class="visit-key">Products</span><span class="visit-val">Single booster packs</span></div>
-          <div class="visit-row"><span class="visit-key">Price</span><span class="visit-val">~$5–6 per pack</span></div>
-          <div class="visit-row"><span class="visit-key">Hours</span><span class="visit-val">Mall hours</span></div>
-          <div class="visit-tip">💡 Worth checking if you're heading toward Vineland. Verify kiosk is stocked before making the trip — call the mall first.</div>
-        </div>
-        <div class="store-actions">
-          <a class="action-btn" href="https://maps.google.com/?q=Cumberland+Mall+Vineland+NJ" target="_blank">Directions ↗</a>
+          <a class="action-btn" href="https://maps.google.com/?q=Five+Below+2271+Wrangleboro+Road+Mays+Landing+NJ" target="_blank">Directions</a>
         </div>
       </div>
     </div>
@@ -495,15 +276,15 @@ main{padding:40px;max-width:1400px;margin:0 auto}
     <div class="store-card" data-cat="all" style="border-color:rgba(240,192,64,.2)">
       <div class="store-bar" style="background:linear-gradient(90deg,#cc0000,#0071ce,#ffed00)"></div>
       <div class="store-body">
-        <div class="store-top"><div class="store-name">Friday AM — Consumer Square Sweep</div><span class="store-chain" style="background:rgba(240,192,64,.08);color:var(--accent);border:1px solid rgba(240,192,64,.2)">BEST RUN</span></div>
-        <div class="store-address" style="color:var(--text2);margin-bottom:14px">All within 2 miles of home — entire run under 60 minutes</div>
+        <div class="store-top"><div class="store-name">Friday AM -- Consumer Square Sweep</div><span class="store-chain" style="background:rgba(240,192,64,.08);color:var(--accent);border:1px solid rgba(240,192,64,.2)">BEST RUN</span></div>
+        <div class="store-address" style="color:var(--text2);margin-bottom:14px">All within 2 miles of home -- entire run under 60 minutes</div>
         <div class="visit-plan">
-          <div class="visit-row"><span class="visit-key">8:00 AM — Stop 1</span><span class="visit-val"><b>Target</b> — 380 Consumer Sq</span></div>
-          <div class="visit-row"><span class="visit-key">8:20 AM — Stop 2</span><span class="visit-val"><b>Best Buy</b> — 100 Consumer Sq</span></div>
-          <div class="visit-row"><span class="visit-key">8:30 AM — Stop 3</span><span class="visit-val"><b>GameStop</b> — 340 Consumer Sq</span></div>
-          <div class="visit-row"><span class="visit-key">8:45 AM — Stop 4</span><span class="visit-val"><b>Walmart</b> — 4620 Black Horse Pike</span></div>
-          <div class="visit-row"><span class="visit-key">9:00 AM — Stop 5</span><span class="visit-val"><b>Five Below</b> — 2271 Wrangleboro Rd</span></div>
-          <div class="visit-tip">💡 All 5 stops within 2 miles. Best day is Friday (Target + BB drop day). Takes about 60 min total including drive time. Add BJ's if you have membership.</div>
+          <div class="visit-row"><span class="visit-key">8:00 AM -- Stop 1</span><span class="visit-val"><b>Target</b> -- 380 Consumer Sq</span></div>
+          <div class="visit-row"><span class="visit-key">8:20 AM -- Stop 2</span><span class="visit-val"><b>Best Buy</b> -- 100 Consumer Sq</span></div>
+          <div class="visit-row"><span class="visit-key">8:30 AM -- Stop 3</span><span class="visit-val"><b>GameStop</b> -- 340 Consumer Sq</span></div>
+          <div class="visit-row"><span class="visit-key">8:45 AM -- Stop 4</span><span class="visit-val"><b>Walmart</b> -- 4620 Black Horse Pike</span></div>
+          <div class="visit-row"><span class="visit-key">9:00 AM -- Stop 5</span><span class="visit-val"><b>Five Below</b> -- 2271 Wrangleboro Rd</span></div>
+          <div class="visit-tip">&#128161; All 5 stops within 2 miles. Best day is Friday (Target + BB drop day). Takes about 60 min total including drive time. Add BJ's if you have membership.</div>
         </div>
       </div>
     </div>
@@ -516,9 +297,9 @@ main{padding:40px;max-width:1400px;margin:0 auto}
         <div class="visit-plan">
           <div class="visit-row"><span class="visit-key">Trigger</span><span class="visit-val"><b>costco_tracker.py alert first</b></span></div>
           <div class="visit-row"><span class="visit-key">Stop 1</span><span class="visit-val"><b>Costco Cherry Hill #1142</b></span></div>
-          <div class="visit-row"><span class="visit-key">Stop 2</span><span class="visit-val"><b>Target Sicklerville</b> — ~8 mi from Costco</span></div>
-          <div class="visit-row"><span class="visit-key">Stop 3</span><span class="visit-val"><b>Marshalls Cherry Hill</b> — check for clearance</span></div>
-          <div class="visit-tip">💡 35 miles each way — don't go without the tracker alert. When you do go, pair Costco with Target Sicklerville and a Marshalls sweep to make the drive count.</div>
+          <div class="visit-row"><span class="visit-key">Stop 2</span><span class="visit-val"><b>Target Sicklerville</b> -- ~8 mi from Costco</span></div>
+          <div class="visit-row"><span class="visit-key">Stop 3</span><span class="visit-val"><b>Marshalls Cherry Hill</b> -- check for clearance</span></div>
+          <div class="visit-tip">&#128161; 35 miles each way -- don't go without the tracker alert. When you do go, pair Costco with Target Sicklerville and a Marshalls sweep to make the drive count.</div>
         </div>
       </div>
     </div>
@@ -531,8 +312,188 @@ main{padding:40px;max-width:1400px;margin:0 auto}
         <div class="visit-plan">
           <div class="visit-row"><span class="visit-key">Trigger</span><span class="visit-val"><b>costco_tracker.py alert first</b></span></div>
           <div class="visit-row"><span class="visit-key">Stop 1</span><span class="visit-val"><b>Costco Princeton #0482</b></span></div>
-          <div class="visit-row"><span class="visit-key">Stop 2</span><span class="visit-val"><b>Target Route 1</b> — same road</span></div>
-          <div class="visit-tip">💡 55 miles — only worth it with a confirmed Costco alert. Pair with Target Route 1 which is on the same road.</div>
+          <div class="visit-row"><span class="visit-key">Stop 2</span><span class="visit-val"><b>Target Route 1</b> -- same road</span></div>
+          <div class="visit-tip">&#128161; 55 miles -- only worth it with a confirmed Costco alert. Add this as a 10-minute detour on the same Route 1 corridor.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ANCHOR STORES -->
+  <div class="section-divider" id="sec-anchor">
+    <div class="section-label">Anchor Stores -- Cherry Hill &amp; Princeton</div>
+    <div class="section-line"></div>
+  </div>
+  <div class="store-grid" id="grid-anchor">
+
+    <div class="store-card" data-cat="costco">
+      <div class="store-bar bar-costco"></div>
+      <div class="store-body">
+        <div class="store-top"><div class="store-name">Costco Wholesale -- Cherry Hill (#1142)</div><span class="store-chain chain-costco">COSTCO</span></div>
+        <div class="store-address">2149 Route 38, Cherry Hill, NJ 08002</div>
+        <div class="store-dist">~35 mi from home | Cherry Hill anchor</div>
+        <div class="visit-plan">
+          <div class="visit-row"><span class="visit-key">Warehouse #</span><span class="visit-val"><b>#1142</b></span></div>
+          <div class="visit-row"><span class="visit-key">Best Day</span><span class="visit-val">Weekday AM (less crowd)</span></div>
+          <div class="visit-row"><span class="visit-key">Pokemon Items</span><span class="visit-val">ETBs, multi-packs, bundles</span></div>
+          <div class="visit-row"><span class="visit-key">Monitored By</span><span class="visit-val">costco_tracker.py (online + in-store)</span></div>
+          <div class="visit-tip">&#128161; Don't make the 35-mile trip without a costco_tracker.py alert first. When you go, pair with Target Sicklerville nearby.</div>
+        </div>
+        <div class="store-actions">
+          <a class="action-btn" href="https://maps.google.com/?q=Costco+2149+Route+38+Cherry+Hill+NJ" target="_blank">Directions</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="store-card" data-cat="costco">
+      <div class="store-bar bar-costco"></div>
+      <div class="store-body">
+        <div class="store-top"><div class="store-name">Costco Wholesale -- Princeton (#0482)</div><span class="store-chain chain-costco">COSTCO</span></div>
+        <div class="store-address">3600 US-1, South Brunswick, NJ 08852</div>
+        <div class="store-dist">~55 mi from home | Princeton anchor</div>
+        <div class="visit-plan">
+          <div class="visit-row"><span class="visit-key">Warehouse #</span><span class="visit-val"><b>#0482</b></span></div>
+          <div class="visit-row"><span class="visit-key">Best Day</span><span class="visit-val">Weekday AM (less crowd)</span></div>
+          <div class="visit-row"><span class="visit-key">Pokemon Items</span><span class="visit-val">ETBs, multi-packs, bundles</span></div>
+          <div class="visit-row"><span class="visit-key">Monitored By</span><span class="visit-val">costco_tracker.py (online + in-store)</span></div>
+          <div class="visit-tip">&#128161; 55 miles -- alert-only trip. Pair with Target on Route 1 which is right on the same road.</div>
+        </div>
+        <div class="store-actions">
+          <a class="action-btn primary" href="https://www.target.com/store-locator/find-stores/South+Brunswick/NJ" target="_blank">Nearby Target</a>
+          <a class="action-btn" href="https://maps.google.com/?q=Costco+3600+US-1+South+Brunswick+NJ" target="_blank">Directions</a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ALT RETAILERS -->
+  <div class="section-divider" id="sec-alt">
+    <div class="section-label">Alt Retailers</div>
+    <div class="section-line"></div>
+  </div>
+  <div class="store-grid" id="grid-alt">
+
+    <div class="store-card" data-cat="alt">
+      <div class="store-bar bar-marshalls"></div>
+      <div class="store-body">
+        <div class="store-top"><div class="store-name">Marshalls -- Mays Landing area</div><span class="store-chain chain-marshalls">MARSHALLS</span></div>
+        <div class="store-address">Hamilton area, NJ (check store finder)</div>
+        <div class="store-dist">~5-10 mi from home</div>
+        <div class="visit-plan">
+          <div class="visit-row"><span class="visit-key">TCG Products</span><span class="visit-val">Clearance ETBs, overstocked sets</span></div>
+          <div class="visit-row"><span class="visit-key">Pattern</span><span class="visit-val">Random -- no scheduled drops</span></div>
+          <div class="visit-row"><span class="visit-key">Price Range</span><span class="visit-val">Often 20-40% below MSRP</span></div>
+          <div class="visit-row"><span class="visit-key">Scanned By</span><span class="visit-val">alternative_retailers.py (Tue/Fri)</span></div>
+          <div class="visit-tip">&#128161; Clearance finds are unpredictable but deeply discounted when they appear. If the scanner fires, move same day -- these go fast.</div>
+        </div>
+        <div class="store-actions">
+          <a class="action-btn primary" href="https://www.marshalls.com/us/store/stores/storeLocator.jsp" target="_blank">Store Finder</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="store-card" data-cat="alt">
+      <div class="store-bar bar-ollies"></div>
+      <div class="store-body">
+        <div class="store-top"><div class="store-name">Ollie's Bargain Outlet -- NJ locations</div><span class="store-chain chain-ollies">OLLIE'S</span></div>
+        <div class="store-address">Multiple NJ locations (check store finder)</div>
+        <div class="store-dist">Nearest: ~15-20 mi from home</div>
+        <div class="visit-plan">
+          <div class="visit-row"><span class="visit-key">TCG Products</span><span class="visit-val">Overstock ETBs, clearance bundles</span></div>
+          <div class="visit-row"><span class="visit-key">Pattern</span><span class="visit-val">Batch restocks, very random</span></div>
+          <div class="visit-row"><span class="visit-key">Price Range</span><span class="visit-val">30-50% below MSRP when available</span></div>
+          <div class="visit-row"><span class="visit-key">Scanned By</span><span class="visit-val">alternative_retailers.py (Tue/Fri)</span></div>
+          <div class="visit-tip">&#128161; When Ollie's gets Pokemon product it can be heavily discounted. Don't make the trip without a scanner alert -- stock comes in large unpredictable batches.</div>
+        </div>
+        <div class="store-actions">
+          <a class="action-btn primary" href="https://www.ollies.us/stores/" target="_blank">Store Finder</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="store-card" data-cat="alt">
+      <div class="store-bar bar-aldi"></div>
+      <div class="store-body">
+        <div class="store-top"><div class="store-name">ALDI -- Seasonal Pokemon Finds</div><span class="store-chain chain-aldi">ALDI</span></div>
+        <div class="store-address">Multiple locations near Mays Landing</div>
+        <div class="store-dist">Nearest: ~5 mi from home</div>
+        <div class="visit-plan">
+          <div class="visit-row"><span class="visit-key">TCG Products</span><span class="visit-val">Mini tins, blisters, seasonal bundles</span></div>
+          <div class="visit-row"><span class="visit-key">Season</span><span class="visit-val">Spring (Mar-Apr) &amp; Fall (Oct-Nov)</span></div>
+          <div class="visit-row"><span class="visit-key">Scanned By</span><span class="visit-val">alternative_retailers.py (Tue/Fri)</span></div>
+          <div class="visit-tip">&#128161; ALDI runs Pokemon TCG as an "ALDI Finds" special -- limited stock, sells in days. Check the ALDI app Wednesday morning when new Finds post.</div>
+        </div>
+        <div class="store-actions">
+          <a class="action-btn primary" href="https://www.aldi.us/en/weekly-specials/" target="_blank">ALDI Finds</a>
+          <a class="action-btn" href="https://www.aldi.us/en/about-aldi/aldi-store-locator/" target="_blank">Store Locator</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="store-card" data-cat="alt">
+      <div class="store-bar" style="background:#1d4ed8"></div>
+      <div class="store-body">
+        <div class="store-top"><div class="store-name">BJ's Wholesale -- Mays Landing</div><span class="store-chain chain-alt">BJ'S</span></div>
+        <div class="store-address">200 Wrangleboro Rd, Mays Landing, NJ 08330</div>
+        <div class="store-dist">~2 mi from home | Near Consumer Square</div>
+        <div class="visit-plan">
+          <div class="visit-row"><span class="visit-key">TCG Products</span><span class="visit-val">Bulk multi-packs, ETB bundles</span></div>
+          <div class="visit-row"><span class="visit-key">Pattern</span><span class="visit-val">Seasonal -- less frequent than Costco</span></div>
+          <div class="visit-row"><span class="visit-key">Note</span><span class="visit-val">Membership required</span></div>
+          <div class="visit-tip">&#128161; BJ's is right next to Consumer Square -- easy to check on a regular run. They occasionally carry Pokemon ETB multi-packs at competitive prices, similar to Costco.</div>
+        </div>
+        <div class="store-actions">
+          <a class="action-btn" href="https://maps.google.com/?q=BJs+Wholesale+200+Wrangleboro+Rd+Mays+Landing+NJ" target="_blank">Directions</a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- VENDING -->
+  <div class="section-divider" id="sec-vending">
+    <div class="section-label">Pokemon TCG Vending Machines</div>
+    <div class="section-line"></div>
+  </div>
+  <div class="vending-note">
+    &#127918; Pokemon TCG vending machines (Vengo kiosks) stock single packs at ~MSRP. Nearest confirmed locations are in South Jersey malls. Stock levels vary -- check before making a dedicated trip.
+  </div>
+  <div class="store-grid" id="grid-vending">
+
+    <div class="store-card" data-cat="vending">
+      <div class="store-bar bar-vending"></div>
+      <div class="store-body">
+        <div class="store-top"><div class="store-name">Hamilton Mall -- Pokemon Kiosk</div><span class="store-chain chain-vending">VENDING</span></div>
+        <div class="store-address">4403 Black Horse Pike, Mays Landing, NJ 08330</div>
+        <div class="store-dist">~2 mi from home | On-site at Hamilton Mall</div>
+        <div class="visit-plan">
+          <div class="visit-row"><span class="visit-key">Products</span><span class="visit-val">Single booster packs (current sets)</span></div>
+          <div class="visit-row"><span class="visit-key">Price</span><span class="visit-val">~$5-6 per pack (MSRP)</span></div>
+          <div class="visit-row"><span class="visit-key">Hours</span><span class="visit-val">Mall hours (10 AM - 9 PM)</span></div>
+          <div class="visit-tip">&#128161; Most convenient vending option -- Hamilton Mall is 2 miles from home and shares the Consumer Square / Black Horse Pike corridor with all your other stops.</div>
+        </div>
+        <div class="store-actions">
+          <a class="action-btn" href="https://maps.google.com/?q=Hamilton+Mall+Mays+Landing+NJ" target="_blank">Directions</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="store-card" data-cat="vending">
+      <div class="store-bar bar-vending"></div>
+      <div class="store-body">
+        <div class="store-top"><div class="store-name">Cumberland Mall -- Pokemon Kiosk</div><span class="store-chain chain-vending">VENDING</span></div>
+        <div class="store-address">3849 S Delsea Dr, Vineland, NJ 08360</div>
+        <div class="store-dist">~25 mi from home</div>
+        <div class="visit-plan">
+          <div class="visit-row"><span class="visit-key">Products</span><span class="visit-val">Single booster packs</span></div>
+          <div class="visit-row"><span class="visit-key">Price</span><span class="visit-val">~$5-6 per pack</span></div>
+          <div class="visit-row"><span class="visit-key">Hours</span><span class="visit-val">Mall hours</span></div>
+          <div class="visit-tip">&#128161; Worth checking if you're heading toward Vineland. Verify kiosk is stocked before making the trip.</div>
+        </div>
+        <div class="store-actions">
+          <a class="action-btn" href="https://maps.google.com/?q=Cumberland+Mall+Vineland+NJ" target="_blank">Directions</a>
         </div>
       </div>
     </div>
@@ -540,63 +501,35 @@ main{padding:40px;max-width:1400px;margin:0 auto}
   </div>
 
 </main>
+
 <script>
+let currentFilter = 'all';
+
 function filterStores(cat, btn) {
+  currentFilter = cat;
   document.querySelectorAll('.f-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  const catMap = {
-    target: ['target'], walmart: ['walmart'], bestbuy: ['bestbuy'],
-    costco: ['costco'], alt: ['alt'], vending: ['vending']
-  };
-  const allowed = catMap[cat] || null;
-  document.querySelectorAll('.store-card').forEach(card => {
-    card.classList.toggle('hidden', allowed !== null && !allowed.includes(card.dataset.cat));
+  document.querySelectorAll('.store-card[data-cat]').forEach(card => {
+    const c = card.dataset.cat;
+    if (cat === 'all' || c === cat) {
+      card.classList.remove('hidden');
+    } else {
+      card.classList.add('hidden');
+    }
   });
-  const secs = ['sec-local','sec-anchor','sec-alt','sec-vending'];
-  const grids = ['grid-local','grid-anchor','grid-alt','grid-vending'];
-  if (allowed === null) {
-    secs.forEach(id => document.getElementById(id).style.display = '');
-    grids.forEach(id => document.getElementById(id).style.display = '');
-    return;
-  }
-  const visibleGrids = {
-    target: ['sec-local','grid-local','sec-anchor','grid-anchor'],
-    walmart: ['sec-local','grid-local'],
-    bestbuy: ['sec-local','grid-local'],
-    costco: ['sec-anchor','grid-anchor'],
-    alt: ['sec-local','grid-local','sec-alt','grid-alt'],
-    vending: ['sec-vending','grid-vending'],
-  };
-  secs.concat(grids).forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.style.display = (visibleGrids[cat] || []).includes(id) ? '' : 'none';
+  document.querySelectorAll('.section-divider').forEach(div => {
+    const gridId = div.nextElementSibling ? div.nextElementSibling.id : null;
+    if (!gridId) return;
+    const grid = document.getElementById(gridId);
+    if (!grid) return;
+    const visible = [...grid.querySelectorAll('.store-card')].some(c => !c.classList.contains('hidden'));
+    div.style.display = visible ? 'flex' : 'none';
+    grid.style.display = visible ? 'grid' : 'none';
   });
+  document.getElementById('last-updated').textContent = 'Updated: ' + new Date().toLocaleTimeString('en-US', {hour:'2-digit',minute:'2-digit'});
 }
 
-async function loadAltData() {
-  try {
-    const r = await fetch('../data/alt_retailers.json?t=' + Date.now());
-    if (!r.ok) return;
-    const data = await r.json();
-    document.getElementById('last-updated').textContent =
-      'Updated: ' + new Date(data.last_updated).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit'});
-    const aldiReminder = (data.findings||[]).find(f => f.reminder && f.retailer && f.retailer.toLowerCase().includes('aldi'));
-    if (aldiReminder) {
-      const statusEl = document.getElementById('aldi-status');
-      const tipEl = document.getElementById('aldi-tip');
-      if (statusEl) statusEl.innerHTML = aldiReminder.in_season
-        ? '<span style="color:var(--green)">IN SEASON — Check Now</span>'
-        : '<span style="color:var(--muted)">Off-season (check back Mar or Oct)</span>';
-      if (tipEl && aldiReminder.in_season) {
-        tipEl.textContent = '🚨 ALDI is currently in Pokemon TCG season! Check the ALDI Finds page and your local store this week.';
-        tipEl.style.color = 'var(--green)';
-      }
-    }
-  } catch(e) {
-    document.getElementById('last-updated').textContent = 'Updated: tracker not running';
-  }
-}
-loadAltData();
+document.getElementById('last-updated').textContent = 'Updated: ' + new Date().toLocaleTimeString('en-US', {hour:'2-digit',minute:'2-digit'});
 </script>
 </body>
 </html>

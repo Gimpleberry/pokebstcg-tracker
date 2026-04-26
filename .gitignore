@@ -1,8 +1,18 @@
-# ── Keith's PokeBS — .gitignore ──────────────────────────────────────
+# -- Keith's PokeBS -- .gitignore --------------------------------------
 # Structure: tcg_tracker/ root with plugins/, dashboard/, data/, tests/
 
-# Browser profile — contains retailer login cookies (SENSITIVE)
+# Browser profile -- contains retailer login cookies (SENSITIVE)
 .browser_profile/
+
+# INTERNAL folder -- local notes, scratch files, never commit
+INTERNAL/
+
+# Runtime-generated JSON at root (untracked via: git rm --cached *.json)
+future_events.json
+price_history.json
+restock_history.json
+status_snapshot.json
+store_inventory.json
 
 # All generated runtime data (data/ folder)
 data/
@@ -10,7 +20,7 @@ data/
 *.log
 *.log.*
 
-# Exception — keep products_backup.txt and requirements.txt
+# Exception -- keep these source-controlled
 !products_backup.txt
 !requirements.txt
 
@@ -32,6 +42,6 @@ venv/
 env/
 .venv/
 .env/
-
-# Runtime data (generated files)
-data/
+"__pycache__/" 
+"*.pyc" 
+"*.pyo" 

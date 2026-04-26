@@ -87,7 +87,7 @@ main{padding:40px;max-width:1400px;margin:0 auto}
 .ev.drop{background:var(--c-drop-bg);color:var(--c-drop);border-left-color:var(--c-drop)}
 .ev-more{font-family:'DM Mono',monospace;font-size:.55rem;color:var(--muted);padding:1px 3px}
 
-/* List */
+/* List view */
 .lv{display:flex;flex-direction:column;gap:4px}
 .lw-hdr{font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:10px 0 4px;border-bottom:1px solid var(--border);margin-bottom:4px;margin-top:8px}
 .lrow{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:11px 16px;cursor:pointer;transition:border-color .15s,background .15s}
@@ -198,26 +198,15 @@ main{padding:40px;max-width:1400px;margin:0 auto}
 const EVENTS=[
   {date:"2026-04-25",name:"Ascended Heroes Pre-release Weekend",type:"prerelease",set:"Ascended Heroes",note:"Local game store prereleases"},
   {date:"2026-05-02",name:"Ascended Heroes Pre-release Weekend",type:"prerelease",set:"Ascended Heroes",note:"Final prerelease weekend"},
-  {date:"2026-05-09",name:"Ascended Heroes Launch",type:"release",set:"Ascended Heroes",note:"Full retail launch -- Target ~3AM ET, Pokemon Center ~10AM ET"},
-  {date:"2026-05-14",name:"Ascended Heroes Walmart Wednesday",type:"drop",set:"Ascended Heroes",note:"Walmart typically stocks new sets ~2 weeks post-launch"},
-  {date:"2026-05-15",name:"Chaos Rising Product Wave - ETB / Bundles",type:"wave",set:"Chaos Rising",note:"Amazon/Target ETB and Booster Bundle wave, 1 week pre-launch"},
-  {date:"2026-05-22",name:"Chaos Rising Launch",type:"release",set:"Chaos Rising",note:"Full retail launch -- Target ~3AM ET, Walmart Wed window, PC ~10AM ET"},
-  {date:"2026-05-27",name:"Chaos Rising Walmart Wednesday",type:"drop",set:"Chaos Rising",note:"First Walmart Wednesday after Chaos Rising launch"},
-  {date:"2026-06-05",name:"Destined Rivals Pre-release",type:"prerelease",set:"Destined Rivals",note:"LGS prerelease weekend"},
-  {date:"2026-06-12",name:"Destined Rivals Pre-release",type:"prerelease",set:"Destined Rivals",note:"Second prerelease weekend"},
-  {date:"2026-06-19",name:"Destined Rivals Launch",type:"release",set:"Destined Rivals",note:"Full retail launch"},
-  {date:"2026-06-20",name:"Destined Rivals Product Wave",type:"wave",set:"Destined Rivals",note:"ETB/Bundle wave 1 week after launch"},
-  {date:"2026-07-03",name:"Journey Together Product Wave",type:"wave",set:"Journey Together",note:"Pre-launch ETB/Bundle wave"},
-  {date:"2026-07-10",name:"Journey Together Launch",type:"release",set:"Journey Together",note:"Confirmed launch date"},
-  {date:"2026-07-17",name:"Pitch Black Launch - Mega Darkrai ex",type:"release",set:"Pitch Black",note:"Highly anticipated Mega Darkrai ex set"},
-  {date:"2026-08-14",name:"Black Bolt Launch",type:"release",set:"Black Bolt",note:"Full retail"},
-  {date:"2026-08-14",name:"White Flare Launch",type:"release",set:"White Flare",note:"Same day as Black Bolt"},
-  {date:"2026-09-18",name:"30th Anniversary Celebration Set",type:"release",set:"30th Celebration",note:"Worldwide simultaneous launch -- major pull window"},
-  {date:"2026-10-16",name:"Stellar Veil (rumored)",type:"rumored",set:"Stellar Veil",note:"Unconfirmed -- no official announcement yet"},
-  {date:"2026-11-06",name:"Holiday Collection Sets (rumored)",type:"rumored",set:"Holiday 2026",note:"Holiday gift sets -- historically announced Sep-Oct"},
-  {date:"2026-12-04",name:"Holiday Tins / Advent Calendar (rumored)",type:"rumored",set:"Holiday 2026",note:"Q4 holiday product wave -- estimated"},
+  {date:"2026-05-09",name:"Ascended Heroes Launch",type:"release",set:"Ascended Heroes",note:"Full retail launch -- Target, Walmart, Best Buy, Pokemon Center"},
+  {date:"2026-05-22",name:"Chaos Rising Launch",type:"release",set:"Chaos Rising",note:"Target ~3AM ET online, PC ~10AM ET. In-store same day."},
+  {date:"2026-05-27",name:"Chaos Rising Walmart Wednesday",type:"drop",set:"Chaos Rising",note:"Walmart Wednesday drop window -- 8AM-3PM ET"},
+  {date:"2026-07-17",name:"Pitch Black Launch",type:"release",set:"Pitch Black",note:"Mega Darkrai ex set"},
+  {date:"2026-09-18",name:"30th Celebration Set",type:"release",set:"30th Celebration",note:"Worldwide simultaneous launch"},
   {date:"2026-05-01",name:"Target Friday Drop Window",type:"drop",set:null,note:"Overnight Thu restock -- check Fri 8-10AM"},
   {date:"2026-05-08",name:"Target Friday Drop Window",type:"drop",set:null,note:"Overnight Thu restock -- check Fri 8-10AM"},
+  {date:"2026-05-15",name:"Target Friday Drop Window",type:"drop",set:null,note:"Overnight Thu restock -- check Fri 8-10AM"},
+  {date:"2026-05-22",name:"Target Friday Drop Window",type:"drop",set:null,note:"Overnight Thu restock -- check Fri 8-10AM"},
   {date:"2026-05-06",name:"Walmart Wednesday Drop Window",type:"drop",set:null,note:"Wed morning 8AM-3PM window"},
   {date:"2026-05-13",name:"Walmart Wednesday Drop Window",type:"drop",set:null,note:"Wed morning 8AM-3PM window"},
   {date:"2026-05-20",name:"Walmart Wednesday Drop Window",type:"drop",set:null,note:"Wed morning 8AM-3PM window"},
@@ -361,7 +350,7 @@ function openModal(ev){
   const[y,m,d]=ev.date.split('-').map(Number);
   const dt=new Date(y,m-1,d);
   const n=daysAway(ev.date);
-  const away=n===0?'Today':n>0?n+' days away':Math.abs(n)+' days ago';
+  const away=n===0?'Today':n===1?'Tomorrow':n>0?'in '+n+' days':Math.abs(n)+' days ago';
   document.getElementById('m-title').textContent=ev.name;
   document.getElementById('m-body').innerHTML=`
     <div class="m-row"><div class="m-lbl">Date</div><div class="m-val">${fmtF(dt)} &nbsp;<span style="color:var(--muted);font-size:.78rem">(${away})</span></div></div>
