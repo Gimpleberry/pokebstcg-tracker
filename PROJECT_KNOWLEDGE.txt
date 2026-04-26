@@ -1,0 +1,310 @@
+═══════════════════════════════════════════════════════
+POKEBS TCG TRACKER — PROJECT KNOWLEDGE
+Last updated: Apr 26, 2026 (v5.8)
+═══════════════════════════════════════════════════════
+
+═══════════════════════════════════════════════════════
+PROJECT STRUCTURE
+═══════════════════════════════════════════════════════
+C:\dev\tcg_tracker\          ← Project lives here, NOT on Desktop or in OneDrive
+  tracker.py                  - Main loop. Run this to start everything.
+  shared.py                   - Single source of truth for all utilities
+  plugins.py                  - Plugin registry (one line per plugin)
+  products_backup.txt         - Safe copy of PRODUCTS list
+  requirements.txt
+  .gitignore                  - Excludes data/*.json, __pycache__, .browser_profile
+  patch_nav_v3.py             - Nav patcher (run once after adding HTML pages)
+
+  plugins/                    - All feature modules (11 plugins)
+  dashboard/                  - All HTML pages (11 pages)
+  data/                       - Runtime JSON/SQLite files (gitignored)
+  tests/                      - Diagnostic scripts (test_config.py, test_ntfy.py)
+  tools/                      - Operational scripts (setup_config.py)
+
+%LOCALAPPDATA%\tcg_tracker\   ← C:\Users\<you>\AppData\Local\tcg_tracker\
+                              ← OUTSIDE OneDrive's Known Folder Move
+  config.json                 - Local config: ntfy topic, location, optional email creds
+  browser_profile/            - Retailer login cookies (Playwright persistent context)
+
+Dashboard URL: http://localhost:8080/dashboard/dashboard.html
+Server must run from tcg_tracker/ root (not dashboard/ subfolder)
+
+═══════════════════════════════════════════════════════
+SENSITIVE CONFIG (loaded from config.json, NEVER hardcoded)
+═══════════════════════════════════════════════════════
+ntfy_topic:        Lives in config.json. Logged as tcg-****xd3h (masked).
+                   Format: 16+ random chars, no personal info, no year suffix.
+home_zip:          08330 (loaded from config.json)
+home_city:         Mays Landing NJ (loaded from config.json)
+anchor_locations:  Cherry Hill NJ, Princeton NJ (Costco warehouse anchors)
+
+Email notifications: disabled by default.  To enable, edit config.json
+to fill in email_sender, email_password, email_recipient, then set
+notify_email: True in tracker.py CONFIG.
+
+═══════════════════════════════════════════════════════
+ARCHITECTURE RULES (non-negotiable)
+═══════════════════════════════════════════════════════
+- shared.py is the ONLY place to define:
+    HEADERS, MSRP_TABLE, get_msrp(), parse_price(),
+    price_vs_msrp(), send_ntfy(), open_browser(),
+    load_history(), save_history(),
+    DATA_DIR, OUTPUT_DIR, ROOT_DIR, BROWSER_PROFILE,
+    APPDATA_DIR, CONFIG_PATH,
+    load_local_config(), ConfigError, get_ntfy_topic(),
+    REQUIRED_CONFIG_KEYS, CONFIG_DEFAULTS, _ascii_safe()
+- Every plugin file must have the path resolution block at top
+- Every plugin class must have a stop() method
+- Register plugins in plugins.py — one line per plugin
+- All runtime data files go in data/ — dashboard fetches ../data/
+- To add a new plugin: create plugins/newname.py + one line in plugins.py
+
+NEW IN v5.8 — NO HARDCODED SECRETS RULE:
+- No ntfy topic, location data, or credentials may be hardcoded in any
+  .py file in the project.  All sensitive values flow from config.json
+  via load_local_config().
+- If a value would be embarrassing or dangerous to commit, it belongs
+  in config.json.  Never in source.
+
+═══════════════════════════════════════════════════════
+SHARED.PY EXPORTS (import these, never redefine)
+═══════════════════════════════════════════════════════
+ROOT_DIR, OUTPUT_DIR, DATA_DIR, BROWSER_PROFILE
+APPDATA_DIR, CONFIG_PATH                          ← v5.8
+HEADERS, HEADERS_JSON, MSRP_TABLE, DEAL_THRESHOLD_PCT
+get_msrp(name, retailer="")          -> float | None
+parse_price(price_str)               -> float | None
+price_vs_msrp(price, name, retailer) -> dict
+send_ntfy(topic, title, body, priority, url) -> bool
+open_browser(url, retailer)          -> None
+load_history(filename)               -> dict
+save_history(filename, data)         -> None
+save_json(filename, data)            -> bool
+load_local_config(force_reload=False) -> dict     ← v5.8
+get_ntfy_topic()                     -> str       ← v5.8
+ConfigError                          -> Exception ← v5.8
+
+REQUIRED_CONFIG_KEYS = ("ntfy_topic", "home_zip", "home_city")
+CONFIG_DEFAULTS      = {notify_push, check_interval_minutes, log_file, _schema_version}
+
+═══════════════════════════════════════════════════════
+SETUP & DIAGNOSTICS
+═══════════════════════════════════════════════════════
+First-time setup:    python tools/setup_config.py
+View config:         python tools/setup_config.py --show
+Validate config:     python tools/setup_config.py --validate
+Full diagnostic:     python tests/test_config.py
+Test ntfy alone:     python tests/test_config.py --no-ntfy
+
+Re-rotate ntfy topic:
+  1. python tools/setup_config.py
+  2. Enter new topic at the prompt (or accept existing)
+  3. Subscribe to new topic in ntfy mobile app
+  4. Restart tracker.py
+
+═══════════════════════════════════════════════════════
+NTFY STANDARD
+═══════════════════════════════════════════════════════
+- Always use shared.send_ntfy() — never requests.post() directly
+- Every alert: click=URL, Actions="view, Open, {url}"
+- Title: ASCII-safe (_ascii_safe() applied)
+- Topic: from config.json via load_local_config(), never hardcoded
+- Topic masked in logs as tcg-****xd3h
+
+═══════════════════════════════════════════════════════
+DASHBOARD NAV (canonical order — v3)
+═══════════════════════════════════════════════════════
+Tracker | Set Info | Pricing | Binder | Calendar | Retail Drops |
+Local | Invest | Price History | Help
+
+Nav patch script: patch_nav_v3.py (run from tcg_tracker/ root)
+
+═══════════════════════════════════════════════════════
+DASHBOARD PAGES (11 pages, all on canonical v3 nav)
+═══════════════════════════════════════════════════════
+dashboard.html      - Main tracker (live stock, alt retailer strip)
+info.html           - Set info, chase cards, pull rates
+pricing.html        - Live price comparison vs MSRP
+binder.html         - Collection binder + National Pokédex
+calendar.html       - 4-week TCG event calendar (future.html redirects here)
+retail-drops.html   - Retail drop history and patterns
+local.html          - Store radar: Consumer Square + Costco anchors + vending
+invest.html         - Purchase log, portfolio KPIs, spending trends
+pricing-history.html - 90-day price history, sparklines, CSV export
+help.html           - Changelog, FAQ, file reference
+future.html         - Redirect stub → calendar.html
+
+═══════════════════════════════════════════════════════
+LOCAL STORE CONTEXT
+═══════════════════════════════════════════════════════
+Home base: Mays Landing NJ 08330
+Consumer Square (nearby): Target, Walmart, Best Buy, GameStop, Five Below
+Costco anchors: Cherry Hill NJ #1142 (~35 mi), Princeton NJ #0482 (~55 mi)
+Vending machines: Hamilton Mall, Cumberland Mall
+Alt retailers active: Burlington, Ollie's, GameStop, Dollar General, ALDI
+Alt retailers removed: Five Below (JS-rendered), TJ Maxx (SSL errors)
+
+═══════════════════════════════════════════════════════
+RETAILER LOGIN STATUS (Playwright session cookies in browser_profile/)
+═══════════════════════════════════════════════════════
+✅ Pokémon Center  - Logged in
+✅ Walmart         - Logged in
+✅ Amazon          - Logged in
+✅ Target          - Logged in
+🟡 Costco          - Deferred (untested)
+❌ Best Buy        - Akamai HttpOnly cookies; auth automation not viable
+
+Best Buy stock detection still works via API (bestbuy_invites plugin).
+Only the cart_preloader feature requires login, which Best Buy blocks.
+
+To re-login any retailer:
+  python plugins/cart_preloader.py --setup --retailer <name>
+
+═══════════════════════════════════════════════════════
+CHANGELOG SUMMARY
+═══════════════════════════════════════════════════════
+v5.8  - SECURITY MIGRATION (Apr 26, 2026)
+        Project moved from Desktop (OneDrive-synced) to C:\dev\tcg_tracker
+        Sensitive config relocated from source code to config.json in
+          %LOCALAPPDATA%\tcg_tracker\ (outside any cloud sync path)
+        Browser profile relocated to %LOCALAPPDATA%\tcg_tracker\browser_profile\
+        New shared.py helpers: load_local_config, ConfigError, get_ntfy_topic,
+          APPDATA_DIR, CONFIG_PATH, REQUIRED_CONFIG_KEYS, CONFIG_DEFAULTS
+        New tools: tools/setup_config.py (interactive setup, --show, --validate)
+        New tests: tests/test_config.py (4-check diagnostic + live ntfy publish)
+        tracker.py CONFIG refactored to fail loudly on missing config
+          (no silent fallbacks to hardcoded values)
+        ntfy topic rotated: old topic compromised via OneDrive history,
+          new topic 16+ chars random, no personal info
+        cart_preloader URLs fixed: target/account → target/login,
+          walmart/account → walmart/account/login, amazon/ap/signin → amazon.com
+        cart_preloader User-Agent updated: Chrome 124 → Chrome 147
+        cart_preloader log message: now reports actual BROWSER_PROFILE path
+        store_inventory.py: YOUR_ZIP now from CONFIG.home_zip (was hardcoded 07060)
+        Documentation: Plainfield → Mays Landing corrections
+        INTERNAL/ folder retired (secrets now in AppData)
+
+v5.7.1 - Alt retailer: Five Below + TJ Maxx removed (JS-rendered / SSL errors)
+         Schedule changed Tue/Fri -> Mon/Wed/Fri
+         Clean 5-scraper run confirmed (Burlington, Ollie's, GameStop, DG, ALDI)
+
+v5.7  - Security: 5 data JSON files untracked from git, .gitignore hardened
+        Binder complete overhaul: 11 sets, type color-coding, type filters,
+          National Pokédex (1,025), Trainer tracker, localStorage v1→v2 migration
+        New pages: calendar.html, local.html, invest.html
+        Alt retailer: Burlington + Dollar General added, history-based dedup
+
+v5.6  - Invest page: purchase log + portfolio KPIs + pokemontcg.io fetch + CSV
+        pricing-history.html rebuilt with KPI bar, retailer chart, MSRP dist,
+          best deals strip, detail panel with 30-day chart
+
+v5.4  - Costco tracker added (online + Cherry Hill/Princeton in-store)
+v5.3  - Restock reminder plugin, Best Buy invites, Amazon-direct monitor
+v5.2  - shared.py established as single source of truth
+        Eliminated all duplicate code across plugins
+v5.0  - Plugin architecture introduced
+v1.0  - Initial tracker, ntfy alerts, Target/Walmart/Best Buy MSRP detection
+
+═══════════════════════════════════════════════════════
+KNOWN ISSUES / TECHNICAL DEBT (post-v5.8)
+═══════════════════════════════════════════════════════
+- Walmart 404/412 API errors on ~6 products: stale item IDs and/or
+  missing API headers.  Pre-existing, not introduced by migration.
+  Sweep needed: refresh Walmart product list, update API headers.
+
+- bestbuy_invites Playwright async/sync mismatch: plugin uses sync API
+  inside tracker.py's asyncio loop, raises error on every Best Buy
+  product check.  Circuit breaker correctly trips after 3 failures.
+  Refactor needed: convert bestbuy_invites to async Playwright.
+
+- Costco login deferred from v5.8 migration; retry in next session.
+
+- Best Buy login automation not viable (Akamai HttpOnly cookies).
+  Stock detection works via API; only cart_preloader feature is lost.
+
+═══════════════════════════════════════════════════════
+NEXT-SESSION PRIORITIES
+═══════════════════════════════════════════════════════
+1. Fix bestbuy_invites async/sync issue (or disable plugin until fixed)
+2. Walmart product list / API header refresh
+3. Costco login retry
+4. Enable BitLocker / Device Encryption on machine
+5. Set up password manager (Bitwarden recommended)
+6. Investment portfolio backup mechanism (currently localStorage-only)
+7. Update help.html changelog with v5.8 entry
+
+═══════════════════════════════════════════════════════
+SECURITY POSTURE (post-v5.8)
+═══════════════════════════════════════════════════════
+✅ Project off Desktop / OneDrive
+✅ Secrets out of source code (config.json in AppData)
+✅ Browser cookies out of OneDrive (AppData)
+✅ ntfy topic rotated (old topic compromised)
+✅ Topic uses 16+ char random format, no personal info
+✅ tracker.py fails loudly on missing config (no silent fallbacks)
+✅ HTTP server bound to 127.0.0.1 only
+✅ All retailer accounts have 2FA enabled
+
+⏳ BitLocker not enabled (drive readable if stolen)
+⏳ No password manager (browser-saved passwords only)
+⏳ OneDrive history retention: ~30 days; auto-decays by ~May 26
+⏳ No automated backup of investment portfolio (localStorage fragility)
+
+═══════════════════════════════════════════════════════
+COSTCO TRACKER SPECIFICS (v5.4)
+═══════════════════════════════════════════════════════
+File:       plugins/costco_tracker.py
+History:    data/costco_tracker_history.json
+Warehouses: Cherry Hill NJ #1142 + Princeton NJ #0482
+Products:   Prismatic Evolutions SPC 2-Pack Bundle + others
+Behavior:   Online in-stock -> urgent ntfy + URL + browser opens
+            Queue detected -> urgent alert (20 min to join manually)
+            In-store hit -> high-priority ntfy with warehouse location
+Security:   Never auto-clicks queue join or checkout
+
+═══════════════════════════════════════════════════════
+INVEST PAGE SPECIFICS (v5.6)
+═══════════════════════════════════════════════════════
+Storage:    localStorage key 'pokebs_invest_v1' (no server needed)
+Types:      Sealed product / Individual card / Graded slab (PSA/BGS/CGC)
+Market val: pokemontcg.io API for cards; MSRP estimate for sealed
+            Manual entry overrides auto-fetch
+Export:     CSV download with full P/L calculations
+KPIs:       Cost basis, market value, total P/L ($/%), best performer
+Charts:     Set breakdown table, monthly spending bar + cumulative value
+
+KNOWN FRAGILITY (open issue):
+Investment data lives only in browser localStorage.  Clearing site data
+or browser profile corruption wipes purchase records permanently.
+Backup mechanism pending (see NEXT-SESSION PRIORITIES).
+
+═══════════════════════════════════════════════════════
+PRICING-HISTORY PAGE SPECIFICS (v5.6)
+═══════════════════════════════════════════════════════
+Data source: ../data/price_summary.json (written by price_history.py hourly)
+KPI bar:     Products tracked, in-stock count + %, at/below MSRP,
+             best deal ($ saving), records logged + DB size, tracking since
+Charts:      Retailer stock status (grouped bars), Price vs MSRP distribution
+Deals strip: Scrollable cards for in-stock products at/below MSRP
+Table:       Sortable, filterable by retailer + status
+Detail:      Click row → 8 KPI chips + 30-day chart (MSRP dashed line,
+             min/max band, in-stock green dots, axes)
+Auto-refresh: every 10 minutes
+
+═══════════════════════════════════════════════════════
+VALIDATION CHECKLIST (run before every change)
+═══════════════════════════════════════════════════════
+1. Syntax check all modified .py files: python -m py_compile <file>
+2. Duplication check for shared utilities (no plugin redefining what's in shared.py)
+3. Encoding sweep for non-ASCII characters (especially in ntfy headers)
+4. Plugin registry check (all enabled plugins in _PLUGIN_CLASSES)
+5. Import chain check (no plugin defines what's in shared.py)
+6. stop() method present in every plugin class
+7. help.html updated if new plugin added
+8. config.json validated: python tools/setup_config.py --validate
+9. End-to-end check: python tests/test_config.py (4/4 PASS)
+10. Integration test: python tracker.py runs one full cycle without errors
+
+═══════════════════════════════════════════════════════
+END OF PROJECT KNOWLEDGE — v5.8
+═══════════════════════════════════════════════════════
