@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Keith's PokeBS — Set Info</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --surface2: #18181f;
+    --border: #2a2a38;
+    --accent: #f0c040;
+    --accent2: #e8503a;
+    --green: #3ddc84;
+    --muted: #555570;
+    --text: #e8e8f0;
+    --text2: #9090a8;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.08) 2px, rgba(0,0,0,0.08) 4px);
+    pointer-events: none;
+    z-index: 999;
+  }
+
+  /* ── Header ── */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px 40px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(10,10,15,0.92);
+    backdrop-filter: blur(12px);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo { display: flex; align-items: baseline; gap: 10px; }
+  .logo-main { font-family: 'Bebas Neue', sans-serif; font-size: 2.2rem; letter-spacing: 0.04em; color: var(--accent); text-shadow: 0 0 30px rgba(240,192,64,0.4); }
+  .logo-sub { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--muted); letter-spacing: 0.2em; text-transform: uppercase; }
+
+  /* ── Nav Bar ── */
+  .nav-bar {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0 40px;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-link {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 12px 18px;
+    color: var(--muted);
+    text-decoration: none;
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+  }
+
+  .nav-link:hover { color: var(--text); }
+  .nav-link.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* ── Main ── */
+  main { padding: 40px; max-width: 1400px; margin: 0 auto; }
+
+  .page-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.8rem;
+    letter-spacing: 0.06em;
+    color: var(--text2);
+    margin-bottom: 6px;
+  }
+
+  .page-subtitle {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    margin-bottom: 32px;
+  }
+
+  /* ── Era sections ── */
+  .era-section { margin-bottom: 48px; }
+
+  .era-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+
+  .era-label {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.1rem;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+  }
+
+  .era-line { flex: 1; height: 1px; background: var(--border); }
+
+  /* ── Set grid ── */
+  .set-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+  }
+
+  /* ── Set card ── */
+  .set-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: visible;
+    cursor: pointer;
+    transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+    animation: cardIn 0.4s ease both;
+    position: relative;
+  }
+
+  .set-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(240,192,64,0.4);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    z-index: 10;
+  }
+
+  .set-card.upcoming { border-color: rgba(167,139,250,0.3); }
+  .set-card.upcoming:hover { border-color: rgba(167,139,250,0.6); box-shadow: 0 8px 32px rgba(167,139,250,0.1); }
+
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .set-card-top {
+    padding: 18px 18px 14px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .set-symbol {
+    width: 56px;
+    height: 56px;
+    border-radius: 4px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .set-symbol img {
+    width: 44px;
+    height: 44px;
+    object-fit: contain;
+    filter: drop-shadow(0 1px 4px rgba(0,0,0,0.5));
+  }
+
+  .set-symbol .sym-abbr {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.1rem;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+  }
+
+  .set-info { flex: 1; min-width: 0; }
+
+  .set-name {
+    font-weight: 500;
+    font-size: 0.92rem;
+    line-height: 1.3;
+    margin-bottom: 4px;
+    color: var(--text);
+  }
+
+  .set-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .set-date {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+  }
+
+  .set-code {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--accent);
+    background: rgba(240,192,64,0.08);
+    border: 1px solid rgba(240,192,64,0.2);
+    border-radius: 2px;
+    padding: 1px 6px;
+    letter-spacing: 0.1em;
+  }
+
+  .set-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    padding: 1px 6px;
+    border-radius: 2px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .badge-upcoming { background: rgba(167,139,250,0.1); color: #a78bfa; border: 1px solid rgba(167,139,250,0.25); }
+  .badge-new { background: rgba(61,220,132,0.1); color: var(--green); border: 1px solid rgba(61,220,132,0.25); }
+  .badge-hot { background: rgba(232,80,58,0.1); color: var(--accent2); border: 1px solid rgba(232,80,58,0.25); }
+
+  .set-card-divider { height: 1px; background: var(--border); margin: 0 18px; }
+
+  .set-card-bottom {
+    padding: 12px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .set-stats {
+    display: flex;
+    gap: 16px;
+  }
+
+  .set-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .set-stat-val {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.1rem;
+    color: var(--text);
+    line-height: 1;
+  }
+
+  .set-stat-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.58rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .hover-hint {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+  }
+
+  /* ── Tooltip / Popup ── */
+  .set-tooltip {
+    display: none;
+    position: absolute;
+    top: calc(100% + 10px);
+    left: 0;
+    width: 360px;
+    background: var(--surface2);
+    border: 1px solid rgba(240,192,64,0.3);
+    border-radius: 6px;
+    box-shadow: 0 16px 48px rgba(0,0,0,0.7);
+    z-index: 200;
+    padding: 20px;
+    animation: fadeIn 0.15s ease;
+  }
+
+  /* Flip tooltip if near right edge */
+  .set-card:nth-child(3n) .set-tooltip,
+  .set-card:nth-child(3n+2) .set-tooltip {
+    left: auto;
+    right: 0;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .set-card:hover .set-tooltip { display: block; }
+
+  .tooltip-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.2rem;
+    letter-spacing: 0.06em;
+    color: var(--accent);
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .tooltip-section {
+    margin-bottom: 14px;
+  }
+
+  .tooltip-section:last-child { margin-bottom: 0; }
+
+  .tooltip-section-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .chase-card-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .chase-card-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 0.8rem;
+  }
+
+  .chase-card-name { color: var(--text); flex: 1; }
+
+  .chase-rarity {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    padding: 2px 7px;
+    border-radius: 2px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .rarity-sir { background: rgba(167,139,250,0.12); color: #a78bfa; border: 1px solid rgba(167,139,250,0.25); }
+  .rarity-hr { background: rgba(240,192,64,0.1); color: var(--accent); border: 1px solid rgba(240,192,64,0.2); }
+  .rarity-ir { background: rgba(61,220,132,0.08); color: var(--green); border: 1px solid rgba(61,220,132,0.2); }
+  .rarity-fa { background: rgba(232,80,58,0.08); color: #ff8a80; border: 1px solid rgba(232,80,58,0.2); }
+
+  .tooltip-desc {
+    font-size: 0.78rem;
+    color: var(--text2);
+    line-height: 1.5;
+  }
+
+  .pull-rate-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 5px;
+    font-size: 0.78rem;
+  }
+
+  .pull-rate-label { color: var(--text2); flex: 1; }
+  .pull-rate-val {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--muted);
+  }
+
+  .pull-bar-wrap {
+    width: 60px;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .pull-bar { height: 100%; border-radius: 2px; background: var(--accent); }
+
+  @media (max-width: 768px) {
+    header { padding: 16px 20px; }
+    main { padding: 20px; }
+    .logo-main { font-size: 1.6rem; }
+    .nav-bar { padding: 0 20px; }
+    .set-tooltip { width: 290px; }
+    .set-card:nth-child(3n) .set-tooltip,
+    .set-card:nth-child(3n+2) .set-tooltip { left: 0; right: auto; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <span class="logo-main">Keith's PokeBS</span>
+    <span class="logo-sub">Set Info</span>
+  </div>
+</header>
+
+<nav class="nav-bar">
+  <a class="nav-link" href="dashboard.html">📡 Tracker</a>
+  <a class="nav-link active" href="info.html">📖 Set Info</a>
+  <a class="nav-link" href="pricing.html">💰 Pricing</a>
+  <a class="nav-link" href="binder.html">📂 Binder</a>
+  <a class="nav-link" href="future.html">📅 Future</a>
+  <a class="nav-link" href="retail-drops.html">🛒 Retail Drops</a>
+  <a class="nav-link" href="help.html">❓ Help</a>
+</nav>
+
+<main>
+  <div class="page-title">Pokémon TCG Set Library</div>
+  <div class="page-subtitle">Hover over any set to see key cards, pull rates & set details · Sorted newest first</div>
+
+  <!-- ── MEGA EVOLUTION ERA ── -->
+  <div class="era-section">
+    <div class="era-header">
+      <span class="era-label">Mega Evolution Era — 2025–2026</span>
+      <div class="era-line"></div>
+    </div>
+    <div class="set-grid">
+
+      <!-- Chaos Rising -->
+      <div class="set-card upcoming" style="animation-delay:0s">
+        <div class="set-card-top">
+          <div class="set-symbol">
+            <img src="https://pokesymbols.com/images/tcg/sets/symbols/perfect-order.png" alt="Chaos Rising"
+              onerror="this.parentNode.innerHTML='<span class=sym-abbr>CR</span>'">
+          </div>
+          <div class="set-info">
+            <div class="set-name"><a href="https://tcg.pokemon.com/en-us/expansions/chaos-rising/" target="_blank" style="color:inherit;text-decoration:none">Mega Evolution — Chaos Rising</a></div>
+            <div class="set-meta">
+              <span class="set-date">May 22, 2026</span>
+              <span class="set-code">ME04</span>
+              <span class="set-badge badge-upcoming">Upcoming</span>
+            </div>
+          </div>
+        </div>
+        <div class="set-card-divider"></div>
+        <div class="set-card-bottom">
+          <div class="set-stats">
+            <div class="set-stat"><span class="set-stat-val">~122</span><span class="set-stat-label">Cards</span></div>
+            <div class="set-stat"><span class="set-stat-val">6</span><span class="set-stat-label">SIRs</span></div>
+            <div class="set-stat"><span class="set-stat-val">5</span><span class="set-stat-label">Mega ex</span></div>
+          </div>
+          <span class="hover-hint">hover for details</span>
+        </div>
+        <div class="set-tooltip">
+          <div class="tooltip-title">Mega Evolution — Chaos Rising</div>
+          <div class="tooltip-section">
+            <div class="tooltip-section-title">Set Overview</div>
+            <div class="tooltip-desc">Ninja-themed set set in Lumiose City. English adaptation of Japan's Ninja Spinner. Smaller 122-card pool means better odds on specific chases. Prereleases May 9–17 at local game stores.</div>
+          </div>
+          <div class="tooltip-section">
+            <div class="tooltip-section-title">Top Chase Cards</div>
+            <div class="chase-card-list">
+              <div class="chase-card-item"><span class="chase-card-name">Mega Greninja ex</span><span class="chase-rarity rarity-sir">SIR</span></div>
+              <div class="chase-card-item"><span class="chase-card-name">Mega Greninja ex</span><span class="chase-rarity rarity-hr">Hyper Rare</span></div>
+              <div class="chase-card-item"><span class="chase-card-name">Mega Pyroar ex</span><span class="chase-rarity rarity-sir">SIR</span></div>
+              <div class="chase-card-item"><span class="chase-card-name">Mega Floette ex</span><span class="chase-rarity rarity-ir">Illus. Rare</span></div>
+              <div class="chase-card-item"><span class="chase-card-name">Mega Dragalge ex</span><span class="chase-rarity rarity-ir">Illus. Rare</span></div>
+              <div class="chase-card-item"><span class="chase-card-name">AZ's Tranquility</span><span class="chase-rarity rarity-sir">SIR Trainer</span></div>
+            </div>
+          </div>
+          <div class="tooltip-section">
+            <div class="tooltip-section-title">Estimated Pull Rates</div>
+            <div class="pull-rate-row"><span class="pull-rate-label">Mega ex</span><span class="pull-rate-val">1:7–9 packs</span><div class="pull-bar-wrap"><div class="pull-bar" style="width:80%"></div></div></div>
+            <div class="pull-rate-row"><span class="pull-rate-label">Illus. Rare</span><span class="pull-rate-val">1:18–20 packs</span><div class="pull-bar-wrap"><div class="pull-bar" style="width:50%"></div></div></div>
+            <div class="pull-rate-row"><span class="pull-rate-label">SIR</span><span class="pull-rate-val">1:40–50 packs</span><div class="pull-bar-wrap"><div class="pull-bar" style="width:22%"></div></div></div>
+            <div class="pull-rate-row"><span class="pull-rate-label">Hyper Rare</span><span class="pull-rate-val">1:60–80 packs</span><div class="pull-bar-wrap"><div class="pull-bar" style="width:12%"></div></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Perfect Order -->
+      <div class="set-card" style="animation-delay:0.05s">
+        <div class="set-card-top">
+          <div class="set-symbol">
+            <img src="https://pokesymbols.com/images/tcg/sets/symbols/perfect-order.png" alt="Perfect Order"
+              onerror="this.parentNode.innerHTML='<span class=sym-abbr>PO</span>'">
+          </div>
+          <div class="set-info">
+            <div class="set-name">Mega Evolution — Perfect Order</div>
+            <div class="set-meta">
+              <span class="set-date">Mar 27, 2026</span>
+              <span class="set-code">ME03</span>
+              <span class="set-badge badge-new">New</span>
+            </div>
+          </div>
+        </div>
+        <div class="set-card-divider"></div>
+        <div class="set-card-bottom">
+          <div class="set-stats">
+            <div class="set-stat"><span class="set-stat-val">~130</span><span class="set-stat-label">Cards</span></div>
+            <div class="set-stat"><span class="set-stat-val">6</span><span class="set-stat-label">SIRs</span></div>
+            <div class="set-stat"><span class="set-stat-val">5</span><span class="set-stat-label">Mega ex</span></div>
+          </div>
+          <span class="hover-hint">hover for details</span>
+        </div>
+        <div class="set-tooltip">
+          <div class="tooltip-title">Mega Evolution — Perfect Order</div>
+          <div class="tooltip-section">
+            <div class="tooltip-section-title">Set Overview</div>
+            <div class="tooltip-desc">Third Mega Evolution set. Smaller, tighter card pool similar to Phantasmal Flames. Features Mega Zygarde ex as the headline card alongside Mega Dragonite ex. Dragon-themed with strong competitive staples.</div>
+          </div>
+          <div class="tooltip-section">
+            <div class="tooltip-section-title">Top Chase Cards</div>
+            <div class="chase-card-list">
+              <div class="chase-card-item"><span class="chase-card-name">Mega Zygarde ex</span><span class="chase-rarity rarity-sir">SIR</span></div>
+              <div class="chase-card-item"><span class="chase-card-name">Mega Dragonite ex</span><span class="chase-rarity rarity-sir">SIR</span></div>
+              <div class="chase-card-item"><span class="chase-card-name">Mega Zygarde ex</span><span class="chase-rarity rarity-hr">Hyper Rare</span></div>
+              <div class="chase-card-item"><span class="chase-card-name">Deoxys (4 formes)</span><span class="chase-rarity rarity-ir">Illus. Rare</span></div>
+              <div class="chase-card-item"><span class="chase-card-name">Mega Dragonite ex</span><span class="chase-rarity rarity-hr">Hyper Rare</span></div>
+            </div>
+          </div>
+          <div class="tooltip-section">
+            <div class="tooltip-section-title">Estimated Pull Rates</div>
+            <div class="pull-rate-row"><span class="pull-rate-label">Mega ex</span><span class="pull-rate-val">1:7–9 packs</span><div class="pull-bar-wrap"><div class="pull-bar" style="width:80%"></div></div></div>
+            <div class="pull-rate-row"><span class="pull-rate-label">Illus. Rare</span><span class="pull-rate-val">1:18–20 packs</span><div class="pull-bar-wrap"><div class="pull-bar" style="width:50%"></div></div></div>
+            <div class="pull-rate-row"><span class="pull-rate-label">SIR</span><span class="pull-rate-val">1:40–50 packs</span><div class="pull-bar-wrap"><div class="pull-bar" style="width:22%"></div></div></div>
+            <div class="pull-rate-row"><span class="pull-rate-label">Hyper Rare</span><span class="pull-rate-val">1:60–80 packs</span><div class="pull-bar-wrap"><div class="pull-bar" style="width:12%"></div></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ascended Heroes -->
+      <div class="set-card" style="animation-delay:0.1s">
+        <div class="set-card-top">
+          <div class="set-symbol">
+            <img src="https://pokesymbols.com/images/tcg/sets/symbols/ascended-heroes.png" alt="Ascended Heroes"
+              onerror="this.parentNode.innerHTML='<span class=sym-abbr>ASC</span>'">
+          </div>
+          <div class="set-info">
+            <div class="set-name">Mega Evolution — Ascended Heroes</div>
+            <div class="set-meta">
+              <span class="set-date">Jan 30, 2026</span>
+              <span class="set-code">ME02.5</span>
+              <span class="set-badge badge-hot">Hot</span>
+            </div>
+          </div>
+        </div>
+        <div class="set-card-divider"></div>
+        <div class="set-card-bottom">
+          <div class="set-stats">
+            <div class="set-stat"><span class="set-stat-val">295</span><span class="set-stat-label">Cards</span></div>
+            <div class="set-stat"><span class="set-stat-val">13</span><span class="set-stat-label">Mega ex</span></div>
+            <div class="set-stat"><span class="set-stat-val">New</span><span class="set-stat-label">MAR Rarity</span></div>
+          </div>
+          <span class="hover-hint">hover for details</span>
+        </div>
+        <div class="set-tooltip">
+          <div class="tooltip-title">Mega Evolution — Ascended Heroes</div>
+          <div class="tooltip-section">
+            <div class="tooltip-section-title">Set Overview</div>
+            <div class="tooltip-desc">Largest Mega Evolution set at 295 cards. Introduces the new Mega Attack Rare rarity — full-art retro katakana attack scenes. Features 13 Mega Evolution ex, new Tera Pokémon ex, and Legends Z-A additions. Strong collector and competitive appeal.</div>
+          </div>
+          <div class="tooltip-section">
+            <div class="tooltip-section-title">Top Chase Cards</div>
+            <div class="chase-card-list">
+              <div class="chase-card-item"><span class="chase-card-name">Mega Gengar ex</span><span class="chase-rarity rarity-sir">SIR</span></div>
+              <div class="chase-card-item"><span class="chase-card-name">Mega Gengar ex</span><span class="chase-rarity rarity-hr">Hyper Rare</span></div>
+              <div class="chase-card-item"><span class="chase-card-name">Mega Dragonite ex</span><span class="chase-rarity rarity-sir">SIR</span></div>
+              <div class="chase-card-item"><span class="chase-card-name">Mega Meganium ex</span><span class="chase-rarity rarity-sir">SIR</span></div>
+              <div class="chase-card-item"><span class="chase-card-name">N's Zekrom (Promo)</span><span class="chase-rarity rarity-fa">PC Promo</span></div>
+            </div>
+          </div>
+          <div class="tooltip-section">
+            <div class="tooltip-section-title">Estimated Pull Rates</div>
+            <div class="pull-rate-row"><span class="pull-rate-label">Mega ex</span><span class="pull-rate-val">1:7–9 packs</span><div class="pull-bar-wrap"><div class="pull-bar" style="width:80%"></div></div></div>
+            <div class="pull-rate-row"><span class="pull-rate-label">Mega Attack Rare</span><span class="pull-rate-val">1:30–40 packs</span><div class="pull-bar-wrap"><div class="pull-bar" style="width:28%"></div></div></div>
+            <div class="pull-rate-row"><span class="pull-rate-label">SIR</span><span class="pull-rate-val">1:40–50 packs</span><div class="pull-bar-wrap"><div class="pull-bar" style="width:22%"></div></div></div>
+            <div class="pull-rate-row"><span class="pull-rate-label">Hyper Rare</span><span class="pull-rate-val">1:80–100 packs</span><div class="pull-bar-wrap"><div class="pull-bar" style="width:10%"></div></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Phantasmal Flames -->
+      <div class="set-card" style="animation-delay:0.15s">
+        <div class="set-card-top">
+          <div class="set-symbol">
+            <img src="https://pokesymbols.com/images/tcg/sets/symbols/phantasmal-flames.png" alt="Phantasmal Flames"
+              onerror="this.parentNode.innerHTML='<span class=sym-abbr>PFL</span>'">
+          </div>
+          <div class="set-info">
+            <div class="set-name">Mega Evolution — Phantasmal Flames</div>
+            <div class="set-meta">
+              <span class="set-date">Nov 14, 2025</span>
+              <span class="set-code">ME01.5</span>
+            </div>
+          </div>
+        </div>
+        <div class="set-card-divider"></div>
+        <div class="set-card-bottom">
+          <div class="set-stats">
+            <div class="set-stat"><span class="set-stat-val">130</span><span class="set-stat-label">Cards</span></div>
+            <div class="set-stat"><span class="set-stat-val">6</span><span class="set-stat-label">SIRs</span></div>
+            <div class="set-stat"><span class="set-stat-val">3</span><span class="set-stat-label">Mega ex</span></div>
+          </div>
+          <span class="hover-hint">hover for details</span>
+        </div>
+        <div class="set-tooltip">
+          <div class="tooltip-title">Mega Evolution — Phantasmal Flames</div>
+          <div class="tooltip-section">
+            <div class="tooltip-section-title">Set Overview</div>
+            <div class="tooltip-desc">Ghost and Fire themed mini-set. Mega Charizard X ex is the standout chase card. Smaller set with higher pull rates on the best cards. Best Buy exclusive in-store launch with ticket distribution.</div>
+          </div>
+          <div class="tooltip-section">
+            <div class="tooltip-section-title">Top Chase Cards</div>
+            <div class="chase-card-list">
+              <div class="chase-card-item"><span class="chase-card-name">Mega Charizard X ex</span><span class="chase-rarity rarity-sir">SIR</span></div>
+              <div class="chase-card-item"><span class="chase-card-name">Mega Charizard X ex</span><span class="chase-rarity rarity-hr">Hyper Rare</span></div>
+              <div class="chase-card-item"><span class="chase-card-name">Mega Gengar ex</span><span class="chase-rarity rarity-sir">SIR</span></div>
+              <div class="chase-card-item"><span class="chase-card-name">Mega Charizard X ex</span><span class="chase-rarity rarity-fa">Full Art</span></div>
+            </div>
+          </div>
+          <div class="tooltip-section">
+            <div class="tooltip-section-title">Estimated Pull Rates</div>
+            <div class="pull-rate-row"><span class="pull-rate-label">Mega ex</span><span class="pull-rate-val">1:5–7 packs</span><div class="pull-bar-wrap"><div class="pull-bar" style="width:90%"></div></div></div>
+            <div class="pull-rate-row"><span class="pull-rate-label">SIR</span><span class="pull-rate-val">1:30–40 packs</span><div class="pull-bar-wrap"><div class="pull-bar" style="width:28%"></div></div></div>
+            <div class="pull-rate-row"><span class="pull-rate-label">Hyper Rare</span><span class="pull-rate-val">1:60–80 packs</span><div class="pull-bar-wrap"><div class="pull-bar" style="width:12%"></div></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mega Evolution -->
+      <div class="set-card" style="animation-delay:0.2s">
+        <div class="set-card-top">
+          <div class="set-symbol">
+            <img src="https://pokesymbols.com/images/tcg/sets/symbols/mega-evolution.png" alt="Mega Evolution"
+              onerror="this.parentNode.innerHTML='<span class=sym-abbr>MEG</span>'">
+          </div>
+          <div class="set-info">
+            <div class="set-name">Mega Evolution</div>
+            <div class="set-meta">
+              <span class="set-date">Sep 26, 2025</span>
+              <span class="set-code">ME01</span>
+            </div>
+          </div>
+        </div>
+        <div class="set-card-divider"></div>
+        <div class="set-card-bottom">
+          <div class="set-stats">
+            <div class="set-stat"><span class="set-stat-val">188</span><span class="set-stat-label">Cards</span></div>
+            <div class="set-stat"><span class="set-stat-val">10+</span><span class="set-stat-label">SIRs</span></div>
+            <div class="set-stat"><span class="set-stat-val">8</span><span class="set-stat-label">Mega ex</span></div>
+          </div>
+          <span class="hover-hint">hover for details</span>
+        </div>
+        <div class="set-tooltip">
+          <div class="tooltip-title">Mega Evolution</div>
+          <div class="tooltip-section">
+            <div class="tooltip-section-title">Set Overview</div>
+            <div class="tooltip-desc">The flagship set that launched the Mega Evolution era. First time Mega Evolution has been a core TCG mechanic since the XY era. Introduced Mega Evolution ex cards and new ACE SPEC trainers. Tied to Pokémon Legends: Z-A launch.</div>
+          </div>
+          <div class="tooltip-section">
+            <div class="tooltip-section-title">Top Chase Cards</div>
+            <div class="chase-card-list">
+              <div class="chase-card-item"><span class="chase-card-name">Mega Lucario ex</span><span class="chase-rarity rarity-sir">SIR</span></div>
+              <div class="chase-card-item"><span class="chase-card-name">Mega Gardevoir ex</span><span class="chase-rarity rarity-sir">SIR</span></div>
+              <div class="chase-card-item"><span class="chase-card-name">Mega Lucario ex</span><span class="chase-rarity rarity-hr">Hyper Rare</span></div>
+              <div class="chase-card-item"><span class="chase-card-name">Mega Gardevoir ex (Promo)</span><span class="chase-rarity rarity-fa">PC Promo</span></div>
+              <div class="chase-card-item"><span class="chase-card-name">Alakazam (Promo)</span><span class="chase-rarity rarity-fa">PC Promo</span></div>
+            </div>
+          </div>
+          <div class="tooltip-section">
+            <div class="tooltip-section-title">Estimated Pull Rates</div>
+            <div class="pull-rate-row"><span class="pull-rate-label">Mega ex</span><span class="pull-rate-val">1:7–9 packs</span><div class="pull-bar-wrap"><div class="pull-bar" style="width:80%"></div></div></div>
+            <div class="pull-rate-row"><span class="pull-rate-label">SIR</span><span class="pull-rate-val">1:40–50 packs</span><div class="pull-bar-wrap"><div class="pull-bar" style="width:22%"></div></div></div>
+            <div class="pull-rate-row"><span class="pull-rate-label">Hyper Rare</span><span class="pull-rate-val">1:80–100 packs</span><div class="pull-bar-wrap"><div class="pull-bar" style="width:10%"></div></div></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── SCARLET & VIOLET ERA ── -->
+  <div class="era-section">
+    <div class="era-header">
+      <span class="era-label">Scarlet &amp; Violet Era — 2025</span>
+      <div class="era-line"></div>
+    </div>
+    <div class="set-grid">
+
+      <!-- Black Bolt -->
+      <div class="set-card" style="animation-delay:0s">
+        <div class="set-card-top">
+          <div class="set-symbol">
+            <img src="https://pokesymbols.com/images/tcg/sets/symbols/black-bolt.png" alt="Black Bolt"
+              onerror="this.parentNode.innerHTML='<span class=sym-abbr>BLK</span>'">
+          </div>
+          <div class="set-info">
+            <div class="set-name">Scarlet &amp; Violet — Black Bolt</div>
+            <div class="set-meta">
+              <span class="set-date">Jul 18, 2025</span>
+              <span class="set-code">SV10.5</span>
+            </div>
+          </div>
+        </div>
+        <div class="set-card-divider"></div>
+        <div class="set-card-bottom">
+          <div class="set-stats">
+            <div class="set-stat"><span class="set-stat-val">172</span><span class="set-stat-label">Cards</span></div>
+            <div class="set-stat"><span class="set-stat-val">10+</span><span class="set-stat-label">SIRs</span></div>
+            <div class="set-stat"><span class="set-stat-val">Unova</span><span class="set-stat-label">Theme</span></div>
+          </div>
+          <span class="hover-hint">hover for details</span>
+        </div>
+        <div class="set-tooltip">
+          <div class="tooltip-title">Scarlet &amp; Violet — Black Bolt</div>
+          <div class="tooltip-section">
+            <div class="tooltip-section-title">Set Overview</div>
+            <div class="tooltip-desc">Twin release with White Flare — the final Scarlet & Violet era sets. Unova-themed with powerful ex cards and nostalgic Pokémon. Parallel cards feature Poké Ball patterns. Features Zekrom ex and Meloetta ex.</div>
+          </div>
+          <div class="tooltip-section">
+            <div class="tooltip-section-title">Top Chase Cards</div>
+            <div class="chase-card-list">
+              <div class="chase-card-item"><span class="chase-card-name">Zekrom ex</span><span class="chase-rarity rarity-sir">SIR</span></div>
+              <div class="chase-card-item"><span class="chase-card-name">Serperior ex</span><span class="chase-rarity rarity-sir">SIR</span></div>
+              <div class="chase-card-item"><span class="chase-card-name">Meloetta ex</span><span class="chase-rarity rarity-ir">Illus. Rare</span></div>
+              <div class="chase-card-item"><span class="chase-card-name">Thundurus (PC Promo)</span><span class="chase-rarity rarity-fa">PC Promo</span></div>
+            </div>
+          </div>
+          <div class="tooltip-section">
+            <div class="tooltip-section-title">Pull Rates (SV Standard)</div>
+            <div class="pull-rate-row"><span class="pull-rate-label">Pokémon ex</span><span class="pull-rate-val">1:4–5 packs</span><div class="pull-bar-wrap"><div class="pull-bar" style="width:90%"></div></div></div>
+            <div class="pull-rate-row"><span class="pull-rate-label">Illus. Rare</span><span class="pull-rate-val">1:18–22 packs</span><div class="pull-bar-wrap"><div class="pull-bar" style="width:48%"></div></div></div>
+            <div class="pull-rate-row"><span class="pull-rate-label">SIR</span><span class="pull-rate-val">1:70–90 packs</span><div class="pull-bar-wrap"><div class="pull-bar" style="width:12%"></div></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- White Flare -->
+      <div class="set-card" style="animation-delay:0.05s">
+        <div class="set-card-top">
+          <div class="set-symbol">
+            <img src="https://pokesymbols.com/images/tcg/sets/symbols/white-flare.png" alt="White Flare"
+              onerror="this.parentNode.innerHTML='<span class=sym-abbr>WHT</span>'">
+          </div>
+          <div class="set-info">
+            <div class="set-name">Scarlet &amp; Violet — White Flare</div>
+            <div class="set-meta">
+              <span class="set-date">Jul 18, 2025</span>
+              <span class="set-code">SV10.5</span>
+            </div>
+          </div>
+        </div>
+        <div class="set-card-divider"></div>
+        <div class="set-card-bottom">
+          <div class="set-stats">
+            <div class="set-stat"><span class="set-stat-val">173</span><span class="set-stat-label">Cards</span></div>
+            <div class="set-stat"><span class="set-stat-val">10+</span><span class="set-stat-label">SIRs</span></div>
+            <div class="set-stat"><span class="set-stat-val">Unova</span><span class="set-stat-label">Theme</span></div>
+          </div>
+          <span class="hover-hint">hover for details</span>
+        </div>
+        <div class="set-tooltip">
+          <div class="tooltip-title">Scarlet &amp; Violet — White Flare</div>
+          <div class="tooltip-section">
+            <div class="tooltip-section-title">Set Overview</div>
+            <div class="tooltip-desc">Twin set with Black Bolt. Companion Unova-themed expansion featuring Reshiram ex and Victini ex. Final Scarlet & Violet era release before the Mega Evolution block began.</div>
+          </div>
+          <div class="tooltip-section">
+            <div class="tooltip-section-title">Top Chase Cards</div>
+            <div class="chase-card-list">
+              <div class="chase-card-item"><span class="chase-card-name">Reshiram ex</span><span class="chase-rarity rarity-sir">SIR</span></div>
+              <div class="chase-card-item"><span class="chase-card-name">Emboar ex</span><span class="chase-rarity rarity-sir">SIR</span></div>
+              <div class="chase-card-item"><span class="chase-card-name">Victini ex</span><span class="chase-rarity rarity-ir">Illus. Rare</span></div>
+            </div>
+          </div>
+          <div class="tooltip-section">
+            <div class="tooltip-section-title">Pull Rates (SV Standard)</div>
+            <div class="pull-rate-row"><span class="pull-rate-label">Pokémon ex</span><span class="pull-rate-val">1:4–5 packs</span><div class="pull-bar-wrap"><div class="pull-bar" style="width:90%"></div></div></div>
+            <div class="pull-rate-row"><span class="pull-rate-label">Illus. Rare</span><span class="pull-rate-val">1:18–22 packs</span><div class="pull-bar-wrap"><div class="pull-bar" style="width:48%"></div></div></div>
+            <div class="pull-rate-row"><span class="pull-rate-label">SIR</span><span class="pull-rate-val">1:70–90 packs</span><div class="pull-bar-wrap"><div class="pull-bar" style="width:12%"></div></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Destined Rivals -->
+      <div class="set-card" style="animation-delay:0.1s">
+        <div class="set-card-top">
+          <div class="set-symbol">
+            <img src="https://pokesymbols.com/images/tcg/sets/symbols/destined-rivals.png" alt="Destined Rivals"
+              onerror="this.parentNode.innerHTML='<span class=sym-abbr>DRI</span>'">
+          </div>
+          <div class="set-info">
+            <div class="set-name">Scarlet &amp; Violet — Destined Rivals</div>
+            <div class="set-meta">
+              <span class="set-date">May 30, 2025</span>
+              <span class="set-code">SV10</span>
+              <span class="set-badge badge-hot">Hot</span>
+            </div>
+          </div>
+        </div>
+        <div class="set-card-divider"></div>
+        <div class="set-card-bottom">
+          <div class="set-stats">
+            <div class="set-stat"><span class="set-stat-val">244</span><span class="set-stat-label">Cards</span></div>
+            <div class="set-stat"><span class="set-stat-val">85+</span><span class="set-stat-label">Trainer Pkm</span></div>
+            <div class="set-stat"><span class="set-stat-val">45+</span><span class="set-stat-label">Team Rocket</span></div>
+          </div>
+          <span class="hover-hint">hover for details</span>
+        </div>
+        <div class="set-tooltip">
+          <div class="tooltip-title">Scarlet &amp; Violet — Destined Rivals</div>
+          <div class="tooltip-section">
+            <div class="tooltip-section-title">Set Overview</div>
+            <div class="tooltip-desc">Team Rocket vs heroic Trainers theme. Features iconic rival pairings — Cynthia & Garchomp ex, Ethan & Ho-Oh ex, Giovanni & Mewtwo ex. Sells out at retail almost immediately on every restock.</div>
+          </div>
+          <div class="tooltip-section">
+            <div class="tooltip-section-title">Top Chase Cards</div>
+            <div class="chase-card-list">
+              <div class="chase-card-item"><span class="chase-card-name">Team Rocket's Mewtwo ex</span><span class="chase-rarity rarity-sir">SIR #231</span></div>
+              <div class="chase-card-item"><span class="chase-card-name">Cynthia's Garchomp ex</span><span class="chase-rarity rarity-sir">SIR #232</span></div>
+              <div class="chase-card-item"><span class="chase-card-name">Ethan's Ho-Oh ex</span><span class="chase-rarity rarity-sir">SIR #230</span></div>
+              <div class="chase-card-item"><span class="chase-card-name">Team Rocket's Wobbuffet</span><span class="chase-rarity rarity-fa">PC Promo</span></div>
+              <div class="chase-card-item"><span class="chase-card-name">Arven's Mabosstiff ex</span><span class="chase-rarity rarity-ir">Illus. Rare</span></div>
+            </div>
+          </div>
+          <div class="tooltip-section">
+            <div class="tooltip-section-title">Pull Rates (SV Standard)</div>
+            <div class="pull-rate-row"><span class="pull-rate-label">Pokémon ex</span><span class="pull-rate-val">1:4–5 packs</span><div class="pull-bar-wrap"><div class="pull-bar" style="width:90%"></div></div></div>
+            <div class="pull-rate-row"><span class="pull-rate-label">Illus. Rare</span><span class="pull-rate-val">1:18–22 packs</span><div class="pull-bar-wrap"><div class="pull-bar" style="width:48%"></div></div></div>
+            <div class="pull-rate-row"><span class="pull-rate-label">SIR</span><span class="pull-rate-val">1:70–90 packs</span><div class="pull-bar-wrap"><div class="pull-bar" style="width:12%"></div></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Journey Together -->
+      <div class="set-card" style="animation-delay:0.15s">
+        <div class="set-card-top">
+          <div class="set-symbol">
+            <img src="https://pokesymbols.com/images/tcg/sets/symbols/journey-together.png" alt="Journey Together"
+              onerror="this.parentNode.innerHTML='<span class=sym-abbr>JTG</span>'">
+          </div>
+          <div class="set-info">
+            <div class="set-name">Scarlet &amp; Violet — Journey Together</div>
+            <div class="set-meta">
+              <span class="set-date">Mar 28, 2025</span>
+              <span class="set-code">SV9</span>
+            </div>
+          </div>
+        </div>
+        <div class="set-card-divider"></div>
+        <div class="set-card-bottom">
+          <div class="set-stats">
+            <div class="set-stat"><span class="set-stat-val">190</span><span class="set-stat-label">Cards</span></div>
+            <div class="set-stat"><span class="set-stat-val">10+</span><span class="set-stat-label">SIRs</span></div>
+            <div class="set-stat"><span class="set-stat-val">Trainer</span><span class="set-stat-label">Pokémon</span></div>
+          </div>
+          <span class="hover-hint">hover for details</span>
+        </div>
+        <div class="set-tooltip">
+          <div class="tooltip-title">Scarlet &amp; Violet — Journey Together</div>
+          <div class="tooltip-section">
+            <div class="tooltip-section-title">Set Overview</div>
+            <div class="tooltip-desc">Returns Trainer's Pokémon mechanic for first time since EX Team Magma vs Team Aqua. Features N's Zoroark ex, Iono's Bellibolt ex, Lillie's Clefairy ex, Hop's Zacian ex. Introduced Latin American Spanish as a new language for the TCG.</div>
+          </div>
+          <div class="tooltip-section">
+            <div class="tooltip-section-title">Top Chase Cards</div>
+            <div class="chase-card-list">
+              <div class="chase-card-item"><span class="chase-card-name">N's Zoroark ex</span><span class="chase-rarity rarity-sir">SIR</span></div>
+              <div class="chase-card-item"><span class="chase-card-name">Lillie's Clefairy ex</span><span class="chase-rarity rarity-sir">SIR</span></div>
+              <div class="chase-card-item"><span class="chase-card-name">Hop's Zacian ex</span><span class="chase-rarity rarity-ir">Illus. Rare</span></div>
+              <div class="chase-card-item"><span class="chase-card-name">N's Reshiram (Box Topper)</span><span class="chase-rarity rarity-fa">Promo IR</span></div>
+              <div class="chase-card-item"><span class="chase-card-name">N's Zorua (PC Promo)</span><span class="chase-rarity rarity-fa">PC Promo</span></div>
+            </div>
+          </div>
+          <div class="tooltip-section">
+            <div class="tooltip-section-title">Pull Rates (SV Standard)</div>
+            <div class="pull-rate-row"><span class="pull-rate-label">Pokémon ex</span><span class="pull-rate-val">1:4–5 packs</span><div class="pull-bar-wrap"><div class="pull-bar" style="width:90%"></div></div></div>
+            <div class="pull-rate-row"><span class="pull-rate-label">Illus. Rare</span><span class="pull-rate-val">1:18–22 packs</span><div class="pull-bar-wrap"><div class="pull-bar" style="width:48%"></div></div></div>
+            <div class="pull-rate-row"><span class="pull-rate-label">SIR</span><span class="pull-rate-val">1:70–90 packs</span><div class="pull-bar-wrap"><div class="pull-bar" style="width:12%"></div></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Prismatic Evolutions -->
+      <div class="set-card" style="animation-delay:0.2s">
+        <div class="set-card-top">
+          <div class="set-symbol">
+            <img src="https://pokesymbols.com/images/tcg/sets/symbols/prismatic-evolutions.png" alt="Prismatic Evolutions"
+              onerror="this.parentNode.innerHTML='<span class=sym-abbr>PRE</span>'">
+          </div>
+          <div class="set-info">
+            <div class="set-name">Scarlet &amp; Violet — Prismatic Evolutions</div>
+            <div class="set-meta">
+              <span class="set-date">Jan 17, 2025</span>
+              <span class="set-code">SV8.5</span>
+              <span class="set-badge badge-hot">High Demand</span>
+            </div>
+          </div>
+        </div>
+        <div class="set-card-divider"></div>
+        <div class="set-card-bottom">
+          <div class="set-stats">
+            <div class="set-stat"><span class="set-stat-val">180</span><span class="set-stat-label">Cards</span></div>
+            <div class="set-stat"><span class="set-stat-val">Eevee</span><span class="set-stat-label">Focus</span></div>
+            <div class="set-stat"><span class="set-stat-val">$4.6K</span><span class="set-stat-label">Master Set</span></div>
+          </div>
+          <span class="hover-hint">hover for details</span>
+        </div>
+        <div class="set-tooltip">
+          <div class="tooltip-title">Scarlet &amp; Violet — Prismatic Evolutions</div>
+          <div class="tooltip-section">
+            <div class="tooltip-section-title">Set Overview</div>
+            <div class="tooltip-desc">Eevee and Eeveelutions themed set. One of the most hyped sets in recent memory — sold out within hours everywhere on release. Still restocks sporadically at retail. Stellar Tera Pokémon ex feature rainbow-spectrum artwork.</div>
+          </div>
+          <div class="tooltip-section">
+            <div class="tooltip-section-title">Top Chase Cards</div>
+            <div class="chase-card-list">
+              <div class="chase-card-item"><span class="chase-card-name">Umbreon ex</span><span class="chase-rarity rarity-sir">SIR</span></div>
+              <div class="chase-card-item"><span class="chase-card-name">Espeon ex</span><span class="chase-rarity rarity-sir">SIR</span></div>
+              <div class="chase-card-item"><span class="chase-card-name">Sylveon ex</span><span class="chase-rarity rarity-sir">SIR</span></div>
+              <div class="chase-card-item"><span class="chase-card-name">Eevee ex</span><span class="chase-rarity rarity-ir">Illus. Rare</span></div>
+              <div class="chase-card-item"><span class="chase-card-name">Umbreon ex (Hyper)</span><span class="chase-rarity rarity-hr">Hyper Rare</span></div>
+            </div>
+          </div>
+          <div class="tooltip-section">
+            <div class="tooltip-section-title">Pull Rates (SV Standard)</div>
+            <div class="pull-rate-row"><span class="pull-rate-label">Pokémon ex</span><span class="pull-rate-val">1:4–5 packs</span><div class="pull-bar-wrap"><div class="pull-bar" style="width:90%"></div></div></div>
+            <div class="pull-rate-row"><span class="pull-rate-label">Illus. Rare</span><span class="pull-rate-val">1:18–22 packs</span><div class="pull-bar-wrap"><div class="pull-bar" style="width:48%"></div></div></div>
+            <div class="pull-rate-row"><span class="pull-rate-label">SIR</span><span class="pull-rate-val">1:70–90 packs</span><div class="pull-bar-wrap"><div class="pull-bar" style="width:12%"></div></div></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── RARITY GUIDE ── -->
+  <div class="era-section">
+    <div class="era-header">
+      <span class="era-label">Rarity Guide</span>
+      <div class="era-line"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;">
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:16px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+          <span class="chase-rarity rarity-hr" style="font-size:0.7rem;padding:3px 10px;">Hyper Rare</span>
+        </div>
+        <div style="font-size:0.78rem;color:var(--text2);line-height:1.5;">Gold textured cards. Rarest pull in any set. ~1:60–80 packs.</div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:16px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+          <span class="chase-rarity rarity-sir" style="font-size:0.7rem;padding:3px 10px;">Special Illus. Rare</span>
+        </div>
+        <div style="font-size:0.78rem;color:var(--text2);line-height:1.5;">Full-art scene cards. High collector value. ~1:40–90 packs depending on set.</div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:16px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+          <span class="chase-rarity rarity-ir" style="font-size:0.7rem;padding:3px 10px;">Illus. Rare</span>
+        </div>
+        <div style="font-size:0.78rem;color:var(--text2);line-height:1.5;">Illustrated background art. Mid-tier chase. ~1:18–22 packs.</div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:16px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+          <span class="chase-rarity rarity-fa" style="font-size:0.7rem;padding:3px 10px;">Full Art / Promo</span>
+        </div>
+        <div style="font-size:0.78rem;color:var(--text2);line-height:1.5;">Full art ex and Trainer cards. PC exclusives have logo stamp. ~1:15–20 packs.</div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+</body>
+</html>

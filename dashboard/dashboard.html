@@ -1,0 +1,1534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Keith's PokeBS</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --surface2: #18181f;
+    --border: #2a2a38;
+    --accent: #f0c040;
+    --accent2: #e8503a;
+    --green: #3ddc84;
+    --red: #e8503a;
+    --muted: #555570;
+    --text: #e8e8f0;
+    --text2: #9090a8;
+    --target-red: #cc0000;
+    --walmart-blue: #0071ce;
+    --bestbuy-yellow: #ffed00;
+    --bestbuy-blue: #003b7a;
+    --fivebelow-pink: #e91e8c;
+    --gamestop-red: #f05000;
+    --ollies-orange: #ff8c00;
+    --aldi-blue: #00529b;
+    --marshalls-purple: #7c4dff;
+    --tjmaxx-coral: #e8503a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Scanline overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.08) 2px,
+      rgba(0,0,0,0.08) 4px
+    );
+    pointer-events: none;
+    z-index: 999;
+  }
+
+  /* Noise texture */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    opacity: 0.03;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 998;
+  }
+
+  /* ── Header ── */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px 40px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    background: rgba(10,10,15,0.92);
+    backdrop-filter: blur(12px);
+    z-index: 100;
+  }
+
+  .logo {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+
+  .logo-main {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.2rem;
+    letter-spacing: 0.04em;
+    color: var(--accent);
+    text-shadow: 0 0 30px rgba(240,192,64,0.4);
+  }
+
+  .logo-sub {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--muted);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .live-badge {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--green);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+
+  .pulse-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 0 0 rgba(61,220,132,0.4); }
+    50% { opacity: 0.8; transform: scale(1.1); box-shadow: 0 0 0 6px rgba(61,220,132,0); }
+  }
+
+  #last-updated {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    color: var(--muted);
+  }
+
+  /* ── Main layout ── */
+  main {
+    padding: 32px 40px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  /* ── Stats Bar ── */
+  .stats-bar {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 36px;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 20px 24px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--accent);
+  }
+
+  .stat-card:nth-child(2)::before { background: var(--green); }
+  .stat-card:nth-child(3)::before { background: var(--accent2); }
+  .stat-card:nth-child(4)::before { background: #a78bfa; }
+
+  .stat-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .stat-value {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.4rem;
+    letter-spacing: 0.02em;
+    line-height: 1;
+  }
+
+  /* ── Retailer Tabs ── */
+  .retailer-tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 28px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0;
+  }
+
+  .tab-btn {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 10px 20px;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: -1px;
+  }
+
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+
+  /* ── Product Grid ── */
+  .product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 16px;
+  }
+
+  .product-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+    animation: cardIn 0.4s ease both;
+  }
+
+  .product-card:hover {
+    transform: translateY(-2px);
+    border-color: #3a3a50;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+
+  .product-card.in-stock {
+    border-color: rgba(61,220,132,0.3);
+    box-shadow: 0 0 20px rgba(61,220,132,0.05);
+  }
+
+  .product-card.in-stock:hover {
+    box-shadow: 0 8px 32px rgba(61,220,132,0.15);
+  }
+
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .card-retailer-bar {
+    height: 3px;
+  }
+  .retailer-target .card-retailer-bar { background: var(--target-red); }
+  .retailer-walmart .card-retailer-bar { background: var(--walmart-blue); }
+  .retailer-bestbuy .card-retailer-bar { background: var(--bestbuy-yellow); }
+  .retailer-pokemoncenter .card-retailer-bar { background: #e53935; }
+
+  /* Alt retailer color bars */
+  .retailer-fivebelow .card-retailer-bar    { background: var(--fivebelow-pink); }
+  .retailer-gamestop .card-retailer-bar     { background: var(--gamestop-red); }
+  .retailer-ollies .card-retailer-bar       { background: var(--ollies-orange); }
+  .retailer-aldi .card-retailer-bar         { background: var(--aldi-blue); }
+  .retailer-marshalls .card-retailer-bar    { background: var(--marshalls-purple); }
+  .retailer-tjmaxx .card-retailer-bar       { background: var(--tjmaxx-coral); }
+
+  /* Alt retailer pill colors */
+  .retailer-fivebelow .retailer-pill  { color: var(--fivebelow-pink); }
+  .retailer-gamestop .retailer-pill   { color: var(--gamestop-red); }
+  .retailer-ollies .retailer-pill     { color: var(--ollies-orange); }
+  .retailer-aldi .retailer-pill       { color: #4fa3e0; }
+  .retailer-marshalls .retailer-pill  { color: #b388ff; }
+  .retailer-tjmaxx .retailer-pill     { color: var(--tjmaxx-coral); }
+
+  /* Alt Retailer section */
+  .alt-section {
+    margin-top: 48px;
+  }
+
+  .alt-section-note {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    margin-bottom: 20px;
+  }
+
+  .alt-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 14px;
+  }
+
+  .alt-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    transition: transform 0.2s, border-color 0.2s;
+    animation: cardIn 0.4s ease both;
+  }
+
+  .alt-card:hover {
+    transform: translateY(-2px);
+    border-color: #3a3a50;
+  }
+
+  .alt-card.reminder-card {
+    opacity: 0.75;
+    border-style: dashed;
+  }
+
+  .alt-card.deal-card {
+    border-color: rgba(61,220,132,0.3);
+    box-shadow: 0 0 16px rgba(61,220,132,0.06);
+  }
+
+  .alt-card-body {
+    padding: 16px 18px;
+  }
+
+  .alt-card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .alt-card-name {
+    font-weight: 500;
+    font-size: 0.88rem;
+    line-height: 1.3;
+    flex: 1;
+  }
+
+  .alt-badge {
+    flex-shrink: 0;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.58rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 2px;
+    font-weight: 500;
+  }
+
+  .alt-badge-deal   { background: rgba(61,220,132,0.12); color: var(--green); border: 1px solid rgba(61,220,132,0.25); }
+  .alt-badge-remind { background: rgba(240,192,64,0.08); color: var(--muted); border: 1px solid rgba(100,100,130,0.2); }
+
+  .alt-card-note {
+    font-size: 0.78rem;
+    color: var(--text2);
+    line-height: 1.5;
+    margin-bottom: 12px;
+  }
+
+  .alt-card-footer {
+    padding: 10px 18px;
+    background: var(--surface2);
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .alt-price-block {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .alt-price {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.82rem;
+    color: var(--text2);
+  }
+
+  .alt-savings {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    color: var(--green);
+  }
+
+  .alt-no-online {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 24px 32px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+
+  .card-body {
+    padding: 18px 20px;
+  }
+
+  .card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .card-name {
+    font-weight: 500;
+    font-size: 0.92rem;
+    line-height: 1.3;
+    color: var(--text);
+    flex: 1;
+  }
+
+  .set-logo-wrap {
+    width: 52px;
+    height: 52px;
+    border-radius: 4px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    overflow: hidden;
+    margin-right: 12px;
+  }
+
+  .set-logo-wrap img {
+    width: 44px;
+    height: 44px;
+    object-fit: contain;
+    filter: drop-shadow(0 1px 3px rgba(0,0,0,0.5));
+  }
+
+  .set-logo-wrap .set-abbr {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1rem;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+  }
+
+  .price-block {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+  }
+
+  .price-listed {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--text2);
+  }
+
+  .price-msrp {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+  }
+
+  .price-msrp.above-msrp { color: var(--accent2); }
+  .price-msrp.at-msrp { color: var(--green); }
+
+  .stock-badge {
+    flex-shrink: 0;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 4px 9px;
+    border-radius: 2px;
+    font-weight: 500;
+  }
+
+  .badge-in { background: rgba(61,220,132,0.12); color: var(--green); border: 1px solid rgba(61,220,132,0.25); }
+  .badge-out { background: rgba(232,80,58,0.08); color: #666680; border: 1px solid rgba(100,100,130,0.2); }
+  .badge-checking { background: rgba(240,192,64,0.08); color: var(--accent); border: 1px solid rgba(240,192,64,0.2); animation: blink 1.5s infinite; }
+
+  @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+  .card-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .retailer-pill {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .retailer-target .retailer-pill { color: #ff6b6b; }
+  .retailer-walmart .retailer-pill { color: #5ab5ff; }
+  .retailer-bestbuy .retailer-pill { color: #ffe566; }
+  .retailer-pokemoncenter .retailer-pill { color: #ff8a80; }
+
+  .card-price {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--text2);
+  }
+
+  .card-footer {
+    padding: 12px 20px;
+    background: var(--surface2);
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .card-time {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--muted);
+  }
+
+  .buy-btn {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 6px 14px;
+    border-radius: 2px;
+    text-decoration: none;
+    border: 1px solid var(--border);
+    color: var(--text2);
+    transition: all 0.15s;
+    cursor: pointer;
+    background: none;
+  }
+
+  .buy-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .buy-btn.active-buy { border-color: var(--green); color: var(--green); background: rgba(61,220,132,0.08); }
+
+  /* ── Alert history panel ── */
+  .history-section {
+    margin-top: 40px;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.3rem;
+    letter-spacing: 0.06em;
+    color: var(--text2);
+  }
+
+  .section-line {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .history-list {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .history-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    animation: slideIn 0.3s ease;
+  }
+
+  .history-item:last-child { border-bottom: none; }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(-8px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  .hist-time { color: var(--muted); min-width: 120px; }
+  .hist-retailer { min-width: 80px; }
+  .hist-name { flex: 1; color: var(--text2); }
+  .hist-status { font-weight: 500; }
+  .hist-in { color: var(--green); }
+  .hist-out { color: var(--muted); }
+
+  /* ── Controls ── */
+  .controls {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .search-input {
+    flex: 1;
+    min-width: 200px;
+    max-width: 320px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 9px 14px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .search-input::placeholder { color: var(--muted); }
+  .search-input:focus { border-color: var(--accent); }
+
+  .filter-btn {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 9px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .filter-btn:hover, .filter-btn.active { border-color: var(--accent); color: var(--accent); }
+
+  .refresh-btn {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 9px 18px;
+    background: rgba(240,192,64,0.1);
+    border: 1px solid rgba(240,192,64,0.3);
+    border-radius: 3px;
+    color: var(--accent);
+    cursor: pointer;
+    transition: all 0.15s;
+    margin-left: auto;
+  }
+
+  .refresh-btn:hover { background: rgba(240,192,64,0.2); }
+
+  /* ── Empty state ── */
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--muted);
+  }
+
+  .empty-icon {
+    font-size: 3rem;
+    margin-bottom: 12px;
+    opacity: 0.4;
+  }
+
+  .empty-text {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+  }
+
+  /* ── Ticker ── */
+  .ticker-wrap {
+    overflow: hidden;
+    background: var(--surface2);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 8px 0;
+    margin-bottom: 32px;
+  }
+
+  .ticker {
+    display: flex;
+    gap: 0;
+    animation: ticker 30s linear infinite;
+    white-space: nowrap;
+  }
+
+  .ticker-item {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 0 40px;
+  }
+
+  .ticker-item span { color: var(--accent); margin-right: 8px; }
+
+  @keyframes ticker {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+
+  /* ── Add product modal ── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(4px);
+    z-index: 500;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 32px;
+    width: 100%;
+    max-width: 480px;
+    position: relative;
+  }
+
+  .modal-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.5rem;
+    letter-spacing: 0.06em;
+    margin-bottom: 24px;
+    color: var(--accent);
+  }
+
+  .form-group { margin-bottom: 16px; }
+
+  .form-label {
+    display: block;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  .form-input, .form-select {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 10px 14px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .form-input:focus, .form-select:focus { border-color: var(--accent); }
+  .form-select option { background: var(--surface); }
+
+  .modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 24px;
+  }
+
+  .btn-primary {
+    flex: 1;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 11px;
+    background: var(--accent);
+    border: none;
+    border-radius: 3px;
+    color: #000;
+    cursor: pointer;
+    font-weight: 500;
+    transition: opacity 0.15s;
+  }
+
+  .btn-primary:hover { opacity: 0.85; }
+
+  .btn-secondary {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 11px 20px;
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .btn-secondary:hover { border-color: var(--text2); color: var(--text2); }
+
+  .add-product-btn {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 9px 18px;
+    background: none;
+    border: 1px solid rgba(240,192,64,0.3);
+    border-radius: 3px;
+    color: var(--accent);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .add-product-btn:hover { background: rgba(240,192,64,0.08); }
+
+  /* ── Nav Bar ── */
+  .nav-bar {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0 40px;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-link {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 12px 18px;
+    color: var(--muted);
+    text-decoration: none;
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+    cursor: pointer;
+    background: none;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+  }
+
+  .nav-link:hover { color: var(--text); }
+  .nav-link.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  @media (max-width: 768px) {
+    header { padding: 16px 20px; }
+    main { padding: 20px; }
+    .stats-bar { grid-template-columns: repeat(2,1fr); }
+    .logo-main { font-size: 1.6rem; }
+    .nav-bar { padding: 0 20px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <span class="logo-main">Keith's PokeBS</span>
+    <span class="logo-sub">Restock Tracker</span>
+  </div>
+  <div class="header-right">
+    <div class="live-badge">
+      <div class="pulse-dot"></div>
+      Monitoring
+    </div>
+    <span id="last-updated">Last check: —</span>
+  </div>
+</header>
+
+<!-- Nav Bar -->
+<nav class="nav-bar">
+  <a class="nav-link active" href="dashboard.html">📡 Tracker</a>
+  <a class="nav-link" href="info.html">📖 Set Info</a>
+  <a class="nav-link" href="pricing.html">💰 Pricing</a>
+  <a class="nav-link" href="binder.html">📂 Binder</a>
+  <a class="nav-link" href="future.html">📅 Future</a>
+  <a class="nav-link" href="retail-drops.html">🛒 Retail Drops</a>
+  <a class="nav-link" href="pricing-history.html">Price History</a>
+  <a class="nav-link" href="help.html">❓ Help</a>
+</nav>
+
+<!-- Ticker -->
+<div class="ticker-wrap">
+  <div class="ticker" id="ticker">
+    <span class="ticker-item"><span>🔥</span> Chaos Rising ETB — Drops May 22</span>
+    <span class="ticker-item"><span>◆</span> Chaos Rising Booster Bundle — May 22</span>
+    <span class="ticker-item"><span>◆</span> Chaos Rising 3-Pack Blister — May 22</span>
+    <span class="ticker-item"><span>◆</span> Chaos Rising PC ETB — May 22</span>
+    <span class="ticker-item"><span>🔔</span> Prerelease Build &amp; Battle — May 9–17</span>
+    <span class="ticker-item"><span>◆</span> Ascended Heroes Booster Bundle — In Stock at select retailers</span>
+    <span class="ticker-item"><span>◆</span> Ascended Heroes Mega ex Boxes — Apr 24</span>
+    <span class="ticker-item"><span>◆</span> Ascended Heroes Mini Tins — Spotted at ALDI Apr 22</span>
+    <span class="ticker-item"><span>◆</span> Perfect Order ETB — Sporadic restocks</span>
+    <span class="ticker-item"><span>🔥</span> Pitch Black (Mega Darkrai ex) — Prerelease Jul 4–12</span>
+    <span class="ticker-item"><span>🔥</span> 30th Celebration Set — Sep 18 (worldwide simultaneous launch)</span>
+    <span class="ticker-item"><span>◆</span> Prismatic Evolutions ETB — Occasional restock Target/Walmart</span>
+    <span class="ticker-item"><span>🔥</span> Chaos Rising ETB — Drops May 22</span>
+    <span class="ticker-item"><span>◆</span> Chaos Rising Booster Bundle — May 22</span>
+    <span class="ticker-item"><span>◆</span> Chaos Rising 3-Pack Blister — May 22</span>
+    <span class="ticker-item"><span>◆</span> Chaos Rising PC ETB — May 22</span>
+    <span class="ticker-item"><span>🔔</span> Prerelease Build &amp; Battle — May 9–17</span>
+    <span class="ticker-item"><span>◆</span> Ascended Heroes Booster Bundle — In Stock at select retailers</span>
+    <span class="ticker-item"><span>◆</span> Ascended Heroes Mega ex Boxes — Apr 24</span>
+    <span class="ticker-item"><span>◆</span> Ascended Heroes Mini Tins — Spotted at ALDI Apr 22</span>
+    <span class="ticker-item"><span>◆</span> Perfect Order ETB — Sporadic restocks</span>
+    <span class="ticker-item"><span>🔥</span> Pitch Black (Mega Darkrai ex) — Prerelease Jul 4–12</span>
+    <span class="ticker-item"><span>🔥</span> 30th Celebration Set — Sep 18 (worldwide simultaneous launch)</span>
+    <span class="ticker-item"><span>◆</span> Prismatic Evolutions ETB — Occasional restock Target/Walmart</span>
+  </div>
+</div>
+
+<main>
+  <!-- Stats -->
+  <div class="stats-bar">
+    <div class="stat-card">
+      <div class="stat-label">Tracking</div>
+      <div class="stat-value" id="stat-total" style="color:var(--accent)">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">In Stock</div>
+      <div class="stat-value" id="stat-instock" style="color:var(--green)">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Alerts Sent</div>
+      <div class="stat-value" id="stat-alerts" style="color:var(--accent2)">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Checks Today</div>
+      <div class="stat-value" id="stat-checks" style="color:#a78bfa">0</div>
+    </div>
+  </div>
+
+  <!-- Controls -->
+  <div class="controls">
+    <input type="text" class="search-input" id="search-input" placeholder="Search products...">
+    <button class="filter-btn active" onclick="filterRetailer('all', this)">All</button>
+    <button class="filter-btn" onclick="filterRetailer('target', this)">Target</button>
+    <button class="filter-btn" onclick="filterRetailer('walmart', this)">Walmart</button>
+    <button class="filter-btn" onclick="filterRetailer('bestbuy', this)">Best Buy</button>
+    <button class="filter-btn" onclick="filterRetailer('pokemoncenter', this)">Pokémon Center</button>
+    <button class="filter-btn" onclick="filterRetailer('alt', this)">Alt Retailers</button>
+    <button class="filter-btn" id="instock-filter" onclick="toggleInStock(this)">In Stock Only</button>
+    <button class="add-product-btn" onclick="openModal()">+ Add Product</button>
+    <button class="refresh-btn" onclick="simulateRefresh()">↻ Refresh Now</button>
+  </div>
+  <!-- Set filter row -->
+  <div class="controls" style="margin-top:-16px;margin-bottom:20px">
+    <span style="font-family:'DM Mono',monospace;font-size:.62rem;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-right:4px">Set:</span>
+    <select id="set-filter" onchange="filterSet(this.value)" style="font-family:'DM Mono',monospace;font-size:.72rem;background:var(--surface);border:1px solid var(--border);border-radius:3px;padding:8px 14px;color:var(--text);outline:none;cursor:pointer;transition:border-color .2s;min-width:200px" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+      <option value="all">All Sets</option>
+      <option value="chaos rising">Chaos Rising</option>
+      <option value="ascended heroes">Ascended Heroes</option>
+      <option value="perfect order">Perfect Order</option>
+      <option value="phantasmal flames">Phantasmal Flames</option>
+      <option value="destined rivals">Destined Rivals</option>
+      <option value="black bolt">Black Bolt</option>
+      <option value="white flare">White Flare</option>
+      <option value="journey together">Journey Together</option>
+      <option value="prismatic evolutions">Prismatic Evolutions</option>
+      <option value="mega evolution">Mega Evolution</option>
+    </select>
+  </div>
+
+  <!-- Product Grid -->
+  <div class="product-grid" id="product-grid">
+    <!-- Cards injected by JS -->
+  </div>
+
+  <!-- History -->
+  <div class="history-section">
+    <div class="section-header">
+      <div class="section-title">Alert History</div>
+      <div class="section-line"></div>
+    </div>
+    <div class="history-list" id="history-list">
+      <div style="padding:20px;text-align:center;font-family:'DM Mono',monospace;font-size:0.75rem;color:var(--muted)">No alerts yet — tracker is watching...</div>
+    </div>
+  </div>
+
+  <!-- Alt Retailers Section -->
+  <div class="alt-section" id="alt-section">
+    <div class="section-header">
+      <div class="section-title">Alt Retailer Scan</div>
+      <div class="section-line"></div>
+    </div>
+    <div class="alt-section-note" id="alt-last-updated">Waiting for alt retailer data...</div>
+    <div class="alt-grid" id="alt-grid">
+      <div class="alt-no-online">🔍 Alt retailer data loads from alt_retailers.json — run the tracker to populate.</div>
+    </div>
+  </div>
+</main>
+
+<!-- Add Product Modal -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-title">Add Product to Track</div>
+    <div class="form-group">
+      <label class="form-label">Product Name</label>
+      <input type="text" class="form-input" id="new-name" placeholder="e.g. Pokemon Scarlet ETB">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Retailer</label>
+      <select class="form-select" id="new-retailer">
+        <option value="target">Target</option>
+        <option value="walmart">Walmart</option>
+        <option value="bestbuy">Best Buy</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Product URL</label>
+      <input type="text" class="form-input" id="new-url" placeholder="https://www.target.com/p/...">
+    </div>
+    <div class="form-group">
+      <label class="form-label">SKU / Item ID</label>
+      <input type="text" class="form-input" id="new-sku" placeholder="Found in the URL or product page">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-primary" onclick="addProduct()">Add to Tracker</button>
+      <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Sample product data (replace with status_snapshot.json in real use) ──
+let products = [
+  { name: "Pokemon Scarlet & Violet Booster Bundle", retailer: "target", url: "https://www.target.com/p/-/A-88907489", price: "$19.99", in_stock: false, checked_at: new Date().toISOString() },
+  { name: "Pokemon Elite Trainer Box — Obsidian Flames", retailer: "target", url: "https://www.target.com/p/-/A-88907490", price: "$49.99", in_stock: false, checked_at: new Date().toISOString() },
+  { name: "Pokemon 151 Booster Bundle", retailer: "target", url: "https://www.target.com/p/-/A-89132100", price: "$24.99", in_stock: false, checked_at: new Date().toISOString() },
+  { name: "One Piece Card Game Booster Box OP-08", retailer: "walmart", url: "https://www.walmart.com/ip/123456", price: "$89.99", in_stock: false, checked_at: new Date().toISOString() },
+  { name: "Yu-Gi-Oh Phantom Nightmare Booster Box", retailer: "walmart", url: "https://www.walmart.com/ip/654321", price: "$69.99", in_stock: false, checked_at: new Date().toISOString() },
+  { name: "Magic: The Gathering Bloomburrow Bundle", retailer: "walmart", url: "https://www.walmart.com/ip/999111", price: "$44.99", in_stock: false, checked_at: new Date().toISOString() },
+  { name: "Lorcana Into the Inklands Booster Box", retailer: "bestbuy", url: "https://www.bestbuy.com/site/6543210.p", price: "$129.99", in_stock: false, checked_at: new Date().toISOString() },
+  { name: "Pokemon Paradox Rift Elite Trainer Box", retailer: "bestbuy", url: "https://www.bestbuy.com/site/7654321.p", price: "$49.99", in_stock: false, checked_at: new Date().toISOString() },
+  { name: "Digimon Card Game Booster Box RB-01", retailer: "bestbuy", url: "https://www.bestbuy.com/site/8765432.p", price: "$74.99", in_stock: false, checked_at: new Date().toISOString() },
+];
+
+let alertHistory = [];
+let filterState = { retailer: 'all', inStockOnly: false, search: '', set: 'all' };
+let alertCount = 0;
+let checkCount = 0;
+
+function retailerClass(r) {
+  const map = {
+    'target': 'retailer-target',
+    'walmart': 'retailer-walmart',
+    'pokemoncenter': 'retailer-pokemoncenter',
+    'bestbuy': 'retailer-bestbuy',
+    'five below': 'retailer-fivebelow',
+    'fivebelow': 'retailer-fivebelow',
+    'gamestop': 'retailer-gamestop',
+    "ollie's bargain outlet": 'retailer-ollies',
+    'ollies': 'retailer-ollies',
+    'aldi': 'retailer-aldi',
+    'marshalls': 'retailer-marshalls',
+    'tj maxx': 'retailer-tjmaxx',
+    'tjmaxx': 'retailer-tjmaxx',
+  };
+  return map[r.toLowerCase()] || 'retailer-bestbuy';
+}
+
+function retailerLabel(r) {
+  const map = {
+    'target':        '● TARGET',
+    'walmart':       '● WALMART',
+    'pokemoncenter': '● POKÉMON CENTER',
+    'bestbuy':       '● BEST BUY',
+    'five below':    '● FIVE BELOW',
+    'fivebelow':     '● FIVE BELOW',
+    'gamestop':      '● GAMESTOP',
+    "ollie's bargain outlet": "● OLLIE'S",
+    'ollies':        "● OLLIE'S",
+    'aldi':          '● ALDI',
+    'marshalls':     '● MARSHALLS',
+    'tj maxx':       '● TJ MAXX',
+    'tjmaxx':        '● TJ MAXX',
+  };
+  return map[r.toLowerCase()] || `● ${r.toUpperCase()}`;
+}
+
+function timeAgo(iso) {
+  const secs = Math.floor((Date.now() - new Date(iso)) / 1000);
+  if (secs < 60) return `${secs}s ago`;
+  if (secs < 3600) return `${Math.floor(secs/60)}m ago`;
+  return `${Math.floor(secs/3600)}h ago`;
+}
+
+// Official Pokémon TCG set symbols from pokesymbols.com
+const SET_LOGOS = {
+  'chaos rising':         'https://pokesymbols.com/images/tcg/sets/symbols/perfect-order.png',
+  'journey together':     'https://pokesymbols.com/images/tcg/sets/symbols/journey-together.png',
+  'destined rivals':      'https://pokesymbols.com/images/tcg/sets/symbols/destined-rivals.png',
+  'prismatic evolutions': 'https://pokesymbols.com/images/tcg/sets/symbols/prismatic-evolutions.png',
+  'black bolt':           'https://pokesymbols.com/images/tcg/sets/symbols/black-bolt.png',
+  'white flare':          'https://pokesymbols.com/images/tcg/sets/symbols/white-flare.png',
+  'ascended heroes':      'https://pokesymbols.com/images/tcg/sets/symbols/ascended-heroes.png',
+  'perfect order':        'https://pokesymbols.com/images/tcg/sets/symbols/perfect-order.png',
+  'phantasmal flames':    'https://pokesymbols.com/images/tcg/sets/symbols/phantasmal-flames.png',
+  'mega evolution':       'https://pokesymbols.com/images/tcg/sets/symbols/mega-evolution.png',
+  'paldean fates':        'https://pokesymbols.com/images/tcg/sets/symbols/paldean-fates.png',
+  'surging sparks':       'https://pokesymbols.com/images/tcg/sets/symbols/surging-sparks.png',
+  'stellar crown':        'https://pokesymbols.com/images/tcg/sets/symbols/stellar-crown.png',
+  'shrouded fable':       'https://pokesymbols.com/images/tcg/sets/symbols/shrouded-fable.png',
+  'paradox rift':         'https://pokesymbols.com/images/tcg/sets/symbols/paradox-rift.png',
+  '151':                  'https://pokesymbols.com/images/tcg/sets/symbols/151.png',
+  'obsidian flames':      'https://pokesymbols.com/images/tcg/sets/symbols/obsidian-flames.png',
+};
+
+// Official MSRP by product type
+const MSRP_MAP = [
+  // Order matters — most specific first
+  { key: 'pokemon center elite trainer box', price: 59.99 },
+  { key: 'pc elite trainer box',             price: 59.99 },
+  { key: 'elite trainer box',                price: 49.99 },
+  { key: 'etb',                              price: 49.99 },
+  { key: 'display box 36pk',                 price: 159.99 },
+  { key: 'display box',                      price: 159.99 },
+  { key: 'booster bundle 6pk',               price: 26.99 },
+  { key: 'booster bundle',                   price: 26.99 },
+  { key: 'booster box',                      price: 159.99 },
+  { key: '3-pack blister',                   price: 14.99 },
+  { key: '3 pack blister',                   price: 14.99 },
+  { key: 'sleeved booster pack',             price: 5.49 },
+  { key: 'sleeved booster',                  price: 5.49 },
+  { key: 'build & battle',                   price: 14.99 },
+  { key: 'collection box',                   price: 29.99 },
+  { key: 'mini tin',                         price: 9.99 },
+  { key: 'tin',                              price: 19.99 },
+  { key: 'premium poster collection',        price: 49.99 },
+];
+
+// Extract set name from product name for filter
+const SET_KEYS = [
+  'chaos rising','ascended heroes','perfect order','phantasmal flames',
+  'mega evolution','black bolt','white flare','destined rivals',
+  'journey together','prismatic evolutions','paldean fates',
+  'surging sparks','stellar crown','obsidian flames','151',
+];
+
+function getProductSet(name) {
+  const lower = name.toLowerCase();
+  for (const key of SET_KEYS) {
+    if (lower.includes(key)) return key;
+  }
+  return 'other';
+}
+
+function getSetLogo(name) {
+  const lower = name.toLowerCase();
+  for (const [key, url] of Object.entries(SET_LOGOS)) {
+    if (lower.includes(key)) return url;
+  }
+  return null;
+}
+
+function getMSRP(name, retailer) {
+  const lower = name.toLowerCase();
+  // Pokemon Center ETBs are always $59.99 — override before general ETB match
+  if ((retailer === 'pokemoncenter') && (lower.includes('elite trainer box') || lower.includes('etb'))) {
+    return 59.99;
+  }
+  for (const entry of MSRP_MAP) {
+    if (lower.includes(entry.key)) return entry.price;
+  }
+  return null;
+}
+
+function parsePriceNum(priceStr) {
+  if (!priceStr || priceStr === 'N/A' || priceStr === '—') return null;
+  // Handle formats like "$49.99", "49.99", "$49", "N/A"
+  const clean = priceStr.toString().replace(/[,$\s]/g, '');
+  const match = clean.match(/^[\d.]+$/);
+  return match ? parseFloat(clean) : null;
+}
+
+function renderCards() {
+  const grid = document.getElementById('product-grid');
+  const s = filterState;
+  let filtered = products.filter(p => {
+    if (s.retailer !== 'all' && p.retailer !== s.retailer) return false;
+    if (s.inStockOnly && !p.in_stock) return false;
+    if (s.search && !p.name.toLowerCase().includes(s.search.toLowerCase())) return false;
+    if (s.set !== 'all' && !p.name.toLowerCase().includes(s.set)) return false;
+    return true;
+  });
+
+  if (filtered.length === 0) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">🃏</div><div class="empty-text">No products match your filters</div></div>`;
+    return;
+  }
+
+  grid.innerHTML = filtered.map((p, i) => {
+    const logoUrl = getSetLogo(p.name);
+    const msrp = getMSRP(p.name, p.retailer);
+    const listedNum = parsePriceNum(p.price);
+    let msrpHtml = '';
+    if (msrp) {
+      const msrpStr = `$${msrp.toFixed(2)}`;
+      if (listedNum === null) {
+        // Price unavailable — just show MSRP reference
+        msrpHtml = `<span class="price-msrp">MSRP ${msrpStr}</span>`;
+      } else if (listedNum <= msrp) {
+        msrpHtml = `<span class="price-msrp at-msrp">MSRP ${msrpStr} ✓</span>`;
+      } else {
+        msrpHtml = `<span class="price-msrp above-msrp">MSRP ${msrpStr} ↑</span>`;
+      }
+    }
+
+    const logoHtml = logoUrl
+      ? `<div class="set-logo-wrap"><img src="${logoUrl}" alt="set logo" onerror="this.parentNode.innerHTML='<span class=\\'set-abbr\\'>${p.name.substring(0,3).toUpperCase()}</span>'"></div>`
+      : `<div class="set-logo-wrap"><span class="set-abbr">${p.name.substring(0,3).toUpperCase()}</span></div>`;
+
+    return `
+    <div class="product-card ${p.in_stock ? 'in-stock' : ''} ${retailerClass(p.retailer)}" style="animation-delay:${i*0.05}s">
+      <div class="card-retailer-bar"></div>
+      <div class="card-body">
+        <div class="card-top">
+          ${logoHtml}
+          <div class="card-name">${p.name}</div>
+          <span class="stock-badge ${p.in_stock ? 'badge-in' : 'badge-out'}">${p.in_stock ? 'IN STOCK' : 'OUT'}</span>
+        </div>
+        <div class="card-meta">
+          <span class="retailer-pill">${retailerLabel(p.retailer)}</span>
+          <div class="price-block">
+            <span class="price-listed">${p.price || '—'}</span>
+            ${msrpHtml}
+          </div>
+        </div>
+      </div>
+      <div class="card-footer">
+        <span class="card-time">Checked ${timeAgo(p.checked_at)}</span>
+        <a href="${p.url}" target="_blank" class="buy-btn ${p.in_stock ? 'active-buy' : ''}">${p.in_stock ? 'BUY NOW →' : 'VIEW'}</a>
+      </div>
+    </div>`;
+  }).join('');
+
+  updateStats();
+}
+
+function updateStats() {
+  document.getElementById('stat-total').textContent = products.length;
+  document.getElementById('stat-instock').textContent = products.filter(p => p.in_stock).length;
+  document.getElementById('stat-alerts').textContent = alertCount;
+  document.getElementById('stat-checks').textContent = checkCount;
+}
+
+function addHistoryEntry(p, status) {
+  const entry = { time: new Date(), name: p.name, retailer: p.retailer, status };
+  alertHistory.unshift(entry);
+  if (alertHistory.length > 50) alertHistory.pop();
+  renderHistory();
+}
+
+function renderHistory() {
+  const list = document.getElementById('history-list');
+  if (alertHistory.length === 0) {
+    list.innerHTML = `<div style="padding:20px;text-align:center;font-family:'DM Mono',monospace;font-size:0.75rem;color:var(--muted)">No alerts yet — tracker is watching...</div>`;
+    return;
+  }
+  list.innerHTML = alertHistory.slice(0, 15).map(e => `
+    <div class="history-item">
+      <span class="hist-time">${e.time.toLocaleTimeString()}</span>
+      <span class="hist-retailer" style="color:${e.retailer==='target'?'#ff6b6b':e.retailer==='walmart'?'#5ab5ff':'#ffe566'}">${e.retailer.toUpperCase()}</span>
+      <span class="hist-name">${e.name}</span>
+      <span class="hist-status ${e.status==='IN STOCK'?'hist-in':'hist-out'}">${e.status}</span>
+    </div>
+  `).join('');
+}
+
+function filterSet(s) {
+  filterState.set = s;
+  renderCards();
+}
+
+function filterRetailer(r, btn) {
+  filterState.retailer = r;
+  // Only remove active from retailer buttons (first controls row)
+  const retailerBtns = document.querySelectorAll('.controls:first-of-type .filter-btn');
+  retailerBtns.forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+
+  // Show/hide main grid vs alt section
+  const productGrid = document.getElementById('product-grid');
+  const altSection = document.getElementById('alt-section');
+  if (r === 'alt') {
+    productGrid.style.display = 'none';
+    altSection.style.display = 'block';
+  } else {
+    productGrid.style.display = '';
+    altSection.style.display = 'none';
+  }
+
+  renderCards();
+}
+
+function toggleInStock(btn) {
+  filterState.inStockOnly = !filterState.inStockOnly;
+  btn.classList.toggle('active', filterState.inStockOnly);
+  renderCards();
+}
+
+document.getElementById('search-input').addEventListener('input', e => {
+  filterState.search = e.target.value;
+  renderCards();
+});
+
+function simulateRefresh() {
+  checkCount++;
+  document.getElementById('last-updated').textContent = `Last check: ${new Date().toLocaleTimeString()}`;
+  // Randomly flip a product in stock for demo
+  const idx = Math.floor(Math.random() * products.length);
+  const wasIn = products[idx].in_stock;
+  products[idx].in_stock = !wasIn;
+  products[idx].checked_at = new Date().toISOString();
+  if (!wasIn && products[idx].in_stock) {
+    alertCount++;
+    addHistoryEntry(products[idx], 'IN STOCK');
+    showToast(products[idx]);
+  } else if (wasIn && !products[idx].in_stock) {
+    addHistoryEntry(products[idx], 'Out of stock');
+  }
+  renderCards();
+}
+
+function showToast(p) {
+  const toast = document.createElement('div');
+  toast.style.cssText = `
+    position:fixed;bottom:24px;right:24px;z-index:9999;
+    background:var(--surface);border:1px solid var(--green);
+    border-radius:4px;padding:16px 20px;max-width:320px;
+    box-shadow:0 8px 32px rgba(0,0,0,0.5);
+    animation:slideIn 0.3s ease;
+    font-family:'DM Sans',sans-serif;
+  `;
+  toast.innerHTML = `
+    <div style="font-family:'DM Mono',monospace;font-size:0.65rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--green);margin-bottom:6px">🚨 Restock Alert</div>
+    <div style="font-weight:500;font-size:0.9rem;margin-bottom:4px">${p.name}</div>
+    <div style="font-size:0.8rem;color:var(--text2)">${p.retailer.toUpperCase()} — ${p.price}</div>
+  `;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 5000);
+}
+
+function openModal() { document.getElementById('modal').classList.add('open'); }
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
+
+document.getElementById('modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('modal')) closeModal();
+});
+
+function addProduct() {
+  const name = document.getElementById('new-name').value.trim();
+  const retailer = document.getElementById('new-retailer').value;
+  const url = document.getElementById('new-url').value.trim();
+  const sku = document.getElementById('new-sku').value.trim();
+  if (!name || !url) { alert('Please enter a name and URL.'); return; }
+  products.push({ name, retailer, url, price: 'N/A', in_stock: false, checked_at: new Date().toISOString() });
+  closeModal();
+  renderCards();
+  // Clear form
+  ['new-name','new-url','new-sku'].forEach(id => document.getElementById(id).value = '');
+}
+
+// Load live data from status_snapshot.json (written by tracker.py)
+async function loadSnapshot() {
+  try {
+    const response = await fetch('../data/status_snapshot.json?t=' + Date.now());
+    if (!response.ok) return false;
+    const data = await response.json();
+    if (!Array.isArray(data) || data.length === 0) return false;
+
+    // Check if any items flipped to in-stock since last load
+    data.forEach(p => {
+      const retailerKey = p.retailer.toLowerCase().replace(/\s+/g, '');
+      const existing = products.find(x => x.url === p.url);
+      const wasInStock = existing ? existing.in_stock : null;
+      if (p.in_stock && wasInStock === false) {
+        alertCount++;
+        addHistoryEntry({ name: p.name, retailer: retailerKey }, 'IN STOCK');
+        showToast({ name: p.name, retailer: p.retailer, price: p.price, url: p.url });
+      }
+    });
+
+    products = data.map(p => ({
+      name: p.name,
+      retailer: p.retailer.toLowerCase().replace(/\s+/g, ''),
+      url: p.url,
+      price: p.price || 'N/A',
+      in_stock: p.in_stock,
+      checked_at: p.checked_at,
+    }));
+    return true;
+  } catch (e) {
+    console.log('Snapshot not available yet — using demo data.', e);
+    return false;
+  }
+}
+
+// Auto-refresh every 3 minutes
+setInterval(async () => {
+  const loaded = await loadSnapshot();
+  await loadAltRetailers();
+  checkCount++;
+  document.getElementById('last-updated').textContent =
+    `Last check: ${new Date().toLocaleTimeString()}${loaded ? '' : ' (demo)'}`;
+  renderCards();
+}, 180000);
+
+// ── Alt Retailer Data ──────────────────────────────────────────────
+let altFindings = [];
+
+async function loadAltRetailers() {
+  try {
+    const res = await fetch('../data/alt_retailers.json?t=' + Date.now());
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!data.findings || !Array.isArray(data.findings)) return;
+    altFindings = data.findings;
+
+    // Update last-updated label
+    if (data.last_updated) {
+      const d = new Date(data.last_updated);
+      document.getElementById('alt-last-updated').textContent =
+        `Last scanned: ${d.toLocaleDateString()} ${d.toLocaleTimeString()} — ${altFindings.length} item(s) found across ALDI, Five Below, Marshalls, TJ Maxx, Ollie\'s, GameStop`;
+    }
+
+    renderAltRetailers();
+  } catch(e) {
+    console.log('alt_retailers.json not available yet.', e);
+  }
+}
+
+function altRetailerClass(retailerName) {
+  const r = (retailerName || '').toLowerCase();
+  if (r.includes('five below'))  return 'retailer-fivebelow';
+  if (r.includes('gamestop'))    return 'retailer-gamestop';
+  if (r.includes("ollie"))       return 'retailer-ollies';
+  if (r.includes('aldi'))        return 'retailer-aldi';
+  if (r.includes('marshalls'))   return 'retailer-marshalls';
+  if (r.includes('tj maxx'))     return 'retailer-tjmaxx';
+  return 'retailer-bestbuy';
+}
+
+function renderAltRetailers() {
+  const grid = document.getElementById('alt-grid');
+  if (!altFindings.length) {
+    grid.innerHTML = `<div class="alt-no-online">🔍 No alt retailer data yet — run the tracker to populate.</div>`;
+    return;
+  }
+
+  grid.innerHTML = altFindings.map((f, i) => {
+    const isReminder = !!f.reminder;
+    const hasDeal = !isReminder && f.price && f.msrp && f.price < f.msrp;
+    const cardClass = isReminder ? 'reminder-card' : (hasDeal ? 'deal-card' : '');
+    const rClass = altRetailerClass(f.retailer);
+
+    const badge = isReminder
+      ? `<span class="alt-badge alt-badge-remind">IN-STORE</span>`
+      : (hasDeal
+        ? `<span class="alt-badge alt-badge-deal">DEAL</span>`
+        : ``);
+
+    const savings = hasDeal
+      ? `<span class="alt-savings">Save $${(f.msrp - f.price).toFixed(2)} vs MSRP</span>`
+      : '';
+
+    const priceDisplay = f.price_str && f.price_str !== 'N/A'
+      ? f.price_str
+      : (f.msrp ? `MSRP $${f.msrp.toFixed(2)}` : '—');
+
+    return `
+    <div class="alt-card ${cardClass} ${rClass}" style="animation-delay:${i*0.04}s">
+      <div class="card-retailer-bar"></div>
+      <div class="alt-card-body">
+        <div class="alt-card-top">
+          <div class="alt-card-name">${f.name}</div>
+          ${badge}
+        </div>
+        <div class="alt-card-note">${f.note || ''}</div>
+      </div>
+      <div class="alt-card-footer">
+        <div class="alt-price-block">
+          <span class="retailer-pill ${rClass}">● ${f.retailer.toUpperCase()}</span>
+          <span class="alt-price">${priceDisplay}</span>
+          ${savings}
+        </div>
+        <a href="${f.url}" target="_blank" class="buy-btn ${hasDeal ? 'active-buy' : ''}">${hasDeal ? 'VIEW DEAL →' : 'CHECK →'}</a>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Init ──────────────────────────────────────────────────────────
+
+// Init — try to load real data immediately, fall back to demo
+async function init() {
+  const loaded = await loadSnapshot();
+  await loadAltRetailers();
+  // Alt section hidden by default (main grid shown)
+  document.getElementById('alt-section').style.display = 'none';
+  checkCount = 1;
+  document.getElementById('last-updated').textContent =
+    `Last check: ${new Date().toLocaleTimeString()}${loaded ? '' : ' (demo)'}`;
+  renderCards();
+  renderHistory();
+}
+
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Keith's PokeBS — Retail Drops</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0a0f;--surface:#111118;--surface2:#18181f;--border:#2a2a38;--accent:#f0c040;--accent2:#e8503a;--green:#3ddc84;--purple:#a78bfa;--muted:#555570;--text:#e8e8f0;--text2:#9090a8}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.08) 2px,rgba(0,0,0,.08) 4px);pointer-events:none;z-index:999}
+header{display:flex;align-items:center;justify-content:space-between;padding:24px 40px;border-bottom:1px solid var(--border);background:rgba(10,10,15,.95);backdrop-filter:blur(12px);position:sticky;top:0;z-index:100}
+.logo{display:flex;align-items:baseline;gap:10px}
+.logo-main{font-family:'Bebas Neue',sans-serif;font-size:2.2rem;letter-spacing:.04em;color:var(--accent);text-shadow:0 0 30px rgba(240,192,64,.4)}
+.logo-sub{font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted);letter-spacing:.2em;text-transform:uppercase}
+.nav-bar{display:flex;align-items:center;gap:4px;padding:0 40px;background:var(--surface2);border-bottom:1px solid var(--border)}
+.nav-link{font-family:'DM Mono',monospace;font-size:.72rem;letter-spacing:.15em;text-transform:uppercase;padding:12px 18px;color:var(--muted);text-decoration:none;border-bottom:2px solid transparent;transition:all .15s}
+.nav-link:hover{color:var(--text)}.nav-link.active{color:var(--accent);border-bottom-color:var(--accent)}
+main{padding:40px;max-width:1400px;margin:0 auto}
+.page-title{font-family:'Bebas Neue',sans-serif;font-size:1.8rem;letter-spacing:.06em;color:var(--text2);margin-bottom:4px}
+.page-subtitle{font-family:'DM Mono',monospace;font-size:.72rem;color:var(--muted);letter-spacing:.1em;margin-bottom:8px}
+.source-note{font-family:'DM Mono',monospace;font-size:.65rem;color:rgba(240,192,64,.6);background:rgba(240,192,64,.05);border:1px solid rgba(240,192,64,.15);border-radius:3px;padding:8px 14px;display:inline-block;margin-bottom:28px}
+
+/* Retailer filter */
+.retailer-filter{display:flex;gap:6px;margin-bottom:28px;flex-wrap:wrap;align-items:center}
+.filter-label{font-family:'DM Mono',monospace;font-size:.62rem;color:var(--muted);letter-spacing:.1em;text-transform:uppercase}
+.ret-btn{font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;padding:7px 16px;border:1px solid var(--border);border-radius:3px;cursor:pointer;transition:all .15s;background:var(--surface)}
+.ret-btn:hover,.ret-btn.active{opacity:1}
+.ret-target{color:#ff6b6b;border-color:rgba(204,0,0,.3);background:rgba(204,0,0,.06)}.ret-target.active{border-color:#ff6b6b}
+.ret-walmart{color:#5ab5ff;border-color:rgba(0,113,206,.3);background:rgba(0,113,206,.06)}.ret-walmart.active{border-color:#5ab5ff}
+.ret-bestbuy{color:#ffe566;border-color:rgba(255,237,0,.2);background:rgba(255,237,0,.04)}.ret-bestbuy.active{border-color:#ffe566}
+.ret-pc{color:#ff8a80;border-color:rgba(232,80,58,.2);background:rgba(232,80,58,.04)}.ret-pc.active{border-color:#ff8a80}
+.ret-all{color:var(--text2);border-color:var(--border)}.ret-all.active{border-color:var(--accent);color:var(--accent)}
+
+/* Pattern guide */
+.pattern-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-bottom:40px}
+.pattern-card{background:var(--surface);border:1px solid var(--border);border-radius:4px;overflow:hidden}
+.pattern-card-top{padding:16px 18px;display:flex;align-items:center;gap:12px}
+.pattern-retailer-bar{height:3px}
+.bar-target{background:var(--accent2)}.bar-walmart{background:#0071ce}.bar-bestbuy{background:#ffed00}.bar-pc{background:#e53935}
+.pattern-retailer-name{font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:.06em}
+.pattern-card-body{padding:0 18px 16px}
+.pattern-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.pattern-key{font-family:'DM Mono',monospace;font-size:.65rem;color:var(--muted);letter-spacing:.08em}
+.pattern-val{font-family:'DM Mono',monospace;font-size:.72rem;color:var(--text2);text-align:right;max-width:55%}
+.pattern-val b{color:var(--text)}
+.pattern-tip{background:var(--surface2);border-top:1px solid var(--border);padding:12px 18px;font-size:.78rem;color:var(--text2);line-height:1.5}
+
+/* Drop calendar section */
+.section-divider{display:flex;align-items:center;gap:14px;margin:32px 0 20px}
+.section-label{font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:.1em;color:var(--muted);white-space:nowrap}
+.section-line{flex:1;height:1px;background:var(--border)}
+
+/* Drop cards */
+.drops-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:12px}
+.drop-card{background:var(--surface);border:1px solid var(--border);border-radius:4px;overflow:hidden;transition:border-color .2s;animation:cardIn .35s ease both}
+@keyframes cardIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.drop-card:hover{border-color:rgba(240,192,64,.3)}
+.drop-card.upcoming{border-color:rgba(61,220,132,.25)}
+.drop-card.past{opacity:.6}
+
+.drop-retailer-bar{height:3px}
+.dc-target .drop-retailer-bar{background:var(--accent2)}
+.dc-walmart .drop-retailer-bar{background:#0071ce}
+.dc-bestbuy .drop-retailer-bar{background:#ffed00}
+.dc-pc .drop-retailer-bar{background:#e53935}
+
+.drop-body{padding:14px 16px}
+.drop-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:10px}
+.drop-title{font-weight:500;font-size:.88rem;color:var(--text);flex:1}
+.drop-confidence{font-family:'DM Mono',monospace;font-size:.6rem;padding:3px 8px;border-radius:2px;white-space:nowrap;flex-shrink:0}
+.conf-confirmed{background:rgba(61,220,132,.1);color:var(--green);border:1px solid rgba(61,220,132,.2)}
+.conf-likely{background:rgba(240,192,64,.08);color:var(--accent);border:1px solid rgba(240,192,64,.2)}
+.conf-rumored{background:rgba(85,85,112,.15);color:var(--muted);border:1px solid var(--border)}
+
+.drop-meta{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.drop-date{font-family:'DM Mono',monospace;font-size:.7rem;color:var(--text2)}
+.drop-time{font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted)}
+.drop-retailer-badge{font-family:'DM Mono',monospace;font-size:.62rem;padding:2px 8px;border-radius:2px;letter-spacing:.06em}
+.db-target{background:rgba(204,0,0,.1);color:#ff6b6b;border:1px solid rgba(204,0,0,.2)}
+.db-walmart{background:rgba(0,113,206,.1);color:#5ab5ff;border:1px solid rgba(0,113,206,.2)}
+.db-bestbuy{background:rgba(255,237,0,.06);color:#ffe566;border:1px solid rgba(255,237,0,.15)}
+.db-pc{background:rgba(232,80,58,.08);color:#ff8a80;border:1px solid rgba(232,80,58,.2)}
+
+.drop-desc{font-size:.78rem;color:var(--text2);line-height:1.5;margin-bottom:10px}
+.drop-source{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--muted);letter-spacing:.06em}
+.drop-source a{color:var(--muted);text-decoration:none}.drop-source a:hover{color:var(--accent)}
+
+/* Tips section */
+.tips-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-top:8px}
+.tip-card{background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:16px}
+.tip-icon{font-size:1.4rem;margin-bottom:8px}
+.tip-title{font-family:'DM Mono',monospace;font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:6px}
+.tip-text{font-size:.78rem;color:var(--text2);line-height:1.5}
+
+@media(max-width:768px){header{padding:16px 20px}main{padding:20px}.logo-main{font-size:1.6rem}.nav-bar{padding:0 20px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo"><span class="logo-main">Keith's PokeBS</span><span class="logo-sub">Retail Drops</span></div>
+  <div style="font-family:'DM Mono',monospace;font-size:.65rem;color:var(--muted)" id="last-refresh">Sources checked: Apr 24, 2026</div>
+</header>
+<nav class="nav-bar">
+  <a class="nav-link" href="dashboard.html">📡 Tracker</a>
+  <a class="nav-link" href="info.html">📖 Set Info</a>
+  <a class="nav-link" href="pricing.html">💰 Pricing</a>
+  <a class="nav-link" href="binder.html">📂 Binder</a>
+  <a class="nav-link" href="future.html">📅 Future</a>
+  <a class="nav-link active" href="retail-drops.html">🛒 Retail Drops</a>
+  <a class="nav-link" href="help.html">❓ Help</a>
+</nav>
+<main>
+  <div class="page-title">Retail Drop Intelligence</div>
+  <div class="page-subtitle">Drop patterns, timing windows, and community-sourced intelligence on Pokémon TCG restocks</div>
+  <div class="source-note">⚠ Drop times are patterns sourced from TrackaLacker, @PokemonRestocks (X/Threads), PokeBeach community, Reddit r/PokemonTCG, and CardChill. Not guaranteed — retailers change schedules without notice. Always have your cart and payment ready.</div>
+
+  <!-- Retailer filter -->
+  <div class="retailer-filter">
+    <span class="filter-label">Filter:</span>
+    <button class="ret-btn ret-all active" id="rf-all" onclick="filterRetailer('all',this)">All</button>
+    <button class="ret-btn ret-target" onclick="filterRetailer('target',this)">🎯 Target</button>
+    <button class="ret-btn ret-walmart" onclick="filterRetailer('walmart',this)">🔵 Walmart</button>
+    <button class="ret-btn ret-bestbuy" onclick="filterRetailer('bestbuy',this)">🟡 Best Buy</button>
+    <button class="ret-btn ret-pc" onclick="filterRetailer('pc',this)">🔴 Pokémon Center</button>
+  </div>
+
+  <!-- Retailer Pattern Cards -->
+  <div class="section-divider"><div class="section-label">Drop Patterns by Retailer</div><div class="section-line"></div></div>
+  <div class="pattern-grid" id="pattern-grid">
+
+    <div class="pattern-card" data-retailer="target">
+      <div class="bar-target drop-retailer-bar"></div>
+      <div class="pattern-card-top"><span class="pattern-retailer-name" style="color:#ff6b6b">🎯 Target</span></div>
+      <div class="pattern-card-body">
+        <div class="pattern-row"><span class="pattern-key">New Product Drops</span><span class="pattern-val"><b>Overnight 2–4 AM ET</b></span></div>
+        <div class="pattern-row"><span class="pattern-key">Best Drop Day</span><span class="pattern-val"><b>Friday</b> (31.5% of drops)</span></div>
+        <div class="pattern-row"><span class="pattern-key">Restock Window</span><span class="pattern-val"><b>3–6 PM ET</b> Friday dominant</span></div>
+        <div class="pattern-row"><span class="pattern-key">Also Watch</span><span class="pattern-val">Monday (14.7%), Tuesday (11.7%)</span></div>
+        <div class="pattern-row"><span class="pattern-key">Purchase Limit</span><span class="pattern-val">Typically 2–4 per customer</span></div>
+        <div class="pattern-row"><span class="pattern-key">Walmart+ Required?</span><span class="pattern-val">No</span></div>
+      </div>
+      <div class="pattern-tip">💡 Log into your Target account and have payment saved before the drop. When live, add to cart immediately and go straight to checkout — don't browse. Afternoon restocks are your second chance if you miss the initial drop.</div>
+    </div>
+
+    <div class="pattern-card" data-retailer="walmart">
+      <div class="bar-walmart drop-retailer-bar"></div>
+      <div class="pattern-card-top"><span class="pattern-retailer-name" style="color:#5ab5ff">🔵 Walmart</span></div>
+      <div class="pattern-card-body">
+        <div class="pattern-row"><span class="pattern-key">Primary Drop Day</span><span class="pattern-val"><b>Wednesday</b> (Walmart Wednesday)</span></div>
+        <div class="pattern-row"><span class="pattern-key">Drop Window</span><span class="pattern-val"><b>12 PM ET</b> standard, varies</span></div>
+        <div class="pattern-row"><span class="pattern-key">Walmart+ Early Access</span><span class="pattern-val"><b>3 hours early</b> for members</span></div>
+        <div class="pattern-row"><span class="pattern-key">In-Store Restocks</span><span class="pattern-val">Tue–Thu vendor routes</span></div>
+        <div class="pattern-row"><span class="pattern-key">Purchase Limit</span><span class="pattern-val">Typically 2 per customer</span></div>
+        <div class="pattern-row"><span class="pattern-key">Watch For</span><span class="pattern-val">Walmart-only sold & shipped listings</span></div>
+      </div>
+      <div class="pattern-tip">💡 Walmart+ ($12.95/mo) gives 3-hour early access to online drops — worth it for high-demand sets. Always filter for "Sold & Shipped by Walmart" to avoid inflated 3rd-party prices. Wednesday evenings are prime checking time.</div>
+    </div>
+
+    <div class="pattern-card" data-retailer="bestbuy">
+      <div class="bar-bestbuy drop-retailer-bar"></div>
+      <div class="pattern-card-top"><span class="pattern-retailer-name" style="color:#ffe566">🟡 Best Buy</span></div>
+      <div class="pattern-card-body">
+        <div class="pattern-row"><span class="pattern-key">Drop Pattern</span><span class="pattern-val"><b>Set launch dates</b> + promotions</span></div>
+        <div class="pattern-row"><span class="pattern-key">App Invites</span><span class="pattern-val"><b>Best Buy app required</b> for high-demand</span></div>
+        <div class="pattern-row"><span class="pattern-key">Restock Timing</span><span class="pattern-val">No consistent day</span></div>
+        <div class="pattern-row"><span class="pattern-key">In-Store</span><span class="pattern-val">Often better than online</span></div>
+        <div class="pattern-row"><span class="pattern-key">Special Access</span><span class="pattern-val">App queue/invite system for ETBs</span></div>
+        <div class="pattern-row"><span class="pattern-key">Watch For</span><span class="pattern-val">My Best Buy+ members get early access</span></div>
+      </div>
+      <div class="pattern-tip">💡 Install the Best Buy app and enable notifications. For high-demand drops like Chaos Rising ETBs, Best Buy uses an invite/queue system sent through the app. In-store availability is usually better than online — call ahead.</div>
+    </div>
+
+    <div class="pattern-card" data-retailer="pc">
+      <div class="bar-pc drop-retailer-bar"></div>
+      <div class="pattern-card-top"><span class="pattern-retailer-name" style="color:#ff8a80">🔴 Pokémon Center</span></div>
+      <div class="pattern-card-body">
+        <div class="pattern-row"><span class="pattern-key">Drop Time</span><span class="pattern-val"><b>Mid-morning ET</b> (9–11 AM typical)</span></div>
+        <div class="pattern-row"><span class="pattern-key">Pre-order Windows</span><span class="pattern-val">Often 2–3 weeks before launch</span></div>
+        <div class="pattern-row"><span class="pattern-key">Sell-Out Speed</span><span class="pattern-val"><b>Minutes</b> (PC ETBs especially)</span></div>
+        <div class="pattern-row"><span class="pattern-key">Purchase Limit</span><span class="pattern-val">1 per product per account</span></div>
+        <div class="pattern-row"><span class="pattern-key">Queue System</span><span class="pattern-val">Virtual queue at peak times</span></div>
+        <div class="pattern-row"><span class="pattern-key">Restocks</span><span class="pattern-val">Rare after initial sellout</span></div>
+      </div>
+      <div class="pattern-tip">💡 PC ETBs sell out in seconds. Have your account logged in, payment saved, and the product page ready to refresh. Check pokemoncenter.com backend for pre-order links before they go live. Set ntfy alerts on your tracker for instant notification.</div>
+    </div>
+
+  </div>
+
+  <!-- Upcoming Drops Calendar -->
+  <div class="section-divider"><div class="section-label">Upcoming & Recent Drops</div><div class="section-line"></div></div>
+  <div class="drops-grid" id="drops-grid"></div>
+
+  <!-- Tips -->
+  <div class="section-divider"><div class="section-label">Pro Tips</div><div class="section-line"></div></div>
+  <div class="tips-grid">
+    <div class="tip-card"><div class="tip-icon">⚡</div><div class="tip-title">Use This Tracker</div><div class="tip-text">Your <a href="dashboard.html" style="color:var(--accent)">Tracker page</a> pings you the instant any product flips to In Stock via ntfy.sh — the fastest way to know before it sells out. Set the interval to 3 min for best coverage.</div></div>
+    <div class="tip-card"><div class="tip-icon">🐦</div><div class="tip-title">Follow @PokemonRestocks</div><div class="tip-text">The <strong>@PokemonRestocks</strong> account on X/Twitter and Threads posts drop links in real-time. They run automated trackers for every major retailer and alert followers as soon as stock changes.</div></div>
+    <div class="tip-card"><div class="tip-icon">💬</div><div class="tip-title">Join the Discord</div><div class="tip-text">TrackaLacker Discord (29k+ members) and PokéBeach community forums post real-time drop info. Community members share cart links and success tips the moment drops go live.</div></div>
+    <div class="tip-card"><div class="tip-icon">🛒</div><div class="tip-title">Pre-stage Your Cart</div><div class="tip-text">Keep the product in your cart at all major retailers ahead of drops. Have a saved payment method and shipping address. On drop day, just hit checkout — every second counts for PC ETBs especially.</div></div>
+    <div class="tip-card"><div class="tip-icon">📱</div><div class="tip-title">Mobile App Alerts</div><div class="tip-text">Enable push notifications for the Target app, Walmart app, and Best Buy app. All three send in-stock alerts for wishlisted items. Combined with your ntfy.sh tracker, this gives you four simultaneous alert channels.</div></div>
+    <div class="tip-card"><div class="tip-icon">🏪</div><div class="tip-title">Don't Sleep on In-Store</div><div class="tip-text">In-store stock replenishment follows vendor routes (Tue–Thu for Walmart/Target). Check your local stores mid-week, especially early morning. Many collectors find ETBs on shelves before they ever appear online.</div></div>
+  </div>
+
+</main>
+<script>
+const DROPS = [
+  // Past drops (contextual)
+  { retailer:'target', title:'Chaos Rising ETB — Target Preorder', date:'2026-04-23', time:'~3:00 AM ET', confidence:'confirmed', desc:'Target preorder links went live overnight. Chaos Rising ETB, Booster Bundle, Blister, and Mega Zygarde Box all listed simultaneously.', source:'@PokemonRestocks', past:true },
+  { retailer:'walmart', title:'Ascended Heroes Booster Bundle Drop', date:'2026-04-23', time:'Wednesday Drop', confidence:'confirmed', desc:'Walmart Wednesday drop included Ascended Heroes Booster Bundles. Sold & shipped by Walmart at MSRP $26.99.', source:'TrackaLacker', past:true },
+  { retailer:'target', title:'Ascended Heroes Mega ex Boxes', date:'2026-04-24', time:'~3:00 AM ET', confidence:'confirmed', desc:'Mega Meganium ex, Mega Emboar ex, and Mega Feraligatr ex boxes went live at Target overnight. 4 ASC packs + lenticular promo each.', source:'pokemon.com', past:false },
+  { retailer:'walmart', title:'Ascended Heroes Mini Tins at ALDI', date:'2026-04-22', time:'In-Store Only', confidence:'confirmed', desc:'Ascended Heroes Mini Tins spotted at ALDI stores starting April 22. 2 packs + art card + sticker sheet. Not online — in-store find only.', source:'@pokemontcgrestocks Threads', past:true },
+  // Upcoming
+  { retailer:'target', title:'Chaos Rising Full Launch — Target', date:'2026-05-22', time:'~3:00 AM ET (first drop)', confidence:'confirmed', desc:'Chaos Rising ETB ($49.99), Booster Bundle ($26.99), and 3-Pack Blister ($14.99) expected to go live overnight Thursday–Friday. Preorder links already confirmed active.', source:'@PokemonRestocks / TrackaLacker', past:false },
+  { retailer:'walmart', title:'Chaos Rising — Walmart Wednesday', date:'2026-05-27', time:'~12:00 PM ET', confidence:'likely', desc:'Walmart Wednesday drop expected the week of May 22. ETB + Bundle + Blister. Walmart+ members get 3-hr early access starting ~9 AM ET. Check the app.', source:'TrackaLacker pattern data', past:false },
+  { retailer:'bestbuy', title:'Chaos Rising ETB — Best Buy App Invite', date:'2026-05-22', time:'App notification', confidence:'likely', desc:'Best Buy historically uses app invites for high-demand ETBs. Download the Best Buy app and enable notifications before May 22. Invite sends once inventory is confirmed.', source:'@PokemonRestocks', past:false },
+  { retailer:'pc', title:'Chaos Rising PC ETB Drop', date:'2026-05-22', time:'~10:00 AM ET', confidence:'confirmed', desc:'Pokémon Center PC-exclusive ETB with 11 packs + stamped Fennekin promo. MSRP $64.99. Expect virtual queue. Pre-orders already live on pokemoncenter.com.', source:'pokemoncenter.com preorder', past:false },
+  { retailer:'pc', title:'Chaos Rising Booster Display Box', date:'2026-05-22', time:'~10:00 AM ET', confidence:'confirmed', desc:'36-pack display box. Pokémon Center exclusive. Sells out within minutes at $159.99. Have the page queued and refreshing at 10 AM sharp.', source:'pokemoncenter.com', past:false },
+  { retailer:'target', title:'Chaos Rising 3-Pack Blister Restock', date:'2026-06-05', time:'~3:00 PM ET Friday', confidence:'likely', desc:'Blisters typically see a restock wave 1–2 weeks after initial launch. Watch Friday afternoon windows at Target.', source:'TrackaLacker historical pattern', past:false },
+  { retailer:'walmart', title:'Pitch Black (Mega Darkrai ex) — Preorder', date:'2026-06-20', time:'Expected', confidence:'rumored', desc:'Walmart typically lists preorders 4–6 weeks before launch. Pitch Black releases July 17 — watch for Walmart preorder listings around mid-June.', source:'Pattern analysis', past:false },
+  { retailer:'target', title:'Pitch Black Full Launch — Target', date:'2026-07-17', time:'~3:00 AM ET', confidence:'confirmed', desc:'Pitch Black (Mega Darkrai ex) launch day. ETB, Bundle, Blister expected. Prereleases Jul 4–12 at LGS.', source:'PokeBeach / pokemon.com', past:false },
+  { retailer:'pc', title:'30th Celebration Set — PC Drop', date:'2026-09-18', time:'~10:00 AM ET', confidence:'confirmed', desc:'Historic worldwide simultaneous launch. First-ever global same-day release. All-foil 6-card packs. Expect massive demand — virtual queue almost certain. This will be the biggest TCG drop of 2026.', source:'PokeBeach / pokemon.com', past:false },
+];
+
+let currentRetailer = 'all';
+
+function filterRetailer(r, btn) {
+  currentRetailer = r;
+  document.querySelectorAll('.ret-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderDrops();
+  renderPatterns();
+}
+
+function renderPatterns() {
+  document.querySelectorAll('.pattern-card').forEach(card => {
+    const r = card.dataset.retailer;
+    card.style.display = (currentRetailer === 'all' || currentRetailer === r) ? '' : 'none';
+  });
+}
+
+function renderDrops() {
+  const grid = document.getElementById('drops-grid');
+  const filtered = DROPS.filter(d => currentRetailer === 'all' || d.retailer === currentRetailer);
+  const retClass = { target:'dc-target', walmart:'dc-walmart', bestbuy:'dc-bestbuy', pc:'dc-pc' };
+  const retBadge = { target:'db-target', walmart:'db-walmart', bestbuy:'db-bestbuy', pc:'db-pc' };
+  const retName = { target:'🎯 TARGET', walmart:'🔵 WALMART', bestbuy:'🟡 BEST BUY', pc:'🔴 POKÉMON CENTER' };
+  const confCls = { confirmed:'conf-confirmed', likely:'conf-likely', rumored:'conf-rumored' };
+  const confLabel = { confirmed:'CONFIRMED', likely:'LIKELY', rumored:'RUMORED' };
+
+  const today = new Date(2026,3,24);
+
+  grid.innerHTML = filtered.map((d, i) => {
+    const dropDate = new Date(d.date + 'T12:00:00');
+    const diff = Math.round((dropDate - today) / 86400000);
+    const isPast = diff < 0 || d.past;
+    const isSoon = diff >= 0 && diff <= 14;
+
+    return `<div class="drop-card ${retClass[d.retailer]||''} ${isPast?'past':isSoon?'upcoming':''}" style="animation-delay:${i*.04}s">
+      <div class="drop-retailer-bar"></div>
+      <div class="drop-body">
+        <div class="drop-top">
+          <div class="drop-title">${d.title}</div>
+          <span class="drop-confidence ${confCls[d.confidence]||''}">${confLabel[d.confidence]||d.confidence.toUpperCase()}</span>
+        </div>
+        <div class="drop-meta">
+          <span class="drop-retailer-badge ${retBadge[d.retailer]||''}">${retName[d.retailer]||d.retailer}</span>
+          <span class="drop-date">${d.date}</span>
+          <span class="drop-time">${d.time}</span>
+          ${isPast ? '<span style="font-family:DM Mono,monospace;font-size:.6rem;color:var(--muted)">PAST</span>' : isSoon ? `<span style="font-family:DM Mono,monospace;font-size:.6rem;color:var(--green)">IN ${diff}D</span>` : ''}
+        </div>
+        <div class="drop-desc">${d.desc}</div>
+        <div class="drop-source">📡 Source: ${d.source}</div>
+      </div>
+    </div>`;
+  }).join('') || '<div style="padding:40px;text-align:center;font-family:DM Mono,monospace;font-size:.75rem;color:var(--muted)">No drops found for this retailer</div>';
+}
+
+// ── Load from JSON (written by news_scraper.py) ──
+async function loadDrops() {
+  try {
+    const r = await fetch('../data/retail_drops.json?t=' + Date.now());
+    if (r.ok) {
+      const data = await r.json();
+      if (data.drops && data.drops.length) {
+        DROPS.length = 0;
+        data.drops.forEach(d => DROPS.push(d));
+        document.getElementById('last-refresh').textContent =
+          'Sources checked: ' + new Date(data.last_updated).toLocaleDateString('en-US', {month:'short',day:'numeric',year:'numeric'});
+      }
+    }
+  } catch(e) {
+    console.log('Using static drop data:', e.message);
+  }
+  renderDrops();
+  renderPatterns();
+}
+
+// Auto-refresh every 6 hours
+setInterval(loadDrops, 6 * 60 * 60 * 1000);
+
+loadDrops();
+</script>
+</body>
+</html>

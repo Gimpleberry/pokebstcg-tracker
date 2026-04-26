@@ -1,0 +1,389 @@
+================================================================================
+Keith's PokeBS — PRODUCTS LIST BACKUP
+Last updated: April 24, 2026
+Total products: 53
+================================================================================
+Paste this entire PRODUCTS = [ ... ] block into tracker.py to restore your list.
+================================================================================
+
+PRODUCTS = [
+
+    # ══════════════════════════════════════════
+    # TARGET — Elite Trainer Boxes (6)
+    # ══════════════════════════════════════════
+    {
+        "name": "Pokemon Chaos Rising ETB",
+        "retailer": "target",
+        "url": "https://www.target.com/s/pokemon+chaos+rising+elite+trainer+box",
+        "sku": "",  # Update when Target lists SKU on release — May 22, 2026
+    },
+    {
+        "name": "Pokemon SV9 Journey Together ETB",
+        "retailer": "target",
+        "url": "https://www.target.com/p/2025-pok-233-mon-scarlet-violet-s9-elite-trainer-box/-/A-93803439",
+        "sku": "93803439",
+    },
+    {
+        "name": "Pokemon Mega Evolution Ascended Heroes ETB",
+        "retailer": "target",
+        "url": "https://www.target.com/p/2025-pok-me-2-5-elite-trainer-box/-/A-95082118",
+        "sku": "95082118",
+    },
+    {
+        "name": "Pokemon Mega Evolution Perfect Order ETB",
+        "retailer": "target",
+        "url": "https://www.target.com/p/pok-233-mon-trading-card-game-mega-evolution-perfect-order-elite-trainer-box/-/A-95230445",
+        "sku": "95230445",
+    },
+    {
+        "name": "Pokemon Mega Evolution Phantasmal Flames ETB",
+        "retailer": "target",
+        "url": "https://www.target.com/p/pok-233-mon-trading-card-game-mega-evolution-8212-phantasmal-flames-elite-trainer-box/-/A-94860231",
+        "sku": "94860231",
+    },
+    {
+        "name": "Pokemon Prismatic Evolutions ETB",
+        "retailer": "target",
+        "url": "https://www.target.com/p/2024-pok-scarlet-violet-s8-5-elite-trainer-box/-/A-93954435",
+        "sku": "93954435",
+    },
+
+    # ══════════════════════════════════════════
+    # TARGET — Booster Bundles (5)
+    # ══════════════════════════════════════════
+    {
+        "name": "Pokemon Chaos Rising Booster Bundle",
+        "retailer": "target",
+        "url": "https://www.target.com/s/pokemon+chaos+rising+booster+bundle",
+        "sku": "",  # Update when Target lists SKU on release — May 22, 2026
+    },
+    {
+        "name": "Pokemon SV9 Journey Together Booster Bundle",
+        "retailer": "target",
+        "url": "https://www.target.com/p/pok-233-mon-trading-card-game-scarlet-38-violet-8212-journey-together-booster-bundle/-/A-94300074",
+        "sku": "94300074",
+    },
+    {
+        "name": "Pokemon SV10 Destined Rivals Booster Bundle",
+        "retailer": "target",
+        "url": "https://www.target.com/p/pok-233-mon-trading-card-game-scarlet-38-violet-8212-destined-rivals-booster-bundle/-/A-94681770",
+        "sku": "94681770",
+    },
+    {
+        "name": "Pokemon Mega Evolution Booster Bundle",
+        "retailer": "target",
+        "url": "https://www.target.com/p/pok-233-mon-trading-card-game-mega-evolution-booster-bundle/-/A-94681782",
+        "sku": "94681782",
+    },
+    {
+        "name": "Pokemon SV8.5 Prismatic Evolutions Booster Bundle",
+        "retailer": "target",
+        "url": "https://www.target.com/p/pok-233-mon-trading-card-game-scarlet-38-violet-prismatic-evolutions-booster-bundle/-/A-93954446",
+        "sku": "93954446",
+    },
+
+    # ══════════════════════════════════════════
+    # TARGET — Blister / Sleeved Packs (4)
+    # ══════════════════════════════════════════
+    {
+        "name": "Pokemon Chaos Rising 3-Pack Blister",
+        "retailer": "target",
+        "url": "https://www.target.com/s/pokemon+chaos+rising+blister",
+        "sku": "",  # Update when Target lists SKU on release — May 22, 2026
+    },
+    {
+        "name": "Pokemon Chaos Rising Sleeved Booster Pack",
+        "retailer": "target",
+        "url": "https://www.target.com/s/pokemon+chaos+rising+sleeved+booster",
+        "sku": "",  # Update when Target lists SKU on release — May 22, 2026
+    },
+    {
+        "name": "Pokemon SV9 Journey Together Sleeved Booster",
+        "retailer": "target",
+        "url": "https://www.target.com/p/pok-233-mon-trading-card-game-scarlet-38-violet-journey-together-sleeved-booster/-/A-94300073",
+        "sku": "94300073",
+    },
+    {
+        "name": "Pokemon SV10 Destined Rivals Sleeved Booster",
+        "retailer": "target",
+        "url": "https://www.target.com/s/pokemon+destined+rivals+sleeved+booster",
+        "sku": "",  # Update with Target SKU if/when listed
+    },
+
+    # ══════════════════════════════════════════
+    # WALMART — Elite Trainer Boxes (6)
+    # ══════════════════════════════════════════
+    {
+        "name": "Pokemon Chaos Rising ETB",
+        "retailer": "walmart",
+        "url": "https://www.walmart.com/ip/Pokemon-TCG-Mega-Evolution-Chaos-Rising-Elite-Trainer-Box/19939024731",
+        "item_id": "19939024731",
+    },
+    {
+        "name": "Pokemon SV9 Journey Together ETB",
+        "retailer": "walmart",
+        "url": "https://www.walmart.com/ip/Pokemon-Journey-Together-SV09-Elite-Trainer-Box/15156564532",
+        "item_id": "15156564532",
+    },
+    {
+        "name": "Pokemon SV10 Destined Rivals ETB",
+        "retailer": "walmart",
+        "url": "https://www.walmart.com/ip/Pok-mon-TCG-Scarlet-Violet-Destined-Rivals-Pok-mon-Center-Elite-Trainer-Box/15718673510",
+        "item_id": "15718673510",
+    },
+    {
+        "name": "Pokemon SV10.5 Black Bolt ETB",
+        "retailer": "walmart",
+        "url": "https://www.walmart.com/ip/Pokemon-TCG-Scarlet-Violet-10-5-Black-Bolt-Elite-Trainer-Box-9-Packs-Promo-Card/16498668973",
+        "item_id": "16498668973",
+    },
+    {
+        "name": "Pokemon SV10.5 White Flare ETB",
+        "retailer": "walmart",
+        "url": "https://www.walmart.com/ip/Pokemon-TCG-Scarlet-Violet-10-5-White-Flare-Elite-Trainer-Box-9-Packs-Promo-Card/16446322202",
+        "item_id": "16446322202",
+    },
+    {
+        "name": "Pokemon Prismatic Evolutions ETB",
+        "retailer": "walmart",
+        "url": "https://www.walmart.com/ip/Pokemon-Scarlet-Violet-Prismatic-Evolutions-Elite-Trainer-Box/13816151308",
+        "item_id": "13816151308",
+    },
+
+    # ══════════════════════════════════════════
+    # WALMART — Booster Bundles (3)
+    # ══════════════════════════════════════════
+    {
+        "name": "Pokemon Chaos Rising Booster Bundle",
+        "retailer": "walmart",
+        "url": "https://www.walmart.com/ip/Pokemon-TCG-Mega-Evolution-Chaos-Rising-Booster-Bundle/19939024729",
+        "item_id": "19939024729",
+    },
+    {
+        "name": "Pokemon SV10 Destined Rivals Booster Bundle",
+        "retailer": "walmart",
+        "url": "https://www.walmart.com/ip/Pokemon-TCG-Scarlet-Violet-Destined-Rivals-Booster-Bundle-6-Packs/16019713971",
+        "item_id": "16019713971",
+    },
+    {
+        "name": "Pokemon SV10 Destined Rivals Booster Bundle (Alt)",
+        "retailer": "walmart",
+        "url": "https://www.walmart.com/ip/TCG-Scarlet-Violet-Destined-Rivals-Booster-Bundle-6-Packs/15700422581",
+        "item_id": "15700422581",
+    },
+
+    # ══════════════════════════════════════════
+    # WALMART — Blister / Sleeved Packs (2)
+    # ══════════════════════════════════════════
+    {
+        "name": "Pokemon Chaos Rising 3-Pack Blister",
+        "retailer": "walmart",
+        "url": "https://www.walmart.com/ip/Pokemon-TCG-Mega-Evolution-Chaos-Rising-3-Pack-Blister-1-Foil-Promo-Card-3-Booster-Packs/19939024730",
+        "item_id": "19939024730",
+    },
+    {
+        "name": "Pokemon SV10 Destined Rivals Sleeved Booster",
+        "retailer": "walmart",
+        "url": "https://www.walmart.com/ip/Pokemon-TCG-Scarlet-Violet-Destined-Rivals-Sleeved-Booster-Pack/16019713972",
+        "item_id": "16019713972",
+    },
+
+    # ══════════════════════════════════════════
+    # BEST BUY — Elite Trainer Boxes (4)
+    # ══════════════════════════════════════════
+    {
+        "name": "Pokemon Chaos Rising ETB",
+        "retailer": "bestbuy",
+        "url": "https://www.bestbuy.com/product/pokemon-trading-card-game-mega-evolution-chaos-rising-elite-trainer-box/JJG2TL34RT",
+        "sku": "6638001",
+    },
+    {
+        "name": "Pokemon SV9 Journey Together ETB",
+        "retailer": "bestbuy",
+        "url": "https://www.bestbuy.com/product/pokemon-trading-card-game-scarlet-violet-journey-together-elite-trainer-box/JJG2TLCFTX",
+        "sku": "6614267",
+    },
+    {
+        "name": "Pokemon SV10 Destined Rivals ETB",
+        "retailer": "bestbuy",
+        "url": "https://www.bestbuy.com/product/pokemon-trading-card-game-scarlet-violet-destined-rivals-elite-trainer-box/JJG2TL22PF",
+        "sku": "6629999",
+    },
+    {
+        "name": "Pokemon Prismatic Evolutions ETB",
+        "retailer": "bestbuy",
+        "url": "https://www.bestbuy.com/product/pokemon-trading-card-game-scarlet-violet-prismatic-evolutions-elite-trainer-box/JJG2TLCW3L",
+        "sku": "6606082",
+    },
+
+    # ══════════════════════════════════════════
+    # BEST BUY — Booster Bundles (4)
+    # ══════════════════════════════════════════
+    {
+        "name": "Pokemon Chaos Rising Booster Bundle",
+        "retailer": "bestbuy",
+        "url": "https://www.bestbuy.com/product/pokemon-trading-card-game-mega-evolution-chaos-rising-booster-bundle/JJG2TL34H9",
+        "sku": "6638002",
+    },
+    {
+        "name": "Pokemon SV9 Journey Together Booster Bundle 6pk",
+        "retailer": "bestbuy",
+        "url": "https://www.bestbuy.com/site/pokemon-trading-card-game-scarlet-violet-journey-together-booster-bundle-6-pk/6614264.p",
+        "sku": "6614264",
+    },
+    {
+        "name": "Pokemon SV10.5 Black Bolt Booster Bundle",
+        "retailer": "bestbuy",
+        "url": "https://www.bestbuy.com/product/pokemon-trading-card-game-scarlet-violet-black-bolt-booster-bundle/JJG2TLX84Q",
+        "sku": "6629998",
+    },
+    {
+        "name": "Pokemon SV8.5 Prismatic Evolutions Booster Bundle",
+        "retailer": "bestbuy",
+        "url": "https://www.bestbuy.com/site/pokemon-trading-card-game-scarlet-violet-prismatic-evolutions-booster-bundle/6608206.p",
+        "sku": "6608206",
+    },
+
+    # ══════════════════════════════════════════
+    # BEST BUY — Blister / Sleeved Packs (3)
+    # ══════════════════════════════════════════
+    {
+        "name": "Pokemon Chaos Rising 3-Pack Blister",
+        "retailer": "bestbuy",
+        "url": "https://www.bestbuy.com/product/pokemon-trading-card-game-mega-evolution-chaos-rising-3pk-booster/JJG2TL34H3",
+        "sku": "6638003",
+    },
+    {
+        "name": "Pokemon Chaos Rising Sleeved Booster Pack",
+        "retailer": "bestbuy",
+        "url": "https://www.bestbuy.com/site/searchpage.jsp?st=pokemon+chaos+rising+sleeved+booster",
+        "sku": "",  # Update when Best Buy lists confirmed SKU
+    },
+    {
+        "name": "Pokemon SV9 Journey Together Sleeved Booster",
+        "retailer": "bestbuy",
+        "url": "https://www.bestbuy.com/site/pokemon-trading-card-game-scarlet-violet-journey-together-sleeved-booster-styles-may-vary/6614259.p",
+        "sku": "6614259",
+    },
+
+    # ══════════════════════════════════════════
+    # POKEMON CENTER — Elite Trainer Boxes (7)
+    # ══════════════════════════════════════════
+    {
+        "name": "Pokemon Chaos Rising PC Elite Trainer Box",
+        "retailer": "pokemoncenter",
+        "url": "https://www.pokemoncenter.com/product/10-10399-112/pokemon-tcg-mega-evolution-chaos-rising-pokemon-center-elite-trainer-box",
+    },
+    {
+        "name": "Pokemon SV9 Journey Together PC Elite Trainer Box",
+        "retailer": "pokemoncenter",
+        "url": "https://www.pokemoncenter.com/product/100-10356/pokemon-tcg-scarlet-and-violet-journey-together-pokemon-center-elite-trainer-box",
+    },
+    {
+        "name": "Pokemon SV10 Destined Rivals PC Elite Trainer Box",
+        "retailer": "pokemoncenter",
+        "url": "https://www.pokemoncenter.com/product/100-10653/pokemon-tcg-scarlet-and-violet-destined-rivals-pokemon-center-elite-trainer-box",
+    },
+    {
+        "name": "Pokemon Mega Evolution Ascended Heroes PC Elite Trainer Box",
+        "retailer": "pokemoncenter",
+        "url": "https://www.pokemoncenter.com/product/10-10315-108/pokemon-tcg-mega-evolution-ascended-heroes-pokemon-center-elite-trainer-box",
+    },
+    {
+        "name": "Pokemon Mega Evolution Perfect Order PC Elite Trainer Box",
+        "retailer": "pokemoncenter",
+        "url": "https://www.pokemoncenter.com/product/10-10372-109/pokemon-tcg-mega-evolution-perfect-order-pokemon-center-elite-trainer-box",
+    },
+    {
+        "name": "Pokemon Mega Evolution Gardevoir PC Elite Trainer Box",
+        "retailer": "pokemoncenter",
+        "url": "https://www.pokemoncenter.com/product/10-10047-120/pokemon-tcg-mega-evolution-pokemon-center-elite-trainer-box-mega-gardevoir",
+    },
+    {
+        "name": "Pokemon SV10.5 Black Bolt PC Elite Trainer Box",
+        "retailer": "pokemoncenter",
+        "url": "https://www.pokemoncenter.com/product/10-10037-118/pokemon-tcg-scarlet-and-violet-black-bolt-pokemon-center-elite-trainer-box",
+    },
+
+    # ══════════════════════════════════════════
+    # POKEMON CENTER — Booster Bundles & Display Boxes (5)
+    # ══════════════════════════════════════════
+    {
+        "name": "Pokemon Chaos Rising Booster Bundle 6pk",
+        "retailer": "pokemoncenter",
+        "url": "https://www.pokemoncenter.com/product/10-10403-109/pokemon-tcg-mega-evolution-chaos-rising-booster-bundle",
+    },
+    {
+        "name": "Pokemon Chaos Rising Booster Display Box 36pk",
+        "retailer": "pokemoncenter",
+        "url": "https://www.pokemoncenter.com/product/10-10407-119/pokemon-tcg-mega-evolution-chaos-rising-booster-display-box-36-packs",
+    },
+    {
+        "name": "Pokemon SV9 Journey Together Booster Bundle 6pk",
+        "retailer": "pokemoncenter",
+        "url": "https://www.pokemoncenter.com/product/100-10341/pokemon-tcg-scarlet-and-violet-journey-together-booster-bundle-6-packs",
+    },
+    {
+        "name": "Pokemon SV10 Destined Rivals Booster Bundle 6pk",
+        "retailer": "pokemoncenter",
+        "url": "https://www.pokemoncenter.com/product/100-10638/pokemon-tcg-scarlet-and-violet-destined-rivals-booster-bundle-6-packs",
+    },
+    {
+        "name": "Pokemon SV10 Destined Rivals Booster Display Box 36pk",
+        "retailer": "pokemoncenter",
+        "url": "https://www.pokemoncenter.com/product/10-10157-101/pokemon-tcg-scarlet-and-violet-destined-rivals-booster-display-box-36-packs",
+    },
+
+    # ══════════════════════════════════════════
+    # POKEMON CENTER — Sleeved Booster Packs (3)
+    # ══════════════════════════════════════════
+    {
+        "name": "Pokemon Chaos Rising Sleeved Booster Pack",
+        "retailer": "pokemoncenter",
+        "url": "https://www.pokemoncenter.com/search?q=chaos+rising+sleeved+booster",
+        # Update URL once Pokemon Center posts confirmed product page
+    },
+    {
+        "name": "Pokemon SV9 Journey Together Sleeved Booster Pack",
+        "retailer": "pokemoncenter",
+        "url": "https://www.pokemoncenter.com/product/100-10326/pokemon-tcg-scarlet-and-violet-journey-together-sleeved-booster-pack-10-cards",
+    },
+    {
+        "name": "Pokemon SV10 Destined Rivals Sleeved Booster Pack",
+        "retailer": "pokemoncenter",
+        "url": "https://www.pokemoncenter.com/product/100-10623/pokemon-tcg-scarlet-and-violet-destined-rivals-sleeved-booster-pack-10-cards",
+    },
+]
+
+================================================================================
+RETAILER BREAKDOWN
+================================================================================
+Target          — 15 products  (6 ETBs + 5 Booster Bundles + 4 Blisters/Sleeved)
+Walmart         — 11 products  (6 ETBs + 3 Booster Bundles + 2 Blisters/Sleeved)
+Best Buy        — 11 products  (4 ETBs + 4 Booster Bundles + 3 Blisters/Sleeved)
+Pokemon Center  — 15 products  (7 ETBs + 5 Booster Bundles/Display + 3 Sleeved)
+────────────────────────────────────────────────────────────────────────────────
+TOTAL           — 52 products
+
+NOTE ON CHAOS RISING (releases May 22, 2026):
+  - Pokemon Center URLs CONFIRMED from pokemoncenter.com preorder listings
+  - Best Buy product URLs CONFIRMED from bestbuy.com listings
+  - Walmart item IDs for Chaos Rising are approximate — verify on release day
+  - Target Chaos Rising SKUs are NOT yet live — update with real SKU on release
+  - Any entry with sku: "" or item_id: "" needs updating before/on release day
+  - ACTION NEEDED on May 22: Update blank SKUs for Target Chaos Rising entries
+
+NOTE ON BLISTER/SLEEVED PACKS:
+  - Earlier sets may no longer have active blister listings at retail
+  - Tracker will show "Out of Stock" for discontinued products — that is normal
+  - Best current opportunities: Chaos Rising (May 22+), Destined Rivals, JTG
+
+================================================================================
+HOW TO RESTORE
+================================================================================
+1. Open tracker.py in Notepad
+2. Find: PRODUCTS = [
+3. Select everything from that line down to the closing ]
+4. Delete and paste this entire block in its place
+5. Save and restart: python tracker.py
+================================================================================

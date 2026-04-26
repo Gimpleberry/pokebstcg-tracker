@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Keith's PokeBS -- Price History</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0a0f;--surface:#111118;--surface2:#18181f;--border:#2a2a38;--accent:#f0c040;--accent2:#e8503a;--green:#3ddc84;--purple:#a78bfa;--blue:#60a5fa;--muted:#555570;--text:#e8e8f0;--text2:#9090a8}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.08) 2px,rgba(0,0,0,.08) 4px);pointer-events:none;z-index:999}
+header{display:flex;align-items:center;justify-content:space-between;padding:24px 40px;border-bottom:1px solid var(--border);background:rgba(10,10,15,.95);backdrop-filter:blur(12px);position:sticky;top:0;z-index:100}
+.logo{display:flex;align-items:baseline;gap:10px}
+.logo-main{font-family:'Bebas Neue',sans-serif;font-size:2.2rem;letter-spacing:.04em;color:var(--accent);text-shadow:0 0 30px rgba(240,192,64,.4)}
+.logo-sub{font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted);letter-spacing:.2em;text-transform:uppercase}
+.nav-bar{display:flex;align-items:center;gap:4px;padding:0 40px;background:var(--surface2);border-bottom:1px solid var(--border);flex-wrap:wrap}
+.nav-link{font-family:'DM Mono',monospace;font-size:.72rem;letter-spacing:.15em;text-transform:uppercase;padding:12px 18px;color:var(--muted);text-decoration:none;border-bottom:2px solid transparent;transition:all .15s}
+.nav-link:hover{color:var(--text)}.nav-link.active{color:var(--accent);border-bottom-color:var(--accent)}
+main{padding:40px;max-width:1500px;margin:0 auto}
+.page-title{font-family:'Bebas Neue',sans-serif;font-size:1.8rem;letter-spacing:.06em;color:var(--text2);margin-bottom:4px}
+.page-subtitle{font-family:'DM Mono',monospace;font-size:.72rem;color:var(--muted);letter-spacing:.1em;margin-bottom:28px}
+
+/* Stats bar */
+.stats-bar{display:flex;gap:14px;margin-bottom:28px;flex-wrap:wrap}
+.stat-chip{background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:12px 18px;flex:1;min-width:130px}
+.stat-label{font-family:'DM Mono',monospace;font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.stat-value{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:.04em;color:var(--accent)}
+.stat-sub{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--muted)}
+
+/* Explorer controls */
+.explorer-controls{background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:20px;margin-bottom:20px;display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end}
+.ctrl-group{display:flex;flex-direction:column;gap:5px}
+.ctrl-label{font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.ctrl-input,.ctrl-select{font-family:'DM Mono',monospace;font-size:.72rem;background:var(--surface2);border:1px solid var(--border);border-radius:3px;padding:8px 12px;color:var(--text);outline:none;min-width:160px}
+.ctrl-input:focus,.ctrl-select:focus{border-color:var(--accent)}
+.ctrl-input::placeholder{color:var(--muted)}
+.sort-btn{font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;padding:8px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:3px;color:var(--muted);cursor:pointer;transition:all .15s}
+.sort-btn.active{border-color:var(--accent);color:var(--accent)}
+.sort-btn:hover{border-color:rgba(240,192,64,.5);color:var(--text)}
+
+/* Export buttons */
+.export-row{display:flex;gap:8px;margin-left:auto;flex-wrap:wrap}
+.exp-btn{font-family:'DM Mono',monospace;font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;padding:8px 14px;border-radius:3px;cursor:pointer;transition:all .15s;border:1px solid}
+.exp-csv{background:rgba(96,165,250,.08);border-color:rgba(96,165,250,.25);color:var(--blue)}
+.exp-csv:hover{background:rgba(96,165,250,.15)}
+.exp-sheets{background:rgba(61,220,132,.08);border-color:rgba(61,220,132,.25);color:var(--green)}
+.exp-sheets:hover{background:rgba(61,220,132,.15)}
+
+/* Result count */
+.result-meta{font-family:'DM Mono',monospace;font-size:.68rem;color:var(--muted);margin-bottom:12px;display:flex;align-items:center;gap:16px}
+.result-count{color:var(--accent)}
+
+/* Price table */
+.price-table{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--border);border-radius:4px;overflow:hidden}
+.price-table thead tr{background:var(--surface2);border-bottom:1px solid var(--border)}
+.price-table thead th{font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);padding:11px 14px;text-align:left;white-space:nowrap;cursor:pointer;user-select:none;transition:color .15s}
+.price-table thead th:hover{color:var(--text)}
+.price-table thead th.sorted{color:var(--accent)}
+.th-right{text-align:right}
+.price-table tbody tr{border-bottom:1px solid var(--border);transition:background .15s}
+.price-table tbody tr:last-child{border-bottom:none}
+.price-table tbody tr:hover{background:rgba(255,255,255,.025)}
+.price-table td{padding:10px 14px;vertical-align:middle;font-size:.82rem}
+
+/* Sparkline */
+canvas.spark{display:block}
+
+/* Badges */
+.badge{font-family:'DM Mono',monospace;font-size:.58rem;padding:2px 7px;border-radius:2px;margin-left:4px}
+.b-msrp{background:rgba(61,220,132,.1);color:var(--green);border:1px solid rgba(61,220,132,.2)}
+.b-above{background:rgba(232,80,58,.08);color:#ff8a80;border:1px solid rgba(232,80,58,.2)}
+.b-na{background:rgba(85,85,112,.1);color:var(--muted);border:1px solid var(--border)}
+.b-stock{background:rgba(61,220,132,.08);color:var(--green);border:1px solid rgba(61,220,132,.2);font-size:.58rem;padding:2px 7px;border-radius:2px}
+
+/* Retailer dot */
+.ret-dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px;flex-shrink:0}
+.d-target{background:#e8503a}.d-walmart{background:#0071ce}
+.d-bestbuy{background:#ffd200}.d-pokemoncenter{background:#e05a6a}
+
+/* Detail panel */
+.detail-panel{background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:20px;margin-top:20px;display:none}
+.detail-panel.open{display:block}
+.detail-title{font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:.06em;color:var(--text);margin-bottom:4px}
+.detail-sub{font-family:'DM Mono',monospace;font-size:.65rem;color:var(--muted);margin-bottom:16px}
+.detail-chart-wrap{width:100%;height:120px;position:relative}
+canvas.detail-chart{width:100%;height:120px}
+
+/* No data */
+.no-data{text-align:center;padding:48px;font-family:'DM Mono',monospace;font-size:.75rem;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:4px}
+.no-data code{background:var(--surface2);padding:2px 8px;border-radius:2px;color:var(--accent)}
+
+/* Loading */
+.loading{text-align:center;padding:50px;font-family:'DM Mono',monospace;font-size:.75rem;color:var(--muted)}
+.spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo"><span class="logo-main">Keith's PokeBS</span><span class="logo-sub">Price History</span></div>
+  <div style="font-family:'DM Mono',monospace;font-size:.65rem;color:var(--muted)" id="last-updated">Loading...</div>
+</header>
+<nav class="nav-bar">
+  <a class="nav-link" href="dashboard.html">Tracker</a>
+  <a class="nav-link" href="info.html">Set Info</a>
+  <a class="nav-link" href="pricing.html">Pricing</a>
+  <a class="nav-link" href="binder.html">Binder</a>
+  <a class="nav-link" href="future.html">Future</a>
+  <a class="nav-link" href="retail-drops.html">Retail Drops</a>
+  <a class="nav-link active" href="pricing-history.html">Price History</a>
+  <a class="nav-link" href="help.html">Help</a>
+</nav>
+<main>
+  <div class="page-title">Price History Explorer</div>
+  <div class="page-subtitle">30-day display -- 90 days retained -- logged hourly -- click any column header to sort</div>
+
+  <!-- Stats -->
+  <div class="stats-bar">
+    <div class="stat-chip"><div class="stat-label">Products</div><div class="stat-value" id="s-products">--</div><div class="stat-sub">with price data</div></div>
+    <div class="stat-chip"><div class="stat-label">Records</div><div class="stat-value" id="s-records">--</div><div class="stat-sub">30-day total</div></div>
+    <div class="stat-chip"><div class="stat-label">At/Below MSRP</div><div class="stat-value" id="s-deals">--</div><div class="stat-sub">currently</div></div>
+    <div class="stat-chip"><div class="stat-label">In Stock Now</div><div class="stat-value" id="s-instock">--</div><div class="stat-sub">products</div></div>
+    <div class="stat-chip"><div class="stat-label">DB Size</div><div class="stat-value" id="s-size">--</div><div class="stat-sub">price_history.db</div></div>
+    <div class="stat-chip"><div class="stat-label">Oldest Record</div><div class="stat-value" id="s-oldest" style="font-size:1rem;padding-top:4px">--</div><div class="stat-sub">first log date</div></div>
+  </div>
+
+  <!-- Explorer controls -->
+  <div class="explorer-controls">
+    <div class="ctrl-group">
+      <div class="ctrl-label">Search</div>
+      <input type="text" class="ctrl-input" id="search" placeholder="Product name..." oninput="applyFilters()">
+    </div>
+    <div class="ctrl-group">
+      <div class="ctrl-label">Retailer</div>
+      <select class="ctrl-select" id="f-retailer" onchange="applyFilters()">
+        <option value="all">All Retailers</option>
+        <option value="target">Target</option>
+        <option value="walmart">Walmart</option>
+        <option value="bestbuy">Best Buy</option>
+        <option value="pokemoncenter">Pokemon Center</option>
+      </select>
+    </div>
+    <div class="ctrl-group">
+      <div class="ctrl-label">Status</div>
+      <select class="ctrl-select" id="f-status" onchange="applyFilters()">
+        <option value="all">All Products</option>
+        <option value="in_stock">In Stock Now</option>
+        <option value="at_msrp">At or Below MSRP</option>
+        <option value="above_msrp">Above MSRP</option>
+      </select>
+    </div>
+    <div class="ctrl-group">
+      <div class="ctrl-label">Sort By</div>
+      <div style="display:flex;gap:5px;flex-wrap:wrap">
+        <button class="sort-btn active" id="sort-name"    onclick="setSort('name',this)">Name</button>
+        <button class="sort-btn"        id="sort-price"   onclick="setSort('price',this)">Price</button>
+        <button class="sort-btn"        id="sort-min"     onclick="setSort('min',this)">30d Min</button>
+        <button class="sort-btn"        id="sort-savings" onclick="setSort('savings',this)">vs MSRP</button>
+        <button class="sort-btn"        id="sort-stock"   onclick="setSort('stock',this)">In Stock</button>
+      </div>
+    </div>
+    <div class="export-row">
+      <button class="exp-btn exp-csv"    onclick="downloadCSV()">Download CSV</button>
+      <button class="exp-btn exp-sheets" onclick="openSheetsInstructions()">Google Sheets</button>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div class="result-meta">
+    <span>Showing <span class="result-count" id="result-count">0</span> products</span>
+    <span id="result-note" style="color:var(--muted)"></span>
+  </div>
+  <div id="table-wrap">
+    <div class="loading"><div class="spinner"></div>Loading price history...</div>
+  </div>
+
+  <!-- Detail panel (shown on row click) -->
+  <div class="detail-panel" id="detail-panel">
+    <div class="detail-title" id="detail-title"></div>
+    <div class="detail-sub" id="detail-sub"></div>
+    <div class="detail-chart-wrap">
+      <canvas class="detail-chart" id="detail-chart"></canvas>
+    </div>
+  </div>
+
+</main>
+
+<!-- Google Sheets modal -->
+<div id="sheets-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:2000;align-items:center;justify-content:center">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:32px;max-width:500px;width:90%">
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:var(--accent);margin-bottom:16px">Open in Google Sheets</div>
+    <div style="font-size:.85rem;color:var(--text2);line-height:1.7;margin-bottom:20px">
+      <strong style="color:var(--text)">Step 1</strong> — Export the CSV file:<br>
+      <code style="font-family:'DM Mono',monospace;background:var(--surface2);padding:4px 10px;border-radius:3px;color:var(--accent);display:inline-block;margin:6px 0">python plugins/price_history.py --csv</code><br>
+      This creates <code style="font-family:'DM Mono',monospace;color:var(--green)">data/price_summary_30d.csv</code> and <code style="font-family:'DM Mono',monospace;color:var(--green)">data/price_history_90d.csv</code><br><br>
+      <strong style="color:var(--text)">Step 2</strong> — Go to <a href="https://sheets.google.com" target="_blank" style="color:var(--accent)">sheets.google.com</a> and click <strong>Blank</strong><br><br>
+      <strong style="color:var(--text)">Step 3</strong> — Click <strong>File > Import > Upload</strong> and drag your CSV file in<br><br>
+      <strong style="color:var(--text)">Step 4</strong> — Select <strong>Replace spreadsheet</strong> and click Import<br><br>
+      You now have full sort, filter, pivot table and chart access.
+    </div>
+    <button onclick="document.getElementById('sheets-modal').style.display='none'" style="font-family:'DM Mono',monospace;font-size:.7rem;padding:8px 18px;background:var(--surface2);border:1px solid var(--border);border-radius:3px;color:var(--muted);cursor:pointer">Close</button>
+  </div>
+</div>
+
+<script>
+// ── State ─────────────────────────────────────────────────────────────
+let allRows      = [];
+let sparklines   = {};
+let sortKey      = 'name';
+let sortDir      = 1;
+let selectedUrl  = null;
+
+// ── Load data ─────────────────────────────────────────────────────────
+async function loadData() {
+  try {
+    const r = await fetch('../data/price_summary.json?t=' + Date.now());
+    if (!r.ok) throw new Error('not found');
+    const data = await r.json();
+
+    // Stats
+    const st = data.stats || {};
+    const sum = data.summary || [];
+    document.getElementById('s-products').textContent = sum.length;
+    document.getElementById('s-records').textContent  = (st.total_records || 0).toLocaleString();
+    document.getElementById('s-size').textContent     = st.db_size_kb ? st.db_size_kb + ' KB' : '--';
+    document.getElementById('s-oldest').textContent   = st.oldest_record ? st.oldest_record.slice(0,10) : '--';
+    document.getElementById('s-deals').textContent    = sum.filter(r => r.latest_price_str && r.msrp &&
+      parseFloat(r.latest_price_str.replace(/[^0-9.]/g,'')) <= r.msrp).length;
+    document.getElementById('s-instock').textContent  = sum.filter(r => r.latest_in_stock).length;
+    document.getElementById('last-updated').textContent =
+      'Updated: ' + new Date(data.last_updated).toLocaleString();
+
+    allRows    = sum;
+    sparklines = data.sparklines || {};
+    applyFilters();
+  } catch(e) {
+    document.getElementById('table-wrap').innerHTML = `
+      <div class="no-data">
+        <div style="font-size:1.4rem;margin-bottom:12px">No price history yet</div>
+        <div>Prices are logged hourly once the tracker is running.</div>
+        <div style="margin-top:10px">Force an immediate log:</div>
+        <div style="margin-top:6px"><code>python plugins/price_history.py --log</code></div>
+      </div>`;
+  }
+}
+
+// ── Filters & sort ────────────────────────────────────────────────────
+function applyFilters() {
+  const search   = document.getElementById('search').value.toLowerCase();
+  const retailer = document.getElementById('f-retailer').value;
+  const status   = document.getElementById('f-status').value;
+
+  let rows = allRows.filter(r => {
+    if (search && !r.name.toLowerCase().includes(search)) return false;
+    if (retailer !== 'all' && r.retailer !== retailer) return false;
+    if (status === 'in_stock' && !r.latest_in_stock) return false;
+    if (status === 'at_msrp') {
+      const p = parseFloat((r.latest_price_str || '').replace(/[^0-9.]/g,''));
+      if (!p || !r.msrp || p > r.msrp) return false;
+    }
+    if (status === 'above_msrp') {
+      const p = parseFloat((r.latest_price_str || '').replace(/[^0-9.]/g,''));
+      if (!p || !r.msrp || p <= r.msrp) return false;
+    }
+    return true;
+  });
+
+  // Sort
+  rows.sort((a, b) => {
+    let va, vb;
+    switch(sortKey) {
+      case 'price':
+        va = parseFloat((a.latest_price_str||'').replace(/[^0-9.]/g,'')) || 9999;
+        vb = parseFloat((b.latest_price_str||'').replace(/[^0-9.]/g,'')) || 9999;
+        break;
+      case 'min':
+        va = a.min_price || 9999; vb = b.min_price || 9999; break;
+      case 'savings':
+        va = a.msrp && a.min_price ? a.msrp - a.min_price : -999;
+        vb = b.msrp && b.min_price ? b.msrp - b.min_price : -999;
+        break;
+      case 'stock':
+        va = a.latest_in_stock ? 0 : 1; vb = b.latest_in_stock ? 0 : 1; break;
+      default:
+        va = a.name.toLowerCase(); vb = b.name.toLowerCase();
+    }
+    return va < vb ? -sortDir : va > vb ? sortDir : 0;
+  });
+
+  document.getElementById('result-count').textContent = rows.length;
+  document.getElementById('result-note').textContent  =
+    rows.length < allRows.length ? `(filtered from ${allRows.length} total)` : '';
+
+  renderTable(rows);
+}
+
+function setSort(key, btn) {
+  if (sortKey === key) { sortDir *= -1; }
+  else { sortKey = key; sortDir = 1; }
+  document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  applyFilters();
+}
+
+// ── Table render ──────────────────────────────────────────────────────
+function renderTable(rows) {
+  if (!rows.length) {
+    document.getElementById('table-wrap').innerHTML =
+      '<div class="no-data">No products match your filters</div>';
+    return;
+  }
+
+  const retDot = r => {
+    const cls = {target:'d-target',walmart:'d-walmart',bestbuy:'d-bestbuy',pokemoncenter:'d-pokemoncenter'}[r]||'';
+    const label = {target:'Target',walmart:'Walmart',bestbuy:'Best Buy',pokemoncenter:'PC'}[r]||r;
+    return `<span class="ret-dot ${cls}"></span>${label}`;
+  };
+
+  const priceBadge = (ps, msrp) => {
+    const p = parseFloat((ps||'').replace(/[^0-9.]/g,''));
+    if (!p || !msrp) return '<span class="badge b-na">N/A</span>';
+    if (p <= msrp)   return `<span class="badge b-msrp">MSRP</span>`;
+    const pct = ((p/msrp-1)*100).toFixed(0);
+    return `<span class="badge b-above">+${pct}%</span>`;
+  };
+
+  const fmt = v => v ? `$${v.toFixed(2)}` : '--';
+
+  let html = `<table class="price-table">
+    <thead><tr>
+      <th onclick="setSort('name',document.getElementById('sort-name'))">Product</th>
+      <th>Retailer</th>
+      <th class="th-right" onclick="setSort('price',document.getElementById('sort-price'))">Latest</th>
+      <th class="th-right">MSRP</th>
+      <th class="th-right" onclick="setSort('min',document.getElementById('sort-min'))">30d Min</th>
+      <th class="th-right">30d Max</th>
+      <th class="th-right">30d Avg</th>
+      <th class="th-right" onclick="setSort('stock',document.getElementById('sort-stock'))">In Stock</th>
+      <th class="th-right">Best Saving</th>
+      <th>7d Trend</th>
+    </tr></thead><tbody>`;
+
+  rows.forEach((r, i) => {
+    const saving = (r.msrp && r.min_price) ? r.msrp - r.min_price : null;
+    const savingStr = saving && saving > 0 ? `<span style="color:var(--green)">$${saving.toFixed(2)}</span>` : '--';
+    const inStock = r.latest_in_stock
+      ? '<span class="badge b-stock">YES</span>'
+      : '<span style="color:var(--muted);font-size:.75rem">no</span>';
+    const cid = `spark${i}`;
+
+    html += `<tr onclick="showDetail('${r.url.replace(/'/g,"\\'")}','${r.name.replace(/'/g,"\\'")}')" style="cursor:pointer">
+      <td><span style="color:var(--text)">${r.name}</span></td>
+      <td>${retDot(r.retailer)}</td>
+      <td class="th-right">${r.latest_price_str||'--'} ${priceBadge(r.latest_price_str,r.msrp)}</td>
+      <td class="th-right" style="color:var(--muted)">${fmt(r.msrp)}</td>
+      <td class="th-right" style="color:var(--green)">${fmt(r.min_price)}</td>
+      <td class="th-right" style="color:#ff8a80">${fmt(r.max_price)}</td>
+      <td class="th-right">${fmt(r.avg_price)}</td>
+      <td class="th-right">${inStock}</td>
+      <td class="th-right">${savingStr}</td>
+      <td><canvas id="${cid}" class="spark" width="80" height="26"></canvas></td>
+    </tr>`;
+  });
+
+  html += '</tbody></table>';
+  document.getElementById('table-wrap').innerHTML = html;
+
+  requestAnimationFrame(() => {
+    rows.forEach((r, i) => {
+      drawSparkline(document.getElementById(`spark${i}`), sparklines[r.url]||[], 80, 26);
+    });
+  });
+}
+
+// ── Sparkline ─────────────────────────────────────────────────────────
+function drawSparkline(canvas, points, W, H) {
+  if (!canvas || !points.length) return;
+  const ctx  = canvas.getContext('2d');
+  ctx.clearRect(0, 0, W, H);
+  const prices = points.map(p => p.price).filter(Boolean);
+  if (prices.length < 2) return;
+  const mn  = Math.min(...prices), mx = Math.max(...prices);
+  const rng = mx - mn || 0.01;
+  const tx  = i => (i / (points.length-1)) * W;
+  const ty  = v => H - ((v-mn)/rng)*(H-4) - 2;
+
+  ctx.beginPath();
+  ctx.strokeStyle = '#f0c040';
+  ctx.lineWidth   = 1.5;
+  points.forEach((p, i) => {
+    if (!p.price) return;
+    i===0 ? ctx.moveTo(tx(i),ty(p.price)) : ctx.lineTo(tx(i),ty(p.price));
+  });
+  ctx.stroke();
+
+  // fill
+  ctx.lineTo(tx(points.length-1), H);
+  ctx.lineTo(0, H);
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(240,192,64,.07)';
+  ctx.fill();
+
+  // in-stock dots
+  points.forEach((p, i) => {
+    if (p.in_stock && p.price) {
+      ctx.beginPath();
+      ctx.arc(tx(i), ty(p.price), 2, 0, Math.PI*2);
+      ctx.fillStyle = '#3ddc84';
+      ctx.fill();
+    }
+  });
+}
+
+// ── Detail chart (30 day price chart for one product) ─────────────────
+function showDetail(url, name) {
+  const panel = document.getElementById('detail-panel');
+  const points = sparklines[url] || [];
+
+  if (selectedUrl === url && panel.classList.contains('open')) {
+    panel.classList.remove('open');
+    selectedUrl = null;
+    return;
+  }
+  selectedUrl = url;
+  panel.classList.add('open');
+
+  const row = allRows.find(r => r.url === url);
+  document.getElementById('detail-title').textContent = name;
+  document.getElementById('detail-sub').textContent =
+    row ? `${row.retailer} | MSRP $${row.msrp?.toFixed(2)||'N/A'} | 30d Min $${row.min_price?.toFixed(2)||'N/A'} | Max $${row.max_price?.toFixed(2)||'N/A'} | ${row.times_in_stock} times in stock` : '';
+
+  const canvas = document.getElementById('detail-chart');
+  const W = canvas.offsetWidth || 800;
+  const H = 120;
+  canvas.width  = W;
+  canvas.height = H;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0,0,W,H);
+
+  if (!points.length) {
+    ctx.fillStyle = 'var(--muted)';
+    ctx.font = '13px DM Mono, monospace';
+    ctx.fillText('No 7-day trend data yet', 20, H/2);
+    return;
+  }
+
+  const prices = points.map(p=>p.price).filter(Boolean);
+  if (prices.length < 2) return;
+  const mn  = Math.min(...prices), mx = Math.max(...prices);
+  const rng = mx - mn || 0.01;
+  const tx  = i => (i/(points.length-1))*(W-20)+10;
+  const ty  = v => H-10 - ((v-mn)/rng)*(H-30);
+
+  // MSRP line
+  if (row && row.msrp) {
+    const msrpY = ty(row.msrp);
+    if (msrpY >= 0 && msrpY <= H) {
+      ctx.setLineDash([4,4]);
+      ctx.strokeStyle = 'rgba(240,192,64,.3)';
+      ctx.lineWidth   = 1;
+      ctx.beginPath();
+      ctx.moveTo(0, msrpY);
+      ctx.lineTo(W, msrpY);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = 'rgba(240,192,64,.5)';
+      ctx.font = '10px DM Mono, monospace';
+      ctx.fillText('MSRP', 4, msrpY-3);
+    }
+  }
+
+  // Price line
+  ctx.beginPath();
+  ctx.strokeStyle = '#f0c040';
+  ctx.lineWidth   = 2;
+  points.forEach((p,i) => {
+    if (!p.price) return;
+    i===0 ? ctx.moveTo(tx(i),ty(p.price)) : ctx.lineTo(tx(i),ty(p.price));
+  });
+  ctx.stroke();
+
+  // Fill
+  ctx.lineTo(tx(points.length-1), H);
+  ctx.lineTo(tx(0), H);
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(240,192,64,.06)';
+  ctx.fill();
+
+  // In-stock markers
+  points.forEach((p,i) => {
+    if (p.in_stock && p.price) {
+      ctx.beginPath();
+      ctx.arc(tx(i), ty(p.price), 3, 0, Math.PI*2);
+      ctx.fillStyle = '#3ddc84';
+      ctx.fill();
+    }
+  });
+
+  // Price labels
+  ctx.fillStyle = 'rgba(240,192,64,.7)';
+  ctx.font = '10px DM Mono, monospace';
+  ctx.textAlign = 'right';
+  ctx.fillText(`$${mx.toFixed(2)}`, W-4, ty(mx)-3);
+  ctx.fillText(`$${mn.toFixed(2)}`, W-4, ty(mn)+12);
+  ctx.textAlign = 'left';
+}
+
+// ── CSV download (client-side from loaded data) ────────────────────────
+function downloadCSV() {
+  if (!allRows.length) {
+    alert('No data loaded yet. Wait for the first hourly log or run:\npython plugins/price_history.py --log');
+    return;
+  }
+
+  const headers = [
+    'Product','Retailer','Latest Price','MSRP',
+    '30d Min','30d Max','30d Avg','Times In Stock',
+    'Records','Last Seen','URL'
+  ];
+
+  const fmt = v => v ? v.toFixed(2) : '';
+
+  const rows = allRows.map(r => [
+    `"${r.name}"`,
+    r.retailer,
+    r.latest_price_str || '',
+    fmt(r.msrp),
+    fmt(r.min_price),
+    fmt(r.max_price),
+    fmt(r.avg_price),
+    r.times_in_stock,
+    r.record_count,
+    (r.last_seen||'').slice(0,16),
+    `"${r.url}"`,
+  ]);
+
+  const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `pokebsprices_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function openSheetsInstructions() {
+  document.getElementById('sheets-modal').style.display = 'flex';
+}
+
+// ── Init ──────────────────────────────────────────────────────────────
+loadData();
+setInterval(loadData, 10 * 60 * 1000);
+</script>
+</body>
+</html>

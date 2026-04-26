@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Keith's PokeBS — Binder</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0a0a0f;--surface:#111118;--surface2:#18181f;--border:#2a2a38;--accent:#f0c040;--accent2:#e8503a;--green:#3ddc84;--purple:#a78bfa;--muted:#555570;--text:#e8e8f0;--text2:#9090a8}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh}
+  body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.08) 2px,rgba(0,0,0,.08) 4px);pointer-events:none;z-index:999}
+  header{display:flex;align-items:center;justify-content:space-between;padding:24px 40px;border-bottom:1px solid var(--border);background:rgba(10,10,15,.95);backdrop-filter:blur(12px);position:sticky;top:0;z-index:100}
+  .logo{display:flex;align-items:baseline;gap:10px}
+  .logo-main{font-family:'Bebas Neue',sans-serif;font-size:2.2rem;letter-spacing:.04em;color:var(--accent);text-shadow:0 0 30px rgba(240,192,64,.4)}
+  .logo-sub{font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted);letter-spacing:.2em;text-transform:uppercase}
+  .nav-bar{display:flex;align-items:center;gap:4px;padding:0 40px;background:var(--surface2);border-bottom:1px solid var(--border)}
+  .nav-link{font-family:'DM Mono',monospace;font-size:.72rem;letter-spacing:.15em;text-transform:uppercase;padding:12px 18px;color:var(--muted);text-decoration:none;border-bottom:2px solid transparent;transition:all .15s}
+  .nav-link:hover{color:var(--text)}.nav-link.active{color:var(--accent);border-bottom-color:var(--accent)}
+  main{padding:40px;max-width:1400px;margin:0 auto}
+  .page-title{font-family:'Bebas Neue',sans-serif;font-size:1.8rem;letter-spacing:.06em;color:var(--text2);margin-bottom:4px}
+  .page-subtitle{font-family:'DM Mono',monospace;font-size:.72rem;color:var(--muted);letter-spacing:.1em;margin-bottom:28px}
+
+  /* Set tabs */
+  .set-tabs{display:flex;gap:4px;margin-bottom:28px;border-bottom:1px solid var(--border)}
+  .set-tab{font-family:'DM Mono',monospace;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;padding:10px 20px;background:none;border:none;border-bottom:2px solid transparent;color:var(--muted);cursor:pointer;transition:all .2s;margin-bottom:-1px}
+  .set-tab:hover{color:var(--text)}.set-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+
+  /* Controls bar */
+  .controls{display:flex;gap:10px;margin-bottom:20px;align-items:center;flex-wrap:wrap}
+  .search-box{font-family:'DM Mono',monospace;font-size:.75rem;background:var(--surface);border:1px solid var(--border);border-radius:3px;padding:8px 14px;color:var(--text);outline:none;width:220px;transition:border-color .2s}
+  .search-box::placeholder{color:var(--muted)}.search-box:focus{border-color:var(--accent)}
+  .filter-btn{font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;padding:8px 14px;background:var(--surface);border:1px solid var(--border);border-radius:3px;color:var(--muted);cursor:pointer;transition:all .15s}
+  .filter-btn:hover,.filter-btn.active{border-color:var(--accent);color:var(--accent)}
+  .progress-wrap{margin-left:auto;display:flex;align-items:center;gap:12px}
+  .progress-text{font-family:'DM Mono',monospace;font-size:.7rem;color:var(--text2)}
+  .progress-text b{color:var(--accent)}
+  .progress-bar-outer{width:140px;height:6px;background:var(--border);border-radius:3px;overflow:hidden}
+  .progress-bar-inner{height:100%;background:var(--green);border-radius:3px;transition:width .3s}
+  .reset-btn{font-family:'DM Mono',monospace;font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;padding:7px 12px;background:none;border:1px solid rgba(232,80,58,.3);border-radius:3px;color:var(--accent2);cursor:pointer;transition:all .15s}
+  .reset-btn:hover{background:rgba(232,80,58,.08)}
+
+  /* Section headers */
+  .rarity-section{margin-bottom:32px}
+  .rarity-header{display:flex;align-items:center;gap:12px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+  .rarity-label{font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:.08em;color:var(--text2)}
+  .rarity-count{font-family:'DM Mono',monospace;font-size:.65rem;color:var(--muted);background:var(--surface2);border:1px solid var(--border);border-radius:2px;padding:2px 8px}
+  .rarity-line{flex:1;height:1px;background:var(--border)}
+  .rarity-progress{font-family:'DM Mono',monospace;font-size:.62rem;color:var(--green)}
+
+  /* Card grid */
+  .card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
+
+  /* Card item */
+  .card-item{background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:10px 12px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:all .15s;user-select:none}
+  .card-item:hover{border-color:rgba(240,192,64,.3);background:rgba(240,192,64,.03)}
+  .card-item.collected{border-color:rgba(61,220,132,.35);background:rgba(61,220,132,.04)}
+  .card-item.collected .card-name-txt{color:var(--text)}
+  .card-item.hidden{display:none}
+
+  .card-check{width:18px;height:18px;border-radius:3px;border:2px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s}
+  .card-item.collected .card-check{background:var(--green);border-color:var(--green)}
+  .card-item.collected .card-check::after{content:'✓';font-size:.75rem;color:#000;font-weight:700}
+
+  .card-info{flex:1;min-width:0}
+  .card-num{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--muted);letter-spacing:.08em;margin-bottom:2px}
+  .card-name-txt{font-size:.82rem;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .15s}
+
+  .card-rarity-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+  .dot-common{background:#444460}.dot-uncommon{background:#6666aa}.dot-rare{background:#4488cc}
+  .dot-ex{background:#88aaff}.dot-ir{background:var(--green)}.dot-ur{background:#ffaa44}
+  .dot-mar{background:#ff6644}.dot-sir{background:var(--purple)}.dot-mhr{background:var(--accent)}
+
+  /* Empty */
+  .empty-msg{text-align:center;padding:40px;font-family:'DM Mono',monospace;font-size:.75rem;color:var(--muted)}
+
+  @media(max-width:768px){header{padding:16px 20px}main{padding:20px}.logo-main{font-size:1.6rem}.nav-bar{padding:0 20px}.card-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo"><span class="logo-main">Keith's PokeBS</span><span class="logo-sub">Binder</span></div>
+  <div style="font-family:'DM Mono',monospace;font-size:.65rem;color:var(--muted)">Collection saved automatically · <span id="save-status">—</span></div>
+</header>
+<nav class="nav-bar">
+  <a class="nav-link" href="dashboard.html">📡 Tracker</a>
+  <a class="nav-link" href="info.html">📖 Set Info</a>
+  <a class="nav-link" href="pricing.html">💰 Pricing</a>
+  <a class="nav-link active" href="binder.html">📂 Binder</a>
+  <a class="nav-link" href="future.html">📅 Future</a>
+  <a class="nav-link" href="retail-drops.html">🛒 Retail Drops</a>
+  <a class="nav-link" href="help.html">❓ Help</a>
+</nav>
+<main>
+  <div class="page-title">My Binder</div>
+  <div class="page-subtitle">Click any card to mark as collected · Saved automatically in your browser</div>
+
+  <div class="set-tabs">
+    <button class="set-tab active" onclick="switchSet('asc',this)">Ascended Heroes (295)</button>
+    <button class="set-tab" onclick="switchSet('por',this)">Perfect Order (130)</button>
+  </div>
+
+  <div class="controls">
+    <input type="text" class="search-box" id="search-box" placeholder="Search cards..." oninput="applyFilters()">
+    <button class="filter-btn active" id="f-all" onclick="setFilter('all',this)">All</button>
+    <button class="filter-btn" id="f-have" onclick="setFilter('have',this)">Have</button>
+    <button class="filter-btn" id="f-need" onclick="setFilter('need',this)">Need</button>
+    <div class="progress-wrap">
+      <div class="progress-text"><b id="prog-have">0</b> / <span id="prog-total">0</span> collected</div>
+      <div class="progress-bar-outer"><div class="progress-bar-inner" id="prog-bar" style="width:0%"></div></div>
+      <div class="progress-text" id="prog-pct">0%</div>
+      <button class="reset-btn" onclick="resetSet()">Reset Set</button>
+    </div>
+  </div>
+
+  <div id="binder-content"></div>
+</main>
+<script>
+// ── CARD DATA ─────────────────────────────────────────────────────────
+// Rarity codes: C=Common, U=Uncommon, R=Rare, EX=Pokémon ex/Mega ex, IR=Illustration Rare, UR=Ultra Rare, MAR=Mega Attack Rare, SIR=Special Illustration Rare, MHR=Mega Hyper Rare
+const SETS = {
+  asc: {
+    name: 'Mega Evolution — Ascended Heroes',
+    code: 'ASC',
+    total: 295,
+    symbol: 'https://pokesymbols.com/images/tcg/sets/symbols/ascended-heroes.png',
+    cards: [
+      // ── BASE SET 1–217 ──
+      // Green (Grass)
+      {n:'001',name:"Erika's Oddish",r:'C'},{n:'002',name:"Erika's Gloom",r:'C'},{n:'003',name:"Erika's Vileplume ex",r:'EX'},{n:'004',name:"Erika's Bellsprout",r:'C'},{n:'005',name:"Erika's Weepinbell",r:'C'},{n:'006',name:"Erika's Victreebel",r:'C'},{n:'007',name:"Erika's Tangela",r:'C'},{n:'008',name:'Chikorita',r:'C'},{n:'009',name:'Bayleef',r:'C'},{n:'010',name:'Mega Meganium ex',r:'EX'},
+      {n:'011',name:'Wurmple',r:'C'},{n:'012',name:'Silcoon',r:'C'},{n:'013',name:'Beautifly',r:'C'},{n:'014',name:'Cascoon',r:'C'},{n:'015',name:'Dustox',r:'C'},{n:'016',name:'Budew',r:'C'},{n:'017',name:'Grubbin',r:'C'},{n:'018',name:"Team Rocket's Tarountula",r:'C'},{n:'019',name:"Team Rocket's Spidops",r:'C'},
+      // Fire
+      {n:'020',name:'Charmander',r:'C'},{n:'021',name:'Charmeleon',r:'C'},{n:'022',name:'Mega Charizard Y ex',r:'EX'},{n:'023',name:"Ethan's Slugma",r:'C'},{n:'024',name:"Ethan's Magcargo",r:'C'},{n:'025',name:'Entei',r:'R'},{n:'026',name:"Ethan's Ho-Oh ex",r:'EX'},{n:'027',name:'Numel',r:'C'},{n:'028',name:'Camerupt',r:'C'},{n:'029',name:'Tepig',r:'C'},{n:'030',name:'Pignite',r:'C'},{n:'031',name:'Mega Emboar ex',r:'EX'},{n:'032',name:"N's Darumaka",r:'C'},{n:'033',name:"N's Darmanitan",r:'C'},{n:'034',name:'Salandit',r:'C'},{n:'035',name:'Salazzle',r:'C'},{n:'036',name:'Scorbunny',r:'C'},{n:'037',name:'Raboot',r:'C'},{n:'038',name:'Cinderace ex',r:'EX'},
+      // Water
+      {n:'039',name:'Psyduck',r:'C'},{n:'040',name:'Golduck',r:'C'},{n:'041',name:'Totodile',r:'C'},{n:'042',name:'Croconaw',r:'C'},{n:'043',name:'Mega Feraligatr ex',r:'EX'},{n:'044',name:'Sneasel',r:'C'},{n:'045',name:'Weavile',r:'C'},{n:'046',name:'Snorunt',r:'C'},{n:'047',name:'Mega Froslass ex',r:'EX'},{n:'048',name:'Regice ex',r:'EX'},{n:'049',name:"N's Vanillite",r:'C'},{n:'050',name:"N's Vanillish",r:'C'},{n:'051',name:"N's Vanilluxe",r:'C'},{n:'052',name:'Snom',r:'C'},{n:'053',name:'Frosmoth',r:'C'},{n:'054',name:'Glastrier',r:'R'},
+      // Lightning
+      {n:'055',name:'Pikachu',r:'C'},{n:'056',name:'Raichu',r:'C'},{n:'057',name:'Pikachu ex',r:'EX'},{n:'058',name:'Voltorb ex',r:'EX'},{n:'059',name:'Tynamo',r:'C'},{n:'060',name:'Eelektrik',r:'C'},{n:'061',name:'Mega Eelektross ex',r:'EX'},{n:'062',name:'Stunfisk',r:'C'},{n:'063',name:'Helioptile',r:'C'},{n:'064',name:'Heliolisk',r:'C'},{n:'065',name:'Charjabug',r:'C'},{n:'066',name:'Vikavolt',r:'C'},{n:'067',name:'Tapu Koko',r:'R'},{n:'068',name:"Hop's Pincurchin ex",r:'EX'},{n:'069',name:"Iono's Tadbulb",r:'C'},{n:'070',name:"Iono's Bellibolt ex",r:'EX'},{n:'071',name:"Iono's Wattrel",r:'C'},{n:'072',name:"Iono's Kilowattrel",r:'C'},{n:'073',name:'Miraidon ex',r:'EX'},
+      // Psychic
+      {n:'074',name:'Clefairy',r:'C'},{n:'075',name:'Clefable',r:'C'},{n:'076',name:"Lillie's Clefairy ex",r:'EX'},{n:'077',name:"Team Rocket's Exeggcute",r:'C'},{n:'078',name:"Team Rocket's Exeggutor",r:'C'},{n:'079',name:"Team Rocket's Mewtwo ex",r:'EX'},{n:'080',name:'Togepi',r:'C'},{n:'081',name:'Togetic',r:'C'},{n:'082',name:'Togekiss ex',r:'EX'},{n:'083',name:'Misdreavus',r:'C'},{n:'084',name:'Mismagius',r:'C'},{n:'085',name:"Misty's Psyduck",r:'C'},{n:'086',name:"Misty's Golduck",r:'C'},{n:'087',name:'Wobbuffet',r:'C'},{n:'088',name:'Ralts',r:'C'},{n:'089',name:'Kirlia',r:'C'},{n:'090',name:'Mega Gardevoir ex',r:'EX'},{n:'091',name:'Wynaut',r:'C'},{n:'092',name:'Spoink',r:'C'},{n:'093',name:'Grumpig',r:'C'},{n:'094',name:'Gothita',r:'C'},{n:'095',name:'Gothorita',r:'C'},{n:'096',name:'Gothitelle',r:'C'},{n:'097',name:'Elgyem',r:'C'},{n:'098',name:'Beheeyem',r:'C'},{n:'099',name:"N's Lampent",r:'C'},{n:'100',name:"N's Chandelure",r:'C'},
+      // Fighting
+      {n:'101',name:'Geodude',r:'C'},{n:'102',name:'Graveler',r:'C'},{n:'103',name:"Brock's Golem ex",r:'EX'},{n:'104',name:'Machop',r:'C'},{n:'105',name:'Machoke',r:'C'},{n:'106',name:'Machamp ex',r:'EX'},{n:'107',name:'Hawlucha',r:'C'},{n:'108',name:'Tyrunt',r:'C'},{n:'109',name:'Tyrantrum',r:'C'},{n:'110',name:'Mega Lucario ex',r:'EX'},{n:'111',name:"Korrina's Mienfoo",r:'C'},{n:'112',name:"Korrina's Mienshao",r:'C'},
+      // Darkness
+      {n:'113',name:"Team Rocket's Rattata",r:'C'},{n:'114',name:"Team Rocket's Raticate",r:'C'},{n:'115',name:"Team Rocket's Ekans",r:'C'},{n:'116',name:"Team Rocket's Arbok",r:'C'},{n:'117',name:"Team Rocket's Koffing",r:'C'},{n:'118',name:"Team Rocket's Weezing",r:'C'},{n:'119',name:"Team Rocket's Dugtrio",r:'C'},{n:'120',name:"Giovanni's Nidoran♀",r:'C'},{n:'121',name:"Giovanni's Nidorina",r:'C'},{n:'122',name:"Giovanni's Nidoqueen",r:'C'},{n:'123',name:"Giovanni's Nidoran♂",r:'C'},{n:'124',name:"Giovanni's Nidorino",r:'C'},{n:'125',name:"Giovanni's Nidoking",r:'C'},{n:'126',name:"Team Rocket's Sneasel",r:'C'},{n:'127',name:"Team Rocket's Weavile",r:'C'},{n:'128',name:'Mega Gengar ex',r:'EX'},{n:'129',name:"N's Zoroark ex",r:'EX'},{n:'130',name:"Ariana's Murkrow",r:'C'},{n:'131',name:"Ariana's Honchkrow",r:'C'},
+      // Metal
+      {n:'132',name:'Magnemite',r:'C'},{n:'133',name:'Magneton',r:'C'},{n:'134',name:'Mega Magnezone ex',r:'EX'},{n:'135',name:'Scyther',r:'C'},{n:'136',name:'Scizor ex',r:'EX'},{n:'137',name:'Shieldon',r:'C'},{n:'138',name:'Bastiodon',r:'C'},{n:'139',name:"Korrina's Lucario",r:'C'},{n:'140',name:'Cobalion',r:'R'},{n:'141',name:'Klink',r:'C'},{n:'142',name:'Klang',r:'C'},{n:'143',name:'Klinklang',r:'C'},
+      // Dragon
+      {n:'144',name:'Dratini',r:'C'},{n:'145',name:'Dragonair',r:'C'},{n:'146',name:'Mega Dragonite ex',r:'EX'},{n:'147',name:'Bagon',r:'C'},{n:'148',name:'Shelgon',r:'C'},{n:'149',name:'Mega Salamence ex',r:'EX'},
+      // Colorless
+      {n:'150',name:'Chansey',r:'C'},{n:'151',name:'Blissey ex',r:'EX'},{n:'152',name:"Brock's Vulpix",r:'C'},{n:'153',name:"Brock's Ninetales",r:'C'},{n:'154',name:'Snorlax',r:'C'},{n:'155',name:'Munchlax',r:'C'},{n:'156',name:'Spearow',r:'C'},{n:'157',name:'Fearow',r:'C'},{n:'158',name:'Swablu',r:'C'},{n:'159',name:'Altaria',r:'C'},{n:'160',name:'Meowth',r:'C'},{n:'161',name:'Persian',r:'C'},{n:'162',name:"Archer's Fearow",r:'C'},{n:'163',name:"Team Rocket's Kangaskhan ex",r:'EX'},
+      // Trainer — Supporters
+      {n:'164',name:"Brock",r:'U'},{n:'165',name:"Erika",r:'U'},{n:'166',name:"Giovanni",r:'U'},{n:'167',name:"Misty",r:'U'},{n:'168',name:"Lt. Surge",r:'U'},{n:'169',name:"Koga",r:'U'},{n:'170',name:"Sabrina",r:'U'},{n:'171',name:"Blaine",r:'U'},{n:'172',name:"Iono",r:'U'},{n:'173',name:"N",r:'U'},{n:'174',name:"Hop",r:'U'},{n:'175',name:"Korrina",r:'U'},{n:'176',name:"Ethan",r:'U'},{n:'177',name:"Lillie",r:'U'},{n:'178',name:"Ariana",r:'U'},{n:'179',name:"Archer",r:'U'},{n:'180',name:"Boss's Orders (Corbeau)",r:'U'},
+      // Trainer — Items
+      {n:'181',name:'Poké Ball',r:'C'},{n:'182',name:'Ultra Ball',r:'C'},{n:'183',name:'Rare Candy',r:'C'},{n:'184',name:'Nest Ball',r:'C'},{n:'185',name:'Switch',r:'C'},{n:'186',name:'Escape Rope',r:'C'},{n:'187',name:"Erika's Lily Pad",r:'C'},{n:'188',name:'Rocket Grunt Uniform',r:'C'},{n:'189',name:'Team Rocket Ring',r:'C'},{n:'190',name:'Mega Sticker',r:'C'},{n:'191',name:'Hyper Potion',r:'C'},{n:'192',name:'Rescue Board',r:'C'},{n:'193',name:'Defiance Band',r:'C'},{n:'194',name:'Counter Catcher',r:'C'},{n:'195',name:'Tera Orb',r:'C'},
+      // Trainer — Stadiums
+      {n:'196',name:'Viridian Forest',r:'C'},{n:'197',name:'Team Rocket HQ',r:'C'},{n:'198',name:'Celadon City Gym',r:'C'},{n:'199',name:'Pewter City Gym',r:'C'},
+      // Energy
+      {n:'200',name:'Basic Grass Energy',r:'C'},{n:'201',name:'Basic Fire Energy',r:'C'},{n:'202',name:'Basic Water Energy',r:'C'},{n:'203',name:'Basic Lightning Energy',r:'C'},{n:'204',name:'Basic Psychic Energy',r:'C'},{n:'205',name:'Basic Fighting Energy',r:'C'},{n:'206',name:'Basic Darkness Energy',r:'C'},{n:'207',name:'Basic Metal Energy',r:'C'},{n:'208',name:'Mega Energy (Grass)',r:'C'},{n:'209',name:'Mega Energy (Fire)',r:'C'},{n:'210',name:'Mega Energy (Water)',r:'C'},{n:'211',name:'Mega Energy (Lightning)',r:'C'},{n:'212',name:'Mega Energy (Psychic)',r:'C'},{n:'213',name:'Mega Energy (Fighting)',r:'C'},{n:'214',name:'Mega Energy (Darkness)',r:'C'},{n:'215',name:'Mega Energy (Metal)',r:'C'},{n:'216',name:'Mega Energy (Dragon)',r:'C'},{n:'217',name:'Mega Energy (Colorless)',r:'C'},
+      // ── SECRET RARES 218–295 ──
+      // Illustration Rares (218–250)
+      {n:'218',name:"Erika's Vileplume ex IR",r:'IR'},{n:'219',name:'Mega Meganium ex IR',r:'IR'},{n:'220',name:"Ethan's Ho-Oh ex IR",r:'IR'},{n:'221',name:'Mega Emboar ex IR',r:'IR'},{n:'222',name:'Mega Feraligatr ex IR',r:'IR'},{n:'223',name:'Mega Froslass ex IR',r:'IR'},{n:'224',name:'Pikachu ex IR',r:'IR'},{n:'225',name:"Hop's Pincurchin ex IR",r:'IR'},{n:'226',name:"Iono's Bellibolt ex IR",r:'IR'},{n:'227',name:'Miraidon ex IR',r:'IR'},{n:'228',name:"Lillie's Clefairy ex IR",r:'IR'},{n:'229',name:"Team Rocket's Mewtwo ex IR",r:'IR'},{n:'230',name:'Togekiss ex IR',r:'IR'},{n:'231',name:'Mega Gardevoir ex IR',r:'IR'},{n:'232',name:"Brock's Golem ex IR",r:'IR'},{n:'233',name:'Mega Lucario ex IR',r:'IR'},{n:'234',name:'Mega Gengar ex IR',r:'IR'},{n:'235',name:"N's Zoroark ex IR",r:'IR'},{n:'236',name:'Mega Magnezone ex IR',r:'IR'},{n:'237',name:'Mega Dragonite ex IR',r:'IR'},{n:'238',name:'Mega Salamence ex IR',r:'IR'},{n:'239',name:"Team Rocket's Kangaskhan ex IR",r:'IR'},{n:'240',name:"Iono Supporter IR",r:'IR'},{n:'241',name:"N Supporter IR",r:'IR'},{n:'242',name:"Lillie Supporter IR",r:'IR'},{n:'243',name:"Korrina Supporter IR",r:'IR'},{n:'244',name:"Misty Supporter IR",r:'IR'},{n:'245',name:"Giovanni Supporter IR",r:'IR'},{n:'246',name:"Erika Supporter IR",r:'IR'},{n:'247',name:"Brock Supporter IR",r:'IR'},{n:'248',name:"Archer Supporter IR",r:'IR'},{n:'249',name:"Ariana Supporter IR",r:'IR'},{n:'250',name:"Boss's Orders (Corbeau) IR",r:'IR'},
+      // Ultra Rares / Full Art (251–261)
+      {n:'251',name:'Mega Charizard Y ex UR',r:'UR'},{n:'252',name:'Mega Meganium ex UR',r:'UR'},{n:'253',name:'Mega Emboar ex UR',r:'UR'},{n:'254',name:'Mega Feraligatr ex UR',r:'UR'},{n:'255',name:'Pikachu ex UR',r:'UR'},{n:'256',name:'Mega Gardevoir ex UR',r:'UR'},{n:'257',name:'Mega Lucario ex UR',r:'UR'},{n:'258',name:'Mega Gengar ex UR',r:'UR'},{n:'259',name:'Mega Dragonite ex UR',r:'UR'},{n:'260',name:'Mega Charizard Y ex (Tera) UR',r:'UR'},{n:'261',name:'Pikachu ex (Tera) UR',r:'UR'},
+      // Mega Attack Rares (262–268)
+      {n:'262',name:'Mega Diancie ex MAR',r:'MAR'},{n:'263',name:'Mega Charizard X MAR',r:'MAR'},{n:'264',name:'Mega Lucario ex MAR',r:'MAR'},{n:'265',name:'Mega Gardevoir ex MAR',r:'MAR'},{n:'266',name:'Mega Hawlucha ex MAR',r:'MAR'},{n:'267',name:'Mega Dragonite ex MAR',r:'MAR'},{n:'268',name:'Mega Gengar ex MAR',r:'MAR'},
+      // Special Illustration Rares (269–290)
+      {n:'269',name:'Mega Meganium ex SIR',r:'SIR'},{n:'270',name:'Mega Emboar ex SIR',r:'SIR'},{n:'271',name:'Mega Feraligatr ex SIR',r:'SIR'},{n:'272',name:"Ethan's Ho-Oh ex SIR",r:'SIR'},{n:'273',name:'Mega Froslass ex SIR',r:'SIR'},{n:'274',name:"Iono's Bellibolt ex SIR",r:'SIR'},{n:'275',name:'Miraidon ex SIR',r:'SIR'},{n:'276',name:"Pikachu ex SIR",r:'SIR'},{n:'277',name:"Lillie's Clefairy ex SIR",r:'SIR'},{n:'278',name:"Team Rocket's Mewtwo ex SIR",r:'SIR'},{n:'279',name:'Mega Gardevoir ex SIR',r:'SIR'},{n:'280',name:'Mega Lucario ex SIR',r:'SIR'},{n:'281',name:'Mega Gengar ex SIR',r:'SIR'},{n:'282',name:"N's Zoroark ex SIR",r:'SIR'},{n:'283',name:'Mega Dragonite ex SIR',r:'SIR'},{n:'284',name:'Mega Gengar ex SIR #2',r:'SIR'},{n:'285',name:"Pikachu ex SIR (alt art)",r:'SIR'},{n:'286',name:"Pikachu ex SIR (Tera)",r:'SIR'},{n:'287',name:"N Supporter SIR",r:'SIR'},{n:'288',name:"Iono Supporter SIR",r:'SIR'},{n:'289',name:"Lillie Supporter SIR",r:'SIR'},{n:'290',name:"Giovanni Supporter SIR",r:'SIR'},
+      // Mega Hyper Rares (291–295)
+      {n:'291',name:'Mega Charizard Y ex MHR',r:'MHR'},{n:'292',name:'Mega Gardevoir ex MHR',r:'MHR'},{n:'293',name:'Mega Gengar ex MHR',r:'MHR'},{n:'294',name:'Mega Lucario ex MHR',r:'MHR'},{n:'295',name:'Mega Dragonite ex MHR',r:'MHR'},
+    ]
+  },
+  por: {
+    name: 'Mega Evolution — Perfect Order',
+    code: 'POR',
+    total: 130,
+    symbol: 'https://pokesymbols.com/images/tcg/sets/symbols/perfect-order.png',
+    cards: [
+      // Base Set 1–86
+      // Grass
+      {n:'001',name:'Spinarak',r:'C'},{n:'002',name:'Ariados',r:'C'},{n:'003',name:'Shaymin',r:'R'},{n:'004',name:'Snivy',r:'C'},{n:'005',name:'Servine',r:'C'},{n:'006',name:'Serperior',r:'C'},{n:'007',name:'Scatterbug',r:'C'},{n:'008',name:'Spewpa',r:'C'},{n:'009',name:'Vivillon',r:'C'},{n:'010',name:'Rowlet',r:'C'},{n:'011',name:'Dartrix',r:'C'},{n:'012',name:'Decidueye ex',r:'EX'},
+      // Fire
+      {n:'013',name:'Fletchinder',r:'C'},{n:'014',name:'Talonflame',r:'C'},{n:'015',name:'Salandit',r:'C'},{n:'016',name:'Salazzle ex',r:'EX'},{n:'017',name:'Turtonator',r:'C'},
+      // Water
+      {n:'018',name:'Seel',r:'C'},{n:'019',name:'Dewgong',r:'C'},{n:'020',name:'Staryu',r:'C'},{n:'021',name:'Mega Starmie ex',r:'EX'},{n:'022',name:'Lapras ex',r:'EX'},{n:'023',name:'Amaura',r:'C'},{n:'024',name:'Aurorus',r:'C'},{n:'025',name:'Volcanion',r:'R'},
+      // Lightning
+      {n:'026',name:'Shinx',r:'C'},{n:'027',name:'Luxio',r:'C'},{n:'028',name:'Luxray',r:'C'},{n:'029',name:'Dedenne',r:'C'},
+      // Psychic / Fairy
+      {n:'030',name:'Clefairy',r:'C'},{n:'031',name:'Mega Clefable ex',r:'EX'},{n:'032',name:'Mawile',r:'C'},{n:'033',name:'Espurr',r:'C'},{n:'034',name:'Meowstic',r:'C'},{n:'035',name:'Spritzee',r:'C'},{n:'036',name:'Aromatisse',r:'C'},
+      // Fighting
+      {n:'037',name:'Nosepass',r:'C'},{n:'038',name:'Probopass',r:'C'},{n:'039',name:'Hippopotas',r:'C'},{n:'040',name:'Hippowdon',r:'C'},{n:'041',name:'Landorus',r:'R'},{n:'042',name:'Binacle',r:'C'},{n:'043',name:'Barbaracle',r:'C'},{n:'044',name:'Tyrunt',r:'C'},{n:'045',name:'Tyrantrum',r:'C'},{n:'046',name:'Hawlucha',r:'C'},{n:'047',name:'Mega Zygarde ex',r:'EX'},
+      // Darkness / Ghost
+      {n:'048',name:'Gastly',r:'C'},{n:'049',name:'Haunter',r:'C'},{n:'050',name:'Gengar',r:'C'},{n:'051',name:'Skorupi',r:'C'},{n:'052',name:'Drapion',r:'C'},{n:'053',name:'Yveltal ex',r:'EX'},{n:'054',name:'Chien-Pao',r:'R'},
+      // Metal
+      {n:'055',name:'Mega Skarmory ex',r:'EX'},{n:'056',name:'Honedge',r:'C'},{n:'057',name:'Doublade',r:'C'},{n:'058',name:'Aegislash',r:'C'},{n:'059',name:'Klefki',r:'C'},
+      // Colorless / Normal
+      {n:'060',name:'Rattata',r:'C'},{n:'061',name:'Raticate',r:'C'},{n:'062',name:'Meowth ex',r:'EX'},{n:'063',name:'Snorlax',r:'C'},{n:'064',name:'Bunnelby',r:'C'},{n:'065',name:'Diggersby',r:'C'},{n:'066',name:'Fletchling',r:'C'},{n:'067',name:'Furfrou',r:'C'},
+      // Trainers
+      {n:'068',name:'Antique Jaw Fossil',r:'C'},{n:'069',name:'Rosa',r:'U'},{n:'070',name:'Jacinthe',r:'U'},{n:'071',name:'Naveen',r:'U'},{n:'072',name:'Tarragon',r:'U'},{n:'073',name:'Judge',r:'U'},{n:'074',name:'Hole-Digging Shovel',r:'C'},{n:'075',name:'Jacinthe (second)',r:'U'},{n:'076',name:'Judge (second)',r:'U'},{n:'077',name:'Lumiose City',r:'C'},{n:'078',name:'Lumiose Galette',r:'C'},{n:'079',name:'Naveen (second)',r:'U'},{n:'080',name:'Poké Ball',r:'C'},{n:'081',name:'Poké Pad',r:'C'},{n:'082',name:'Pokémon Catcher',r:'C'},{n:'083',name:'Potion',r:'C'},{n:'084',name:"Rosa's Encouragement",r:'U'},{n:'085',name:'Tarragon (second)',r:'U'},
+      // Energy
+      {n:'086',name:'Growing {G} Energy',r:'C'},{n:'087',name:'Rocky {F} Energy',r:'C'},{n:'088',name:'Telepathic {P} Energy',r:'C'},
+      // Secret Rares 89–130
+      // Illustration Rares
+      {n:'089',name:'Spewpa IR',r:'IR'},{n:'090',name:'Rowlet IR',r:'IR'},{n:'091',name:'Talonflame IR',r:'IR'},{n:'092',name:'Aurorus IR',r:'IR'},{n:'093',name:'Dedenne IR',r:'IR'},{n:'094',name:'Clefairy IR',r:'IR'},{n:'095',name:'Espurr IR',r:'IR'},{n:'096',name:'Probopass IR',r:'IR'},{n:'097',name:'Drapion IR',r:'IR'},{n:'098',name:'Doublade IR',r:'IR'},{n:'099',name:'Raticate IR',r:'IR'},
+      // Full Art / Ultra Rare
+      {n:'100',name:'Decidueye ex UR',r:'UR'},{n:'101',name:'Salazzle ex UR',r:'UR'},{n:'102',name:'Mega Starmie ex UR',r:'UR'},{n:'103',name:'Mega Clefable ex UR',r:'UR'},{n:'104',name:'Mega Zygarde ex UR',r:'UR'},{n:'105',name:'Yveltal ex UR',r:'UR'},{n:'106',name:'Mega Skarmory ex UR',r:'UR'},{n:'107',name:'Meowth ex UR',r:'UR'},
+      // Supporter Full Arts
+      {n:'108',name:'Energy Recycler UR',r:'UR'},{n:'109',name:'Forest of Vitality UR',r:'UR'},{n:'110',name:'Jacinthe UR',r:'UR'},{n:'111',name:'Lumiose City UR',r:'UR'},{n:'112',name:'Naveen UR',r:'UR'},{n:'113',name:'Poké Pad UR',r:'UR'},{n:'114',name:"Rosa's Encouragement UR",r:'UR'},{n:'115',name:'Sacred Ash UR',r:'UR'},{n:'116',name:'Tarragon UR',r:'UR'},{n:'117',name:'Wondrous Patch UR',r:'UR'},
+      // SIRs
+      {n:'118',name:'Mega Starmie ex SIR',r:'SIR'},{n:'119',name:'Mega Clefable ex SIR',r:'SIR'},{n:'120',name:'Mega Zygarde ex SIR',r:'SIR'},{n:'121',name:'Meowth ex SIR',r:'SIR'},{n:'122',name:'Jacinthe SIR',r:'SIR'},{n:'123',name:"Rosa's Encouragement SIR",r:'SIR'},
+      // MHR
+      {n:'124',name:'Mega Zygarde ex MHR',r:'MHR'},
+      // Promo / PC variants (125–130)
+      {n:'125',name:'Tyrunt PC Promo',r:'UR'},{n:'126',name:'Mega Clefable ex (alt art)',r:'SIR'},{n:'127',name:'Mega Zygarde ex (alt art)',r:'SIR'},{n:'128',name:'Mega Starmie ex (alt art)',r:'SIR'},{n:'129',name:'Mega Dragonite ex (crossover)',r:'SIR'},{n:'130',name:'Mega Zygarde ex (gold)',r:'MHR'},
+    ]
+  }
+};
+
+// ── Rarity config ─────────────────────────────────────────────────────
+const RARITY_CONFIG = {
+  C:   { label:'Common',                dot:'dot-common',   order:1 },
+  U:   { label:'Uncommon / Trainer',    dot:'dot-uncommon', order:2 },
+  R:   { label:'Rare',                  dot:'dot-rare',     order:3 },
+  EX:  { label:'Pokémon ex / Mega ex',  dot:'dot-ex',       order:4 },
+  IR:  { label:'Illustration Rare',     dot:'dot-ir',       order:5 },
+  UR:  { label:'Ultra Rare / Full Art', dot:'dot-ur',       order:6 },
+  MAR: { label:'Mega Attack Rare',      dot:'dot-mar',      order:7 },
+  SIR: { label:'Special Illustration Rare', dot:'dot-sir',  order:8 },
+  MHR: { label:'Mega Hyper Rare',       dot:'dot-mhr',      order:9 },
+};
+
+// ── State ─────────────────────────────────────────────────────────────
+let currentSet = 'asc';
+let filterMode = 'all';
+let searchTerm = '';
+let collection = {};
+
+function storageKey(set) { return `keithpokebsv1_${set}`; }
+
+function load() {
+  try {
+    const asc = localStorage.getItem(storageKey('asc'));
+    const por = localStorage.getItem(storageKey('por'));
+    collection.asc = asc ? JSON.parse(asc) : {};
+    collection.por = por ? JSON.parse(por) : {};
+  } catch(e) {
+    collection = { asc:{}, por:{} };
+  }
+}
+
+function save() {
+  try {
+    localStorage.setItem(storageKey('asc'), JSON.stringify(collection.asc));
+    localStorage.setItem(storageKey('por'), JSON.stringify(collection.por));
+    const t = new Date().toLocaleTimeString();
+    document.getElementById('save-status').textContent = `Saved ${t}`;
+  } catch(e) {
+    document.getElementById('save-status').textContent = 'Save failed (private browsing?)';
+  }
+}
+
+function toggle(setId, cardNum) {
+  if (!collection[setId]) collection[setId] = {};
+  if (collection[setId][cardNum]) delete collection[setId][cardNum];
+  else collection[setId][cardNum] = 1;
+  save();
+  // Update just this card element
+  const el = document.getElementById(`card-${setId}-${cardNum}`);
+  if (el) {
+    if (collection[setId][cardNum]) el.classList.add('collected');
+    else el.classList.remove('collected');
+    applyFilters();
+  }
+  updateProgress();
+  updateSectionProgress();
+}
+
+function switchSet(setId, btn) {
+  currentSet = setId;
+  document.querySelectorAll('.set-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+}
+
+function setFilter(mode, btn) {
+  filterMode = mode;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  applyFilters();
+}
+
+function applyFilters() {
+  searchTerm = document.getElementById('search-box').value.toLowerCase();
+  const col = collection[currentSet] || {};
+  document.querySelectorAll('.card-item').forEach(el => {
+    const num = el.dataset.num;
+    const name = el.dataset.name;
+    const have = !!col[num];
+    let show = true;
+    if (filterMode === 'have' && !have) show = false;
+    if (filterMode === 'need' && have) show = false;
+    if (searchTerm && !name.includes(searchTerm) && !num.includes(searchTerm)) show = false;
+    el.classList.toggle('hidden', !show);
+  });
+  // Hide empty sections
+  document.querySelectorAll('.rarity-section').forEach(sec => {
+    const visible = sec.querySelectorAll('.card-item:not(.hidden)').length;
+    sec.style.display = visible === 0 ? 'none' : '';
+  });
+}
+
+function updateProgress() {
+  const set = SETS[currentSet];
+  const col = collection[currentSet] || {};
+  const have = Object.keys(col).length;
+  const total = set.cards.length;
+  const pct = total ? Math.round(have/total*100) : 0;
+  document.getElementById('prog-have').textContent = have;
+  document.getElementById('prog-total').textContent = total;
+  document.getElementById('prog-bar').style.width = pct + '%';
+  document.getElementById('prog-pct').textContent = pct + '%';
+}
+
+function updateSectionProgress() {
+  const col = collection[currentSet] || {};
+  document.querySelectorAll('.rarity-section').forEach(sec => {
+    const cards = sec.querySelectorAll('.card-item');
+    const total = cards.length;
+    const have = [...cards].filter(c => col[c.dataset.num]).length;
+    const prog = sec.querySelector('.rarity-progress');
+    if (prog) prog.textContent = `${have}/${total}`;
+  });
+}
+
+function resetSet() {
+  if (!confirm(`Reset all ${currentSet.toUpperCase()} collection data? This cannot be undone.`)) return;
+  collection[currentSet] = {};
+  save();
+  render();
+}
+
+function render() {
+  const set = SETS[currentSet];
+  const col = collection[currentSet] || {};
+
+  // Group by rarity
+  const groups = {};
+  set.cards.forEach(card => {
+    if (!groups[card.r]) groups[card.r] = [];
+    groups[card.r].push(card);
+  });
+
+  // Sort groups by rarity order
+  const sortedRarities = Object.keys(groups).sort(
+    (a, b) => (RARITY_CONFIG[a]?.order || 99) - (RARITY_CONFIG[b]?.order || 99)
+  );
+
+  let html = '';
+  sortedRarities.forEach(r => {
+    const rc = RARITY_CONFIG[r] || { label: r, dot: 'dot-common' };
+    const cards = groups[r];
+    const have = cards.filter(c => col[c.n]).length;
+    html += `<div class="rarity-section">
+      <div class="rarity-header">
+        <div class="rarity-label">${rc.label}</div>
+        <div class="rarity-count">${cards.length} cards</div>
+        <div class="rarity-line"></div>
+        <div class="rarity-progress">${have}/${cards.length}</div>
+      </div>
+      <div class="card-grid">`;
+
+    cards.forEach(card => {
+      const collected = !!col[card.n];
+      html += `<div class="card-item${collected?' collected':''}" id="card-${currentSet}-${card.n}" data-num="${card.n}" data-name="${card.name.toLowerCase()}" onclick="toggle('${currentSet}','${card.n}')">
+        <div class="card-check"></div>
+        <div class="card-info">
+          <div class="card-num">#${card.n}</div>
+          <div class="card-name-txt">${card.name}</div>
+        </div>
+        <div class="card-rarity-dot ${rc.dot}"></div>
+      </div>`;
+    });
+
+    html += `</div></div>`;
+  });
+
+  document.getElementById('binder-content').innerHTML = html;
+  updateProgress();
+  applyFilters();
+}
+
+// ── Init ──────────────────────────────────────────────────────────────
+load();
+render();
+</script>
+</body>
+</html>

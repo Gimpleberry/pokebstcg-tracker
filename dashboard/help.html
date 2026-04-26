@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Keith's PokeBS — Help</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0a0f;--surface:#111118;--surface2:#18181f;--border:#2a2a38;--accent:#f0c040;--accent2:#e8503a;--green:#3ddc84;--purple:#a78bfa;--blue:#60a5fa;--muted:#555570;--text:#e8e8f0;--text2:#9090a8}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.08) 2px,rgba(0,0,0,.08) 4px);pointer-events:none;z-index:999}
+header{display:flex;align-items:center;justify-content:space-between;padding:24px 40px;border-bottom:1px solid var(--border);background:rgba(10,10,15,.95);backdrop-filter:blur(12px);position:sticky;top:0;z-index:100}
+.logo{display:flex;align-items:baseline;gap:10px}
+.logo-main{font-family:'Bebas Neue',sans-serif;font-size:2.2rem;letter-spacing:.04em;color:var(--accent);text-shadow:0 0 30px rgba(240,192,64,.4)}
+.logo-sub{font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted);letter-spacing:.2em;text-transform:uppercase}
+.nav-bar{display:flex;align-items:center;gap:4px;padding:0 40px;background:var(--surface2);border-bottom:1px solid var(--border);flex-wrap:wrap}
+.nav-link{font-family:'DM Mono',monospace;font-size:.72rem;letter-spacing:.15em;text-transform:uppercase;padding:12px 18px;color:var(--muted);text-decoration:none;border-bottom:2px solid transparent;transition:all .15s}
+.nav-link:hover{color:var(--text)}.nav-link.active{color:var(--accent);border-bottom-color:var(--accent)}
+main{padding:40px;max-width:1200px;margin:0 auto}
+
+/* ── Tabs ── */
+.help-tabs{display:flex;gap:4px;margin-bottom:32px;border-bottom:1px solid var(--border)}
+.help-tab{font-family:'DM Mono',monospace;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;padding:11px 20px;background:none;border:none;border-bottom:2px solid transparent;color:var(--muted);cursor:pointer;transition:all .2s;margin-bottom:-1px}
+.help-tab:hover{color:var(--text)}.help-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.tab-content{display:none}.tab-content.active{display:block}
+
+/* ── Changelog ── */
+.version-block{margin-bottom:40px}
+.version-header{display:flex;align-items:center;gap:14px;margin-bottom:16px}
+.version-number{font-family:'Bebas Neue',sans-serif;font-size:1.5rem;letter-spacing:.06em;color:var(--accent)}
+.version-date{font-family:'DM Mono',monospace;font-size:.68rem;color:var(--muted);letter-spacing:.1em}
+.version-tag{font-family:'DM Mono',monospace;font-size:.6rem;padding:3px 10px;border-radius:2px;letter-spacing:.08em}
+.tag-major{background:rgba(240,192,64,.1);color:var(--accent);border:1px solid rgba(240,192,64,.25)}
+.tag-fix{background:rgba(61,220,132,.08);color:var(--green);border:1px solid rgba(61,220,132,.2)}
+.tag-security{background:rgba(232,80,58,.08);color:#ff8a80;border:1px solid rgba(232,80,58,.2)}
+.tag-feature{background:rgba(96,165,250,.08);color:var(--blue);border:1px solid rgba(96,165,250,.2)}
+.version-line{flex:1;height:1px;background:var(--border)}
+.change-list{display:flex;flex-direction:column;gap:8px}
+.change-item{background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:12px 16px;display:flex;align-items:flex-start;gap:12px}
+.change-icon{flex-shrink:0;font-size:1rem;margin-top:1px}
+.change-body{}
+.change-title{font-weight:500;font-size:.88rem;color:var(--text);margin-bottom:3px}
+.change-desc{font-size:.78rem;color:var(--text2);line-height:1.5}
+.change-file{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--muted);margin-top:4px}
+
+/* ── FAQ ── */
+.faq-section{margin-bottom:40px}
+.faq-section-title{font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:.08em;color:var(--text2);margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.faq-item{background:var(--surface);border:1px solid var(--border);border-radius:4px;margin-bottom:8px;overflow:hidden}
+.faq-q{width:100%;padding:14px 18px;background:none;border:none;text-align:left;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:12px;transition:background .15s}
+.faq-q:hover{background:rgba(255,255,255,.025)}
+.faq-q.open{background:rgba(240,192,64,.04);border-bottom:1px solid var(--border)}
+.faq-q-text{font-weight:500;font-size:.88rem;color:var(--text)}
+.faq-chevron{font-family:'DM Mono',monospace;font-size:.8rem;color:var(--muted);transition:transform .2s;flex-shrink:0}
+.faq-q.open .faq-chevron{transform:rotate(90deg)}
+.faq-a{display:none;padding:14px 18px 16px;font-size:.82rem;color:var(--text2);line-height:1.7;background:var(--surface2)}
+.faq-a.open{display:block}
+.faq-a code{font-family:'DM Mono',monospace;font-size:.75rem;background:rgba(240,192,64,.08);color:var(--accent);padding:2px 7px;border-radius:2px;border:1px solid rgba(240,192,64,.15)}
+.faq-a pre{font-family:'DM Mono',monospace;font-size:.73rem;background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:12px 16px;margin:10px 0;color:var(--text2);overflow-x:auto;line-height:1.6}
+.faq-a ul{padding-left:18px;margin:8px 0}
+.faq-a li{margin-bottom:5px}
+.faq-a .warn{background:rgba(232,80,58,.06);border:1px solid rgba(232,80,58,.2);border-radius:3px;padding:8px 12px;color:#ff8a80;font-size:.78rem;margin:8px 0}
+.faq-a .tip{background:rgba(61,220,132,.06);border:1px solid rgba(61,220,132,.2);border-radius:3px;padding:8px 12px;color:var(--green);font-size:.78rem;margin:8px 0}
+
+/* ── File reference ── */
+.file-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;margin-bottom:40px}
+.file-card{background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:16px}
+.file-name{font-family:'DM Mono',monospace;font-size:.78rem;color:var(--accent);margin-bottom:6px;letter-spacing:.06em}
+.file-type{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--muted);margin-bottom:8px}
+.file-desc{font-size:.78rem;color:var(--text2);line-height:1.5}
+.file-runs{font-family:'DM Mono',monospace;font-size:.62rem;color:var(--muted);margin-top:6px;padding-top:6px;border-top:1px solid var(--border)}
+
+@media(max-width:768px){header{padding:16px 20px}main{padding:20px}.logo-main{font-size:1.6rem}.nav-bar{padding:0 20px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo"><span class="logo-main">Keith's PokeBS</span><span class="logo-sub">Help</span></div>
+  <div style="font-family:'DM Mono',monospace;font-size:.65rem;color:var(--muted)">v5.2 — Apr 2026</div>
+</header>
+<nav class="nav-bar">
+  <a class="nav-link" href="dashboard.html">📡 Tracker</a>
+  <a class="nav-link" href="info.html">📖 Set Info</a>
+  <a class="nav-link" href="pricing.html">💰 Pricing</a>
+  <a class="nav-link" href="binder.html">📂 Binder</a>
+  <a class="nav-link" href="future.html">📅 Future</a>
+  <a class="nav-link" href="retail-drops.html">🛒 Retail Drops</a>
+  <a <a class="nav-link" href="pricing-history.html">Price History</a>
+  <a class="nav-link active" href="help.html">❓ Help</a>
+</nav>
+<main>
+
+  <div class="help-tabs">
+    <button class="help-tab active" onclick="showTab('changelog',this)">📋 Changelog</button>
+    <button class="help-tab" onclick="showTab('faq',this)">❓ FAQ & Diagnostics</button>
+    <button class="help-tab" onclick="showTab('files',this)">📁 File Reference</button>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- CHANGELOG -->
+  <!-- ══════════════════════════════════════════ -->
+  <div id="tab-changelog" class="tab-content active">
+
+
+    <div class="version-block">
+      <div class="version-header">
+        <div class="version-number">v5.3</div>
+        <div class="version-date">Apr 25, 2026</div>
+        <span class="version-tag tag-major">Major</span>
+        <span class="version-tag tag-feature">Features Complete</span>
+        <div class="version-line"></div>
+      </div>
+      <div class="change-list">
+        <div class="change-item"><div class="change-icon">&#128200;</div><div class="change-body"><div class="change-title">Price History Tracker -- #5</div><div class="change-desc">SQLite database logging prices once per hour per product. 90-day retention with 30-day display window. Interactive browser explorer with sort, filter, sparkline charts, and 30-day price chart per product. CSV export (no dependencies) and Excel export (requires openpyxl). Google Sheets instructions built into page.</div><div class="change-file">plugins/price_history.py (new), dashboard/pricing-history.html (new)</div></div></div>
+        <div class="change-item"><div class="change-icon">&#128203;</div><div class="change-body"><div class="change-title">CSV export added -- no Excel required</div><div class="change-desc">python plugins/price_history.py --csv writes price_summary_30d.csv and price_history_90d.csv directly to data/. Opens in Google Sheets, LibreOffice, or any text editor. Dashboard Price History page also has a Download CSV button that exports directly from the browser with no command needed.</div><div class="change-file">plugins/price_history.py</div></div></div>
+        <div class="change-item"><div class="change-icon">&#128064;</div><div class="change-body"><div class="change-title">Restock Reminder -- #8</div><div class="change-desc">Daily 8:30 AM push notification with day-specific messaging. Wednesday = urgent Walmart Wednesday alert. Friday = Target restock window reminder. Launch days override with urgent priority regardless of day. Preview with python plugins/restock_reminder.py, test send with --send flag.</div><div class="change-file">plugins/restock_reminder.py (new)</div></div></div>
+        <div class="change-item"><div class="change-icon">&#127381;</div><div class="change-body"><div class="change-title">Amazon MSRP Monitor -- #6</div><div class="change-desc">Monitors Amazon.com for Pokemon TCG products sold directly by Amazon at MSRP. Amazon-sold = urgent alert + browser + add to cart. FBA sellers = lower priority heads-up flagged for authenticity verification. Checks every 15 minutes. 8 ASINs pre-loaded for current sets.</div><div class="change-file">plugins/amazon_monitor.py (new)</div></div></div>
+        <div class="change-item"><div class="change-icon">&#127381;</div><div class="change-body"><div class="change-title">All plugin files now self-resolving for import paths</div><div class="change-desc">Every plugin file now contains a path resolution block that finds shared.py correctly whether run from tcg_tracker/ root or from inside plugins/ directly. Eliminates ModuleNotFoundError when running plugin diagnostics standalone.</div><div class="change-file">All plugin files</div></div></div>
+        <div class="change-item"><div class="change-icon">&#128274;</div><div class="change-body"><div class="change-title">Full ASCII sweep -- encoding errors eliminated</div><div class="change-desc">176 non-ASCII characters (em dashes, smart quotes, accented letters, arrows) replaced across 9 files. shared.send_ntfy now runs all header values through _ascii_safe() as a permanent safety net. Windows latin-1 encoding errors on ntfy notifications are now permanently prevented.</div><div class="change-file">shared.py + all plugin files</div></div></div>
+        <div class="change-item"><div class="change-icon">&#128202;</div><div class="change-body"><div class="change-title">Help page -- comprehensive plugin FAQ and diagnostics</div><div class="change-desc">New FAQ sections added for Price History, Amazon Monitor, Best Buy Invites, Walmart Queue, Restock Reminder, Store Inventory, and Alternative Retailers. Each section includes diagnostic commands, common issues, and how to view/export data. All future plugins will include Help page documentation from the start.</div><div class="change-file">dashboard/help.html</div></div></div>
+      </div>
+    </div>
+
+    <div class="version-block">
+      <div class="version-header">
+        <div class="version-number">v5.2</div>
+        <div class="version-date">Apr 25, 2026</div>
+        <span class="version-tag tag-feature">Scalability</span>
+        <span class="version-tag tag-fix">Refactor</span>
+        <div class="version-line"></div>
+      </div>
+      <div class="change-list">
+        <div class="change-item"><div class="change-icon">🏗️</div><div class="change-body"><div class="change-title">shared.py — single source of truth</div><div class="change-desc">New shared utility module eliminates all duplicate code across the plugin ecosystem. Contains: HEADERS, MSRP_TABLE, get_msrp(), parse_price(), price_vs_msrp(), send_ntfy(), open_browser(), load_history(), save_history(). All modules now import from here instead of defining their own copies.</div><div class="change-file">shared.py (new)</div></div></div>
+        <div class="change-item"><div class="change-icon">✂️</div><div class="change-body"><div class="change-title">HEADERS deduplicated — was defined in 5 files</div><div class="change-desc">HEADERS and HEADERS_JSON were identically defined in tracker.py, walmart_queue.py, store_inventory.py, alternative_retailers.py, and news_scraper.py. All now import from shared.py. One change to update all scrapers.</div><div class="change-file">All plugin files</div></div></div>
+        <div class="change-item"><div class="change-icon">✂️</div><div class="change-body"><div class="change-title">MSRP table deduplicated — was defined in 3 places</div><div class="change-desc">MSRP_TABLE was separately maintained in msrp_alert.py, walmart_queue.py (as MSRP_REF), and dashboard.html. Python modules now all use shared.MSRP_TABLE. Dashboard JS MSRP_MAP remains separate but mirrors the same values.</div><div class="change-file">msrp_alert.py, walmart_queue.py</div></div></div>
+        <div class="change-item"><div class="change-icon">✂️</div><div class="change-body"><div class="change-title">ntfy sender deduplicated — was defined in 4 files</div><div class="change-desc">Each module had its own requests.post to ntfy with slightly different headers. All now call shared.send_ntfy() which handles UTF-8 encoding, Click action, and Buy Now button consistently.</div><div class="change-file">tracker.py, msrp_alert.py, walmart_queue.py, store_inventory.py</div></div></div>
+        <div class="change-item"><div class="change-icon">✂️</div><div class="change-body"><div class="change-title">Browser opener deduplicated — was defined in 2 files</div><div class="change-desc">walmart_queue.py had its own open_browser_to_product() that duplicated cart_preloader.py logic. Now calls shared.open_browser() which has one consistent implementation used everywhere.</div><div class="change-file">walmart_queue.py, shared.py</div></div></div>
+        <div class="change-item"><div class="change-icon">✂️</div><div class="change-body"><div class="change-title">price_vs_msrp() — new single comparison helper</div><div class="change-desc">Added price_vs_msrp() to shared.py that returns status (below/at/above), savings, and pct_of_msrp in one call. Replaces ad-hoc price comparison logic scattered across msrp_alert.py and walmart_queue.py.</div><div class="change-file">shared.py</div></div></div>
+      </div>
+    </div>
+
+
+    <div class="version-block">
+      <div class="version-header">
+        <div class="version-number">v5.3</div>
+        <div class="version-date">Apr 25, 2026</div>
+        <span class="version-tag tag-major">Major</span>
+        <span class="version-tag tag-feature">Features Complete</span>
+        <div class="version-line"></div>
+      </div>
+      <div class="change-list">
+        <div class="change-item"><div class="change-icon">&#128200;</div><div class="change-body"><div class="change-title">Price History Tracker -- #5</div><div class="change-desc">SQLite database logging prices once per hour per product. 90-day retention with 30-day display window. Interactive browser explorer with sort, filter, sparkline charts, and 30-day price chart per product. CSV export (no dependencies) and Excel export (requires openpyxl). Google Sheets instructions built into page.</div><div class="change-file">plugins/price_history.py (new), dashboard/pricing-history.html (new)</div></div></div>
+        <div class="change-item"><div class="change-icon">&#128203;</div><div class="change-body"><div class="change-title">CSV export added -- no Excel required</div><div class="change-desc">python plugins/price_history.py --csv writes price_summary_30d.csv and price_history_90d.csv directly to data/. Opens in Google Sheets, LibreOffice, or any text editor. Dashboard Price History page also has a Download CSV button that exports directly from the browser with no command needed.</div><div class="change-file">plugins/price_history.py</div></div></div>
+        <div class="change-item"><div class="change-icon">&#128064;</div><div class="change-body"><div class="change-title">Restock Reminder -- #8</div><div class="change-desc">Daily 8:30 AM push notification with day-specific messaging. Wednesday = urgent Walmart Wednesday alert. Friday = Target restock window reminder. Launch days override with urgent priority regardless of day. Preview with python plugins/restock_reminder.py, test send with --send flag.</div><div class="change-file">plugins/restock_reminder.py (new)</div></div></div>
+        <div class="change-item"><div class="change-icon">&#127381;</div><div class="change-body"><div class="change-title">Amazon MSRP Monitor -- #6</div><div class="change-desc">Monitors Amazon.com for Pokemon TCG products sold directly by Amazon at MSRP. Amazon-sold = urgent alert + browser + add to cart. FBA sellers = lower priority heads-up flagged for authenticity verification. Checks every 15 minutes. 8 ASINs pre-loaded for current sets.</div><div class="change-file">plugins/amazon_monitor.py (new)</div></div></div>
+        <div class="change-item"><div class="change-icon">&#127381;</div><div class="change-body"><div class="change-title">All plugin files now self-resolving for import paths</div><div class="change-desc">Every plugin file now contains a path resolution block that finds shared.py correctly whether run from tcg_tracker/ root or from inside plugins/ directly. Eliminates ModuleNotFoundError when running plugin diagnostics standalone.</div><div class="change-file">All plugin files</div></div></div>
+        <div class="change-item"><div class="change-icon">&#128274;</div><div class="change-body"><div class="change-title">Full ASCII sweep -- encoding errors eliminated</div><div class="change-desc">176 non-ASCII characters (em dashes, smart quotes, accented letters, arrows) replaced across 9 files. shared.send_ntfy now runs all header values through _ascii_safe() as a permanent safety net. Windows latin-1 encoding errors on ntfy notifications are now permanently prevented.</div><div class="change-file">shared.py + all plugin files</div></div></div>
+        <div class="change-item"><div class="change-icon">&#128202;</div><div class="change-body"><div class="change-title">Help page -- comprehensive plugin FAQ and diagnostics</div><div class="change-desc">New FAQ sections added for Price History, Amazon Monitor, Best Buy Invites, Walmart Queue, Restock Reminder, Store Inventory, and Alternative Retailers. Each section includes diagnostic commands, common issues, and how to view/export data. All future plugins will include Help page documentation from the start.</div><div class="change-file">dashboard/help.html</div></div></div>
+      </div>
+    </div>
+
+    <div class="version-block">
+      <div class="version-header">
+        <div class="version-number">v5.2</div>
+        <div class="version-date">Apr 25, 2026</div>
+        <span class="version-tag tag-feature">Scalability</span>
+        <span class="version-tag tag-fix">Refactor</span>
+        <div class="version-line"></div>
+      </div>
+      <div class="change-list">
+        <div class="change-item"><div class="change-icon">🏗️</div><div class="change-body"><div class="change-title">shared.py — single source of truth</div><div class="change-desc">Created shared.py as the authoritative source for HEADERS, MSRP_TABLE, get_msrp(), parse_price(), price_vs_msrp(), send_ntfy(), open_browser(), load_history(), and save_history(). All other modules now import from here. No more defining the same things in multiple files.</div><div class="change-file">shared.py (new)</div></div></div>
+        <div class="change-item"><div class="change-icon">🧹</div><div class="change-body"><div class="change-title">Eliminated all duplicate code</div><div class="change-desc">Removed duplicate HEADERS dicts (were in 5 files), duplicate MSRP tables (were in 3 files), duplicate parse_price/get_msrp helpers (were in 2 files), and duplicate ntfy send logic (were in 4 files). All now delegate to shared.py.</div><div class="change-file">tracker.py, msrp_alert.py, walmart_queue.py, store_inventory.py, alternative_retailers.py, news_scraper.py</div></div></div>
+        <div class="change-item"><div class="change-icon">🔮</div><div class="change-body"><div class="change-title">Future-proof plugin pattern established</div><div class="change-desc">Every new feature (Best Buy invites, Amazon monitor, price history, restock reminders) will follow the same pattern: one new .py file + one line in plugins.py + imports from shared.py. No changes to tracker.py or any existing file needed to add features.</div><div class="change-file">plugins.py, shared.py</div></div></div>
+        <div class="change-item"><div class="change-icon">✅</div><div class="change-body"><div class="change-title">All modules verified importable</div><div class="change-desc">Full import and function test run on shared.py confirmed all helpers return correct values: MSRP lookup, retailer-aware PC ETB pricing, price parsing, and price_vs_msrp comparison all verified.</div><div class="change-file">shared.py</div></div></div>
+      </div>
+    </div>
+
+    <div class="version-block">
+      <div class="version-header">
+        <div class="version-number">v5.3</div>
+        <div class="version-date">Apr 25, 2026</div>
+        <span class="version-tag tag-major">Major</span>
+        <span class="version-tag tag-feature">Features Complete</span>
+        <div class="version-line"></div>
+      </div>
+      <div class="change-list">
+        <div class="change-item"><div class="change-icon">&#128200;</div><div class="change-body"><div class="change-title">Price History Tracker -- #5</div><div class="change-desc">SQLite database logging prices once per hour per product. 90-day retention with 30-day display window. Interactive browser explorer with sort, filter, sparkline charts, and 30-day price chart per product. CSV export (no dependencies) and Excel export (requires openpyxl). Google Sheets instructions built into page.</div><div class="change-file">plugins/price_history.py (new), dashboard/pricing-history.html (new)</div></div></div>
+        <div class="change-item"><div class="change-icon">&#128203;</div><div class="change-body"><div class="change-title">CSV export added -- no Excel required</div><div class="change-desc">python plugins/price_history.py --csv writes price_summary_30d.csv and price_history_90d.csv directly to data/. Opens in Google Sheets, LibreOffice, or any text editor. Dashboard Price History page also has a Download CSV button that exports directly from the browser with no command needed.</div><div class="change-file">plugins/price_history.py</div></div></div>
+        <div class="change-item"><div class="change-icon">&#128064;</div><div class="change-body"><div class="change-title">Restock Reminder -- #8</div><div class="change-desc">Daily 8:30 AM push notification with day-specific messaging. Wednesday = urgent Walmart Wednesday alert. Friday = Target restock window reminder. Launch days override with urgent priority regardless of day. Preview with python plugins/restock_reminder.py, test send with --send flag.</div><div class="change-file">plugins/restock_reminder.py (new)</div></div></div>
+        <div class="change-item"><div class="change-icon">&#127381;</div><div class="change-body"><div class="change-title">Amazon MSRP Monitor -- #6</div><div class="change-desc">Monitors Amazon.com for Pokemon TCG products sold directly by Amazon at MSRP. Amazon-sold = urgent alert + browser + add to cart. FBA sellers = lower priority heads-up flagged for authenticity verification. Checks every 15 minutes. 8 ASINs pre-loaded for current sets.</div><div class="change-file">plugins/amazon_monitor.py (new)</div></div></div>
+        <div class="change-item"><div class="change-icon">&#127381;</div><div class="change-body"><div class="change-title">All plugin files now self-resolving for import paths</div><div class="change-desc">Every plugin file now contains a path resolution block that finds shared.py correctly whether run from tcg_tracker/ root or from inside plugins/ directly. Eliminates ModuleNotFoundError when running plugin diagnostics standalone.</div><div class="change-file">All plugin files</div></div></div>
+        <div class="change-item"><div class="change-icon">&#128274;</div><div class="change-body"><div class="change-title">Full ASCII sweep -- encoding errors eliminated</div><div class="change-desc">176 non-ASCII characters (em dashes, smart quotes, accented letters, arrows) replaced across 9 files. shared.send_ntfy now runs all header values through _ascii_safe() as a permanent safety net. Windows latin-1 encoding errors on ntfy notifications are now permanently prevented.</div><div class="change-file">shared.py + all plugin files</div></div></div>
+        <div class="change-item"><div class="change-icon">&#128202;</div><div class="change-body"><div class="change-title">Help page -- comprehensive plugin FAQ and diagnostics</div><div class="change-desc">New FAQ sections added for Price History, Amazon Monitor, Best Buy Invites, Walmart Queue, Restock Reminder, Store Inventory, and Alternative Retailers. Each section includes diagnostic commands, common issues, and how to view/export data. All future plugins will include Help page documentation from the start.</div><div class="change-file">dashboard/help.html</div></div></div>
+      </div>
+    </div>
+
+    <div class="version-block">
+      <div class="version-header">
+        <div class="version-number">v5.2</div>
+        <div class="version-date">Apr 25, 2026</div>
+        <span class="version-tag tag-major">Major</span>
+        <span class="version-tag tag-feature">Architecture</span>
+        <div class="version-line"></div>
+      </div>
+      <div class="change-list">
+        <div class="change-item"><div class="change-icon">🏗️</div><div class="change-body"><div class="change-title">Folder reorganization — 3-subfolder structure</div><div class="change-desc">Project reorganized into plugins/ (all feature modules), dashboard/ (all HTML pages), data/ (all generated runtime files), and tests/ (diagnostic scripts). Root contains only tracker.py, shared.py, plugins.py, and config files. DATA_DIR added to shared.py as single source for all file paths.</div><div class="change-file">shared.py, tracker.py, plugins.py, all plugin files</div></div></div>
+        <div class="change-item"><div class="change-icon">🆕</div><div class="change-body"><div class="change-title">Best Buy Invite Monitor — #4</div><div class="change-desc">Two-phase monitor: Phase 1 detects when the Request Invite button goes live and auto-clicks it via Playwright (registering you as early as possible). Phase 2 monitors for invite selection and sends URGENT alert + opens browser to checkout. Checks every 10 min. Button safety check prevents any accidental purchase clicks.</div><div class="change-file">plugins/bestbuy_invites.py (new)</div></div></div>
+        <div class="change-item"><div class="change-icon">🔒</div><div class="change-body"><div class="change-title">Invite auto-click safety validation</div><div class="change-desc">Before clicking any button, bestbuy_invites.py validates the button text contains "invite" and does NOT contain "add to cart", "buy", "checkout", "place order", or "purchase". Any ambiguous button is skipped and you are alerted to click manually instead.</div><div class="change-file">plugins/bestbuy_invites.py</div></div></div>
+        <div class="change-item"><div class="change-icon">✨</div><div class="change-body"><div class="change-title">Zero-duplication architecture validated</div><div class="change-desc">Automated check confirms: HEADERS, MSRP_TABLE, get_msrp, parse_price, send_ntfy, open_browser, OUTPUT_DIR, and BROWSER_PROFILE are each defined exactly once in shared.py. All 10 Python files pass syntax check. Running python shared.py confirms all utilities work correctly.</div><div class="change-file">shared.py + all modules</div></div></div>
+      </div>
+    </div>
+
+    <div class="version-block">
+      <div class="version-header">
+        <div class="version-number">v5.1</div>
+        <div class="version-date">Apr 25, 2026</div>
+        <span class="version-tag tag-major">Major</span>
+        <span class="version-tag tag-feature">Architecture</span>
+        <div class="version-line"></div>
+      </div>
+      <div class="change-list">
+        <div class="change-item"><div class="change-icon">🏗️</div><div class="change-body"><div class="change-title">Plugin architecture introduced</div><div class="change-desc">All optional features now use a standardised plugin system via plugins.py. Each feature is a self-contained module. To disable any feature, comment out one line in plugins.py. Adding future features requires writing one new file and one line in plugins.py.</div><div class="change-file">plugins.py (new)</div></div></div>
+        <div class="change-item"><div class="change-icon">🆕</div><div class="change-body"><div class="change-title">Walmart Queue Monitor — #2</div><div class="change-desc">Full Walmart Pokemon TCG activity monitor covering: Wednesday noon drops (alert 15 min early at 11:45 AM ET), any-day restocks, clearance badge detection, rollback pricing, and new untracked listings. Sends ntfy alert with direct clickable URL + opens browser to product page on detection. No Walmart+ required.</div><div class="change-file">walmart_queue.py (new)</div></div></div>
+        <div class="change-item"><div class="change-icon">✨</div><div class="change-body"><div class="change-title">All ntfy notifications now include direct clickable URLs</div><div class="change-desc">Tapping any notification on your phone now opens the product page directly. Every alert includes a "Buy Now" action button and a Click action that routes to the retailer. Applies to stock alerts, MSRP alerts, and Walmart drop alerts.</div><div class="change-file">tracker.py, msrp_alert.py, walmart_queue.py</div></div></div>
+        <div class="change-item"><div class="change-icon">✨</div><div class="change-body"><div class="change-title">Stock change events broadcast to all plugins</div><div class="change-desc">When any product flips IN_STOCK, the event is now broadcast to all loaded plugins via plugins.notify_stock_change(). This allows features like walmart_queue to react to tracker detections without polling separately.</div><div class="change-file">tracker.py, plugins.py</div></div></div>
+      </div>
+    </div>
+
+    <div class="version-block">
+      <div class="version-header">
+        <div class="version-number">v5.0</div>
+        <div class="version-date">Apr 25, 2026</div>
+        <span class="version-tag tag-security">Security</span>
+        <span class="version-tag tag-feature">Performance</span>
+        <div class="version-line"></div>
+      </div>
+      <div class="change-list">
+        <div class="change-item"><div class="change-icon">🔒</div><div class="change-body"><div class="change-title">Log rotation added</div><div class="change-desc">tcg_tracker.log now auto-rotates at 5MB, keeping 3 backups. Prevents disk filling up during 24/7 operation.</div><div class="change-file">tracker.py</div></div></div>
+        <div class="change-item"><div class="change-icon">🔒</div><div class="change-body"><div class="change-title">ntfy topic masked in logs</div><div class="change-desc">Your ntfy topic name is now shown as tcre****-123 in log output. Anyone reading your log file can no longer see the full topic.</div><div class="change-file">tracker.py</div></div></div>
+        <div class="change-item"><div class="change-icon">🔒</div><div class="change-body"><div class="change-title">.gitignore added</div><div class="change-desc">Protects .browser_profile/ (retailer cookies), all JSON data files, and log files from being accidentally shared or uploaded.</div><div class="change-file">.gitignore (new)</div></div></div>
+        <div class="change-item"><div class="change-icon">⚡</div><div class="change-body"><div class="change-title">Playwright browser reuse</div><div class="change-desc">Target checker now keeps one Chromium browser open and reuses it across all product checks, instead of launching/closing a new browser per product. Images and fonts are blocked. Estimated 60-70% CPU reduction for Target checks.</div><div class="change-file">tracker.py</div></div></div>
+        <div class="change-item"><div class="change-icon">⚡</div><div class="change-body"><div class="change-title">Adaptive check scheduling</div><div class="change-desc">Tracker now adjusts its check interval automatically: 3 min during known drop windows (Target 1-5AM, Fri 2-7PM; Walmart Wed 8AM-3PM; PC 8-noon), 8 min normally, 15 min during dead hours (10PM-1AM).</div><div class="change-file">tracker.py</div></div></div>
+        <div class="change-item"><div class="change-icon">⚡</div><div class="change-body"><div class="change-title">Walmart alt ID loop efficiency fix</div><div class="change-desc">The Walmart checker no longer sleeps unnecessarily after finding a product in stock via alternate item IDs.</div><div class="change-file">tracker.py</div></div></div>
+        <div class="change-item"><div class="change-icon">🐛</div><div class="change-body"><div class="change-title">UTF-8 encoding fixed across all ntfy alerts</div><div class="change-desc">Fixed latin-1 codec error that was silently preventing all push notifications from sending. All ntfy calls now explicitly encode as UTF-8.</div><div class="change-file">tracker.py, msrp_alert.py, cart_preloader.py</div></div></div>
+        <div class="change-item"><div class="change-icon">🆕</div><div class="change-body"><div class="change-title">Help page added (this page)</div><div class="change-desc">Full changelog, FAQ diagnostic guide, and file reference added as a new navigation page.</div><div class="change-file">help.html (new)</div></div></div>
+      </div>
+    </div>
+
+    <div class="version-block">
+      <div class="version-header">
+        <div class="version-number">v4.0</div>
+        <div class="version-date">Apr 24, 2026</div>
+        <span class="version-tag tag-major">Major</span>
+        <div class="version-line"></div>
+      </div>
+      <div class="change-list">
+        <div class="change-item"><div class="change-icon">🆕</div><div class="change-body"><div class="change-title">Cart Pre-Loader — auto-triggered on MSRP detection</div><div class="change-desc">When tracker detects a product in stock at MSRP, a visible browser opens automatically, navigates to the product, clicks Add to Cart, and lands on the checkout page. You click Buy. Script never touches payment data or places orders.</div><div class="change-file">cart_preloader.py (new)</div></div></div>
+        <div class="change-item"><div class="change-icon">🆕</div><div class="change-body"><div class="change-title">MSRP Price Alerting</div><div class="change-desc">Fires a separate ntfy alert when any tracked product is detected in stock at or below MSRP. Tracks alert history to prevent spam. Includes price vs MSRP summary table when run standalone.</div><div class="change-file">msrp_alert.py (new)</div></div></div>
+        <div class="change-item"><div class="change-icon">🆕</div><div class="change-body"><div class="change-title">Store Inventory Checker</div><div class="change-desc">Checks Target and Walmart store-level inventory near your zip code daily at 8AM. Alerts you which specific store has stock, what aisle, and how many units.</div><div class="change-file">store_inventory.py (new)</div></div></div>
+        <div class="change-item"><div class="change-icon">🆕</div><div class="change-body"><div class="change-title">Alternative Retailer Monitor</div><div class="change-desc">Scrapes Five Below, Marshalls, TJ Maxx, Ollie's, GameStop, and monitors ALDI seasonal windows every Tuesday and Friday at 9AM.</div><div class="change-file">alternative_retailers.py (new)</div></div></div>
+        <div class="change-item"><div class="change-icon">🆕</div><div class="change-body"><div class="change-title">ntfy test utility</div><div class="change-desc">Standalone script to diagnose push notification issues. Auto-reads your topic from tracker.py and sends a test notification.</div><div class="change-file">test_ntfy.py (new)</div></div></div>
+        <div class="change-item"><div class="change-icon">🐛</div><div class="change-body"><div class="change-title">Walmart price extraction fix</div><div class="change-desc">Walmart checker now tries multiple price API paths and supports alt_item_ids for products like Prismatic Evolutions ETB that Walmart relists under multiple item IDs.</div><div class="change-file">tracker.py</div></div></div>
+        <div class="change-item"><div class="change-icon">🐛</div><div class="change-body"><div class="change-title">Pokemon Center MSRP fix</div><div class="change-desc">PC ETBs now correctly show $59.99 MSRP instead of $49.99. getMSRP() is now retailer-aware. Price display shows MSRP reference when listed price is N/A.</div><div class="change-file">dashboard.html</div></div></div>
+        <div class="change-item"><div class="change-icon">✨</div><div class="change-body"><div class="change-title">Set filter changed to dropdown</div><div class="change-desc">The set filter in the tracker was replaced with a compact dropdown select, saving horizontal space and making filtering cleaner.</div><div class="change-file">dashboard.html</div></div></div>
+      </div>
+    </div>
+
+    <div class="version-block">
+      <div class="version-header">
+        <div class="version-number">v3.0</div>
+        <div class="version-date">Apr 23, 2026</div>
+        <span class="version-tag tag-major">Major</span>
+        <div class="version-line"></div>
+      </div>
+      <div class="change-list">
+        <div class="change-item"><div class="change-icon">🆕</div><div class="change-body"><div class="change-title">Future page — 2026 TCG Calendar</div><div class="change-desc">Full 2026 launch timeline with interactive monthly calendar. Filterable by Set Releases, Prereleases, Product Waves, Collections, Rumored. Navigate months with arrows. Data refreshes daily from news_scraper.py.</div><div class="change-file">future.html (new)</div></div></div>
+        <div class="change-item"><div class="change-icon">🆕</div><div class="change-body"><div class="change-title">Retail Drops page</div><div class="change-desc">Drop pattern guides per retailer (Target, Walmart, Best Buy, Pokemon Center) with timing data, confidence levels, and filterable upcoming/recent drops sourced from TrackaLacker and @PokemonRestocks.</div><div class="change-file">retail-drops.html (new)</div></div></div>
+        <div class="change-item"><div class="change-icon">🆕</div><div class="change-body"><div class="change-title">Daily news scraper</div><div class="change-desc">Scrapes PokeBeach, CollectorStation, and Pokemon.com daily at 6AM. Merges new events into future_events.json and retail_drops.json. Both pages auto-refresh every 6 hours.</div><div class="change-file">news_scraper.py (new)</div></div></div>
+        <div class="change-item"><div class="change-icon">🆕</div><div class="change-body"><div class="change-title">Binder page — collection tracker</div><div class="change-desc">Full card checklist for Ascended Heroes (295 cards) and Perfect Order (130 cards), sorted by rarity. Click to check off cards. Collection saves automatically to browser localStorage and persists after closing.</div><div class="change-file">binder.html (new)</div></div></div>
+        <div class="change-item"><div class="change-icon">✨</div><div class="change-body"><div class="change-title">Chaos Rising added to all tracking</div><div class="change-desc">Chaos Rising ETB, Booster Bundle, 3-Pack Blister, and PC ETB added across all four retailers. May 22, 2026 launch. Ticker banner updated with current 2026 products.</div><div class="change-file">products_backup.txt, dashboard.html</div></div></div>
+        <div class="change-item"><div class="change-icon">✨</div><div class="change-body"><div class="change-title">Blister packs added to all sets</div><div class="change-desc">3-pack blisters and sleeved boosters added for Chaos Rising, Destined Rivals, Journey Together, and Black Bolt across all retailers. Total tracked products: 52.</div><div class="change-file">products_backup.txt</div></div></div>
+        <div class="change-item"><div class="change-icon">🔒</div><div class="change-body"><div class="change-title">Security review — http.server binding</div><div class="change-desc">Recommendation to bind local dashboard server to 127.0.0.1 only: python -m http.server 8080 --bind 127.0.0.1. Prevents local network exposure.</div><div class="change-file">README / setup guidance</div></div></div>
+      </div>
+    </div>
+
+    <div class="version-block">
+      <div class="version-header">
+        <div class="version-number">v2.0</div>
+        <div class="version-date">Apr 22, 2026</div>
+        <span class="version-tag tag-major">Major</span>
+        <div class="version-line"></div>
+      </div>
+      <div class="change-list">
+        <div class="change-item"><div class="change-icon">🆕</div><div class="change-body"><div class="change-title">Pricing page with live card images</div><div class="change-desc">Top 5 chase cards per set with raw NM prices, PSA 10 estimates, and pull rate data. Card images load live from pokemontcg.io API. Click any card to zoom. TCGPlayer links included.</div><div class="change-file">pricing.html (new)</div></div></div>
+        <div class="change-item"><div class="change-icon">🆕</div><div class="change-body"><div class="change-title">Set Info page</div><div class="change-desc">All major 2025-2026 sets organized by era. Hover any set card to see chase cards, pull rates, and set overview. Covers Ascended Heroes, Perfect Order, Chaos Rising, Destined Rivals, Journey Together, Prismatic Evolutions, Black Bolt, White Flare.</div><div class="change-file">info.html (new)</div></div></div>
+        <div class="change-item"><div class="change-icon">✨</div><div class="change-body"><div class="change-title">Pokemon Center added as 4th retailer</div><div class="change-desc">pokemoncenter.com added to tracker with dedicated scraper using JSON-LD structured data. 10 PC-exclusive products added including ETBs with stamped Tyrunt, Fennekin, and N's Zekrom promos.</div><div class="change-file">tracker.py, products_backup.txt</div></div></div>
+        <div class="change-item"><div class="change-icon">✨</div><div class="change-body"><div class="change-title">Set logo icons on tracker cards</div><div class="change-desc">Official set symbol icons appear on each product card using pokesymbols.com. Falls back to 3-letter abbreviation if image fails to load.</div><div class="change-file">dashboard.html</div></div></div>
+        <div class="change-item"><div class="change-icon">✨</div><div class="change-body"><div class="change-title">MSRP price comparison display</div><div class="change-desc">Each tracker card now shows the listed price vs MSRP with color-coded indicators. Green = at or below MSRP, Red = above MSRP.</div><div class="change-file">dashboard.html</div></div></div>
+        <div class="change-item"><div class="change-icon">🐛</div><div class="change-body"><div class="change-title">Target API blocked — Playwright rewrite</div><div class="change-desc">Target's RedSky API (403) and fulfillment API (410) both became blocked. Rewrote Target checker to use Playwright headless browser which renders the full JavaScript page for accurate stock data.</div><div class="change-file">tracker.py</div></div></div>
+        <div class="change-item"><div class="change-icon">🐛</div><div class="change-body"><div class="change-title">Dashboard async init fix</div><div class="change-desc">Fixed "await is only valid in async function" error. Wrapped all async dashboard code in proper init() function. Dashboard now reliably loads status_snapshot.json on startup.</div><div class="change-file">dashboard.html</div></div></div>
+      </div>
+    </div>
+
+    <div class="version-block">
+      <div class="version-header">
+        <div class="version-number">v1.0</div>
+        <div class="version-date">Apr 20, 2026</div>
+        <span class="version-tag tag-major">Initial Release</span>
+        <div class="version-line"></div>
+      </div>
+      <div class="change-list">
+        <div class="change-item"><div class="change-icon">🆕</div><div class="change-body"><div class="change-title">TCG Restock Tracker — initial build</div><div class="change-desc">Core tracker polling Target, Walmart, and Best Buy for Pokemon ETBs and Booster Bundles. Alerts via ntfy.sh push notifications. 5-minute check interval.</div><div class="change-file">tracker.py, requirements.txt</div></div></div>
+        <div class="change-item"><div class="change-icon">🆕</div><div class="change-body"><div class="change-title">Live dashboard</div><div class="change-desc">HTML dashboard reading from status_snapshot.json. Retailer filters, search, in-stock toggle, Add Product modal, alert history, auto-refresh every 5 seconds.</div><div class="change-file">dashboard.html (new)</div></div></div>
+        <div class="change-item"><div class="change-icon">🆕</div><div class="change-body"><div class="change-title">32 Pokemon products tracked</div><div class="change-desc">Initial product list covering ETBs and Booster Bundles for Journey Together, Destined Rivals, Prismatic Evolutions, Black Bolt, White Flare, and Mega Evolution sets across Target, Walmart, and Best Buy.</div><div class="change-file">products_backup.txt (new)</div></div></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- FAQ -->
+  <!-- ══════════════════════════════════════════ -->
+  <div id="tab-faq" class="tab-content">
+
+    <div class="faq-section">
+      <div class="faq-section-title">Notifications (ntfy.sh)</div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)"><span class="faq-q-text">I'm not receiving any push notifications on my phone</span><span class="faq-chevron">▶</span></button>
+        <div class="faq-a">
+          Run the test script first:<pre>python test_ntfy.py</pre>
+          <ul>
+            <li>If it says <code>latin-1 codec error</code> — replace tracker.py, msrp_alert.py with latest versions</li>
+            <li>If it says <code>Notification sent successfully</code> but phone shows nothing — open the ntfy app, confirm your topic is subscribed, and check phone Settings → Apps → ntfy → Notifications are Allowed</li>
+            <li>If it says <code>Connection error</code> — check your internet connection</li>
+            <li>If it says <code>HTTP 4xx</code> — your topic name has invalid characters (only letters, numbers, hyphens, underscores allowed)</li>
+          </ul>
+          <div class="tip">The topic name in tracker.py must match EXACTLY what you subscribed to in the ntfy app, including capitalization.</div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)"><span class="faq-q-text">Notifications stopped working after they were fine before</span><span class="faq-chevron">▶</span></button>
+        <div class="faq-a">
+          Most common causes:
+          <ul>
+            <li>Phone battery saver killed the ntfy app in the background — go to phone Settings → Battery → ntfy → set to Unrestricted</li>
+            <li>ntfy app was updated and needs notification permission re-granted</li>
+            <li>Your ntfy topic subscription expired (free topics are permanent, but check the app)</li>
+          </ul>
+          Run <code>python test_ntfy.py</code> to confirm the sending side is working, then focus on the phone side.
+        </div>
+      </div>
+    </div>
+
+    <div class="faq-section">
+      <div class="faq-section-title">Tracker & Stock Detection</div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)"><span class="faq-q-text">The tracker shows a product as In Stock but it's actually unavailable on the website</span><span class="faq-chevron">▶</span></button>
+        <div class="faq-a">
+          This is a false positive. Run the debug tool to see exactly what the APIs are returning:
+          <pre>python tracker.py debug</pre>
+          This checks the first 3 Target products and prints every availability signal found. Paste the output and compare:
+          <ul>
+            <li><strong>Target</strong> — if all availability_status values are empty, Playwright may not be loading the page correctly. Try restarting the tracker to reset the browser session.</li>
+            <li><strong>Walmart</strong> — if price shows but status is wrong, Walmart may have switched the item to a 3rd-party seller. The tracker filters these out but may occasionally miss one.</li>
+            <li><strong>Best Buy</strong> — if buttonState shows ADD_TO_CART but item is OOS, Best Buy's API may be caching stale data. This resolves itself within 1-2 check cycles.</li>
+          </ul>
+          <div class="tip">False positives are most common in the first check after the tracker starts. The second check cycle is usually accurate.</div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)"><span class="faq-q-text">The tracker is only showing 5 products in the dashboard</span><span class="faq-chevron">▶</span></button>
+        <div class="faq-a">
+          This means the dashboard is showing demo data instead of live data from the tracker. Causes:
+          <ul>
+            <li><strong>status_snapshot.json doesn't exist yet</strong> — the tracker hasn't completed its first full check. Wait 3-5 minutes after starting tracker.py</li>
+            <li><strong>The local server is running from the wrong folder</strong> — the server must be started from inside your tcg_tracker folder. Run: <code>cd path\to\tcg_tracker</code> then <code>python -m http.server 8080 --bind 127.0.0.1</code></li>
+            <li><strong>Old tracker.py with placeholder products</strong> — confirm your PRODUCTS list has your actual products, not the 5 placeholder items from the original file</li>
+          </ul>
+          Press F12 → Console in the browser and look for any red errors mentioning status_snapshot.json.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)"><span class="faq-q-text">Prices show as N/A for Pokemon Center products</span><span class="faq-chevron">▶</span></button>
+        <div class="faq-a">
+          This is expected behaviour for Pokemon Center. Their prices are loaded via JavaScript after the initial page render, and the tracker's HTTP scraper can't see them. The MSRP reference ($59.99 for PC ETBs, $26.99 for bundles) is shown instead so you know what to expect. There is no fix without using Playwright for PC as well, which would add significant overhead.
+          <div class="tip">If a PC product shows N/A price but In Stock status — that's still a valid alert. Go buy it.</div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)"><span class="faq-q-text">Target products are all showing Out of Stock even when they're available on the website</span><span class="faq-chevron">▶</span></button>
+        <div class="faq-a">
+          Target uses a fully JavaScript-rendered page that requires Playwright to read. If all Target products show Out of Stock:
+          <ul>
+            <li>Playwright may not be installed — run: <code>pip install playwright</code> then <code>playwright install chromium</code></li>
+            <li>The persistent browser session may have crashed — restart tracker.py to reset it</li>
+            <li>Your .browser_profile/ may be corrupted — delete the folder and restart</li>
+          </ul>
+          Check the tracker console output for lines like <code>Playwright not installed</code> or <code>Target check error</code>.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)"><span class="faq-q-text">The tracker is running very slowly or freezing</span><span class="faq-chevron">▶</span></button>
+        <div class="faq-a">
+          With 52 products and a 3-second delay between each, one full check cycle takes about 2.5 minutes. This is normal. However if it's freezing:
+          <ul>
+            <li><strong>Playwright browser session hung</strong> — restart tracker.py. The browser resets on restart.</li>
+            <li><strong>Too many products with alt_item_ids</strong> — each alt ID adds 3 seconds. Consider removing alt IDs for products that consistently work on the primary ID.</li>
+            <li><strong>Check interval too aggressive</strong> — the adaptive scheduler handles this automatically, but if you manually set check_interval_minutes below 3, checks will overlap.</li>
+          </ul>
+          <div class="tip">Check the adaptive scheduler output in the console — it logs the current interval mode (hot window / normal / dead hours).</div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)"><span class="faq-q-text">Tapping a notification on my phone doesn't open the product page</span><span class="faq-chevron">▶</span></button>
+        <div class="faq-a">
+          All notifications now include a direct URL click action. If tapping doesn't open the page:
+          <ul>
+            <li>Make sure you have the latest tracker.py, msrp_alert.py — older versions didn't include the Click header</li>
+            <li>On Android — tap the notification itself (not a button). The page should open in your default browser</li>
+            <li>On iPhone — long-press the notification to see the "Buy Now" action button, then tap it</li>
+            <li>If the link opens to a sold-out page — the product sold out between the alert firing and you tapping. This is normal for high-demand drops</li>
+          </ul>
+          <div class="tip">For Pokemon Center drops specifically — have the PC product page already open in Safari/Chrome before the 10 AM ET drop window. The notification confirms it's live, but you may be faster going straight to the pre-loaded tab.</div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)"><span class="faq-q-text">The Walmart Wednesday watch isn't alerting me</span><span class="faq-chevron">▶</span></button>
+        <div class="faq-a">
+          The Walmart queue monitor sends an alert at 11:45 AM ET on Wednesdays to tell you the watch window is open. Then it fires again when a tracked product flips IN_STOCK. If you're not getting alerts:
+          <ul>
+            <li>Confirm walmart_queue_plugin is not commented out in plugins.py</li>
+            <li>Check tracker.py console for <code>[walmart_queue] Schedules registered</code> on startup</li>
+            <li>Make sure your ntfy topic is configured — run <code>python test_ntfy.py</code></li>
+            <li>The 11:45 AM alert uses ET timezone — your computer clock must be accurate</li>
+          </ul>
+          <div class="tip">The monitor also runs clearance/rollback scans at 9 AM and 6 PM daily regardless of day. These can surface deals any day of the week.</div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)"><span class="faq-q-text">How do I disable a plugin without deleting the file?</span><span class="faq-chevron">▶</span></button>
+        <div class="faq-a">
+          Open plugins.py in Notepad and find the ENABLED_PLUGINS list. Comment out the line for the plugin you want to disable by adding a # at the start:
+          <pre># "walmart_queue_plugin",   # disabled temporarily</pre>
+          Save the file and restart tracker.py. The plugin will not load. Re-enable by removing the #.
+        </div>
+      </div>
+
+    </div>
+
+    <div class="faq-section">
+      <div class="faq-section-title">Cart Pre-Loader</div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)"><span class="faq-q-text">The cart preloader browser didn't open when a drop was detected</span><span class="faq-chevron">▶</span></button>
+        <div class="faq-a">
+          Check in order:
+          <ul>
+            <li><strong>Playwright not installed</strong> — run <code>pip install playwright && playwright install chromium</code></li>
+            <li><strong>msrp_alert.py not finding the product at MSRP</strong> — the preloader only fires when a product is detected at or below MSRP. If the listed price is above MSRP or N/A, it won't trigger. Check price_history.json to see what prices are being recorded.</li>
+            <li><strong>Computer was asleep</strong> — the browser can't open if the machine is sleeping. Set Windows power settings to Never Sleep during known drop windows.</li>
+            <li><strong>cart_preloader.py not in the same folder</strong> — all scripts must be in the same tcg_tracker folder.</li>
+          </ul>
+          Test manually: <code>python cart_preloader.py --test --retailer target --url https://www.target.com/p/cardguard-trading-card-50ct-top-load-sleeves/-/A-84081853</code>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)"><span class="faq-q-text">The browser opens but doesn't find the Add to Cart button</span><span class="faq-chevron">▶</span></button>
+        <div class="faq-a">
+          This can happen if:
+          <ul>
+            <li>The product is actually out of stock (most common)</li>
+            <li>The retailer changed their page structure — CSS selectors may need updating</li>
+            <li>You're not logged into the retailer in the .browser_profile — run <code>python cart_preloader.py --setup --retailer target</code></li>
+          </ul>
+          The browser will still navigate to the checkout page even if ATC wasn't clicked, so you can add to cart manually.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)"><span class="faq-q-text">Best Buy login isn't working in the preloader browser</span><span class="faq-chevron">▶</span></button>
+        <div class="faq-a">
+          Best Buy uses anti-automation detection that sometimes blocks the Playwright browser. Options:
+          <ul>
+            <li>Try again at a different time — the block is often temporary</li>
+            <li>Run <code>python cart_preloader.py --setup --retailer bestbuy</code> and log in slowly as a human would (don't rush)</li>
+            <li>If it consistently fails, handle Best Buy manually on drop days — Best Buy also uses an app invite system for high-demand ETBs anyway, which you handle through the Best Buy app directly</li>
+          </ul>
+          <div class="warn">Never enter your Best Buy password into any script or automated input. Always type it yourself in the browser window.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="faq-section">
+      <div class="faq-section-title">Dashboard</div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)"><span class="faq-q-text">The dashboard isn't updating even though the tracker is running</span><span class="faq-chevron">▶</span></button>
+        <div class="faq-a">
+          <ul>
+            <li>Check that the local server is running: <code>python -m http.server 8080 --bind 127.0.0.1</code></li>
+            <li>Make sure the server is started from inside the tcg_tracker folder, not your home directory</li>
+            <li>Open the browser console (F12 → Console) and look for fetch errors on status_snapshot.json</li>
+            <li>Click the ↻ Refresh Now button to force an immediate reload</li>
+            <li>Check that status_snapshot.json exists in the tcg_tracker folder and has recent content</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)"><span class="faq-q-text">Set logos (Pokemon set symbols) aren't showing on product cards</span><span class="faq-chevron">▶</span></button>
+        <div class="faq-a">
+          The set logos load from pokesymbols.com. If they're not showing:
+          <ul>
+            <li>Check your internet connection — the images load from an external URL</li>
+            <li>pokesymbols.com may be temporarily down — the cards fall back to a 3-letter abbreviation</li>
+            <li>The product name may not match any set keyword — confirm the product name contains the set name (e.g. "Journey Together", "Ascended Heroes")</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)"><span class="faq-q-text">How do I add a new product to track?</span><span class="faq-chevron">▶</span></button>
+        <div class="faq-a">
+          Two ways:
+          <ul>
+            <li><strong>Via the dashboard</strong> — click the "+ Add Product" button in the controls bar. Enter the name, select retailer, paste the URL, and enter the SKU/item ID.</li>
+            <li><strong>Via tracker.py</strong> — open tracker.py in Notepad, find the PRODUCTS list, and add a new entry following the existing format. SKU for Target (number after A- in URL), item_id for Walmart (number in URL), sku for Best Buy (number before .p in URL).</li>
+          </ul>
+          After adding via tracker.py, restart the tracker: <code>python tracker.py</code>
+          <div class="tip">Save a copy of your PRODUCTS list in products_backup.txt so you can restore it if you accidentally overwrite tracker.py.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="faq-section">
+      <div class="faq-section-title">Binder & Data Persistence</div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)"><span class="faq-q-text">My binder collection was reset / cards unchecked themselves</span><span class="faq-chevron">▶</span></button>
+        <div class="faq-a">
+          The binder saves to your browser's localStorage. This can be lost if:
+          <ul>
+            <li>You cleared your browser history or site data</li>
+            <li>You opened the binder in a different browser (localStorage is browser-specific)</li>
+            <li>You used a private/incognito window (localStorage doesn't persist there)</li>
+          </ul>
+          <div class="warn">Always open the dashboard from the same browser at http://localhost:8080/binder.html — not from a different browser or incognito mode.</div>
+          There is currently no export/backup feature for binder data. If this is a concern, let Claude know and a CSV export can be added.
+        </div>
+      </div>
+    </div>
+
+    <div class="faq-section">
+      <div class="faq-section-title">Setup & Installation</div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)"><span class="faq-q-text">How do I start everything from scratch after downloading new files?</span><span class="faq-chevron">▶</span></button>
+        <div class="faq-a">
+          <ol style="padding-left:18px">
+            <li style="margin-bottom:6px">Replace all files in your tcg_tracker folder with the new downloads</li>
+            <li style="margin-bottom:6px">Open tracker.py in Notepad and confirm your ntfy_topic is still set correctly</li>
+            <li style="margin-bottom:6px">Paste your PRODUCTS list from products_backup.txt if it was reset</li>
+            <li style="margin-bottom:6px">Open Command Prompt, navigate to tcg_tracker, and run: <code>python tracker.py</code></li>
+            <li style="margin-bottom:6px">In a second Command Prompt window: <code>python -m http.server 8080 --bind 127.0.0.1</code></li>
+            <li style="margin-bottom:6px">Open your browser to http://localhost:8080/dashboard/dashboard.html</li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)"><span class="faq-q-text">What do I need to do before the Chaos Rising drop on May 22?</span><span class="faq-chevron">▶</span></button>
+        <div class="faq-a">
+          <strong>Evening of May 21:</strong>
+          <ul>
+            <li>Make sure tracker.py is running</li>
+            <li>Set Windows power settings to Never Sleep</li>
+            <li>Confirm your Target, Walmart, and Pokemon Center accounts have a saved payment method and shipping address</li>
+            <li>Run <code>python test_ntfy.py</code> to confirm push notifications are working</li>
+            <li>Log into each retailer in the cart preloader browser: <code>python cart_preloader.py --setup --retailer target</code></li>
+          </ul>
+          <strong>May 22 timing:</strong>
+          <ul>
+            <li>Target: ~3 AM ET (new drops), also check 3-6 PM ET Friday if it misses overnight</li>
+            <li>Pokemon Center: ~10 AM ET — have the PC ETB page open in a separate tab</li>
+            <li>Walmart: Wednesday May 27 is likely the first Walmart Wednesday drop (12 PM ET, 9 AM for Walmart+)</li>
+          </ul>
+          <div class="tip">The tracker will alert you automatically. You don't need to be watching — just make sure your computer is on and tracker.py is running.</div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)"><span class="faq-q-text">pip install says 'pip not found' or 'python not found'</span><span class="faq-chevron">▶</span></button>
+        <div class="faq-a">
+          Try these alternatives:
+          <pre>pip3 install requests beautifulsoup4 schedule lxml playwright
+python3 tracker.py</pre>
+          If that also fails, Python wasn't added to PATH during installation. Fix it by:
+          <ul>
+            <li>Opening the Python installer again</li>
+            <li>Choosing "Modify" then checking "Add Python to PATH"</li>
+            <li>Restarting Command Prompt after</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+
+    <div class="faq-section">
+      <div class="faq-section-title">Price History Tracker</div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)"><span class="faq-q-text">How do I view my price history data?</span><span class="faq-chevron">&#9658;</span></button>
+        <div class="faq-a">Three ways depending on what you need:
+          <ul>
+            <li><strong>Browser dashboard</strong> - open <code>http://localhost:8080/dashboard/pricing-history.html</code> for the interactive explorer with sort, filter, sparklines, and 30-day charts. Best for daily use.</li>
+            <li><strong>CSV export</strong> - run <code>python plugins/price_history.py --csv</code> to write two files to your <code>data/</code> folder: <code>price_summary_30d.csv</code> (one row per product) and <code>price_history_90d.csv</code> (every hourly record). Open in Google Sheets via File > Import > Upload.</li>
+            <li><strong>DB Browser for SQLite</strong> - download free from sqlitebrowser.org, open <code>data/price_history.db</code> directly, browse all records and run custom SQL queries.</li>
+          </ul>
+          <div class="tip">For Google Sheets: go to sheets.google.com, create a blank sheet, then File > Import > Upload and drag in your CSV file.</div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)"><span class="faq-q-text">The Price History page shows "No price history yet"</span><span class="faq-chevron">&#9658;</span></button>
+        <div class="faq-a">
+          Prices are logged once per hour automatically. If no data has appeared yet:
+          <ul>
+            <li>Force an immediate log: <code>python plugins/price_history.py --log</code></li>
+            <li>Confirm tracker.py is running - the price_history plugin only fires when loaded by the tracker</li>
+            <li>Check that <code>data/price_summary.json</code> exists after running --log</li>
+          </ul>
+          <div class="tip">Run the diagnostic to see current DB status: <code>python plugins/price_history.py</code></div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)"><span class="faq-q-text">How do I export price history to Google Sheets?</span><span class="faq-chevron">&#9658;</span></button>
+        <div class="faq-a">
+          <strong>Step 1</strong> - Export the CSV:<pre>python plugins/price_history.py --csv</pre>
+          <strong>Step 2</strong> - Go to <code>sheets.google.com</code> and open a blank sheet<br><br>
+          <strong>Step 3</strong> - Click File > Import > Upload and drag in one of:<ul>
+            <li><code>data/price_summary_30d.csv</code> - summary view, one row per product</li>
+            <li><code>data/price_history_90d.csv</code> - full raw data, every hourly record</li>
+          </ul>
+          <strong>Step 4</strong> - Select "Replace spreadsheet" and click Import<br><br>
+          You now have full sort, filter, pivot table and chart access.
+          <div class="tip">The Download CSV button on the Price History page also exports the summary table directly from the browser - no command line needed.</div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)"><span class="faq-q-text">Useful SQL queries for DB Browser for SQLite</span><span class="faq-chevron">&#9658;</span></button>
+        <div class="faq-a">Open <code>data/price_history.db</code> in DB Browser for SQLite (free at sqlitebrowser.org) then use the Execute SQL tab:
+          <pre>-- Products ever seen at or below MSRP
+SELECT name, retailer, price_str, recorded_at
+FROM price_records
+WHERE pct_of_msrp &lt;= 100
+ORDER BY recorded_at DESC;
+
+-- Lowest price ever seen per product
+SELECT name, retailer, MIN(price) AS lowest, msrp
+FROM price_records
+GROUP BY url ORDER BY lowest;
+
+-- How often each product was in stock
+SELECT name, retailer,
+  SUM(in_stock) AS times_in_stock,
+  COUNT(*) AS total_checks
+FROM price_records GROUP BY url;
+
+-- Price trend for one product (last 7 days)
+SELECT recorded_at, price_str, in_stock
+FROM price_records
+WHERE name LIKE '%Chaos Rising ETB%'
+  AND retailer = 'target'
+ORDER BY recorded_at DESC LIMIT 168;</pre>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)"><span class="faq-q-text">How large will the price history database get?</span><span class="faq-chevron">&#9658;</span></button>
+        <div class="faq-a">
+          With 52 products logged hourly, the database grows at approximately:
+          <ul>
+            <li>52 records/hour x 24 hours = ~1,250 records/day</li>
+            <li>~37,500 records over 30 days (display window)</li>
+            <li>~112,500 records over 90 days (retention window)</li>
+          </ul>
+          At roughly 200 bytes per record, the database will stay under 25MB after 90 days. Records older than 90 days are purged automatically on every hourly log cycle. Run <code>python plugins/price_history.py</code> at any time to see the current size.
+        </div>
+      </div>
+    </div>
+
+    <div class="faq-section">
+      <div class="faq-section-title">Amazon Monitor</div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)"><span class="faq-q-text">Why does Amazon Monitor only alert on "Sold by Amazon.com"?</span><span class="faq-chevron">&#9658;</span></button>
+        <div class="faq-a">
+          This is intentional for your safety as a collector. Pokemon TCG products from third-party Amazon sellers carry documented authenticity risks including resealed packs and weighted boxes. Amazon.com as the direct seller guarantees the product came from an authorized distributor and is covered by Amazon's A-to-Z guarantee if anything is wrong.
+          <ul>
+            <li><strong>Amazon.com sold</strong> - urgent alert + browser opens + add to cart attempted</li>
+            <li><strong>FBA (Fulfilled by Amazon)</strong> - lower priority alert only, flagged as "verify authenticity" - no automatic browser or cart action</li>
+            <li><strong>Third-party marketplace</strong> - not alerted at all</li>
+          </ul>
+          <div class="tip">Amazon MSRP windows are rare and brief. The monitor checks every 15 minutes specifically to catch these windows without putting heavy load on your system.</div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)"><span class="faq-q-text">How do I add new Amazon products to monitor?</span><span class="faq-chevron">&#9658;</span></button>
+        <div class="faq-a">
+          Open <code>plugins/amazon_monitor.py</code> and find the <code>AMAZON_PRODUCTS</code> list near the top. Add a new entry in the format:
+          <pre>("Product Name", "ASIN", None)</pre>
+          The ASIN is the 10-character code in the Amazon URL: <code>amazon.com/dp/<strong>B0GR6N18F6</strong></code>. Use <code>None</code> for the third value and the MSRP will be determined automatically from the product name. Run <code>python plugins/amazon_monitor.py</code> to check the current status of all monitored products.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)"><span class="faq-q-text">Amazon monitor isn't detecting anything - how do I diagnose it?</span><span class="faq-chevron">&#9658;</span></button>
+        <div class="faq-a">
+          <ul>
+            <li>Run the standalone diagnostic: <code>python plugins/amazon_monitor.py</code> - this prints the current price, seller, and availability for all watched products</li>
+            <li>Make sure you are logged into Amazon in the browser profile: <code>python plugins/cart_preloader.py --setup --retailer amazon</code></li>
+            <li>Amazon occasionally serves captcha pages to unrecognized browsers - logging in via the setup command helps establish a legitimate session</li>
+            <li>Check <code>data/amazon_monitor_history.json</code> to see when products were last checked and what prices were recorded</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="faq-section">
+      <div class="faq-section-title">Best Buy Invite Monitor</div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)"><span class="faq-q-text">How does the Best Buy invite system work?</span><span class="faq-chevron">&#9658;</span></button>
+        <div class="faq-a">
+          Best Buy uses a two-phase system for high-demand Pokemon TCG products:
+          <ul>
+            <li><strong>Phase 1 - Request Invite:</strong> When the "Request Invite" button appears on a product page, the monitor detects it, sends you an ntfy alert, opens a browser, and automatically clicks the button to register your interest as early as possible.</li>
+            <li><strong>Phase 2 - Selected:</strong> When Best Buy selects you, the monitor detects your status change, sends an URGENT alert, and opens a browser directly to checkout. You have 24 hours to complete the purchase - you click Place Order.</li>
+          </ul>
+          Early registration likely improves your selection odds since Best Buy's algorithm considers account activity and purchase history.
+          <div class="warn">The script never clicks Place Order. You must complete the purchase yourself within the 24-hour window.</div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)"><span class="faq-q-text">How do I check the current invite status of my Best Buy products?</span><span class="faq-chevron">&#9658;</span></button>
+        <div class="faq-a">
+          Run the standalone diagnostic:
+          <pre>python plugins/bestbuy_invites.py</pre>
+          This checks all tracked Best Buy products and prints the current invite state for each: <code>UNAVAILABLE</code>, <code>REQUESTABLE</code>, <code>REQUESTED</code>, or <code>SELECTED</code>. Also check <code>data/bestbuy_invite_history.json</code> to see timestamps for when each state was detected.
+        </div>
+      </div>
+    </div>
+
+    <div class="faq-section">
+      <div class="faq-section-title">Walmart Queue Monitor</div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)"><span class="faq-q-text">What exactly does the Walmart Queue Monitor watch for?</span><span class="faq-chevron">&#9658;</span></button>
+        <div class="faq-a">
+          Four types of Walmart activity are monitored:
+          <ul>
+            <li><strong>Wednesday drops</strong> - sends an alert at 11:45 AM ET on Wednesdays (15 minutes before the public 12 PM drop window) so you have time to get to your computer</li>
+            <li><strong>Any-day restocks</strong> - when any tracked Walmart product flips in-stock via the main tracker, a dedicated Walmart alert fires and a browser opens to that product page</li>
+            <li><strong>Clearance and rollbacks</strong> - scans at 9 AM and 6 PM daily for clearance badge, rollback pricing, or more than 10% below MSRP</li>
+            <li><strong>New listings</strong> - scans at 7 AM and 1 PM for untracked Pokemon TCG products appearing at or near MSRP</li>
+          </ul>
+          Check <code>data/walmart_drop_history.json</code> to see all previous alerts and detected drops.
+        </div>
+      </div>
+    </div>
+
+    <div class="faq-section">
+      <div class="faq-section-title">Restock Reminder</div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)"><span class="faq-q-text">How do I preview or test the restock reminder?</span><span class="faq-chevron">&#9658;</span></button>
+        <div class="faq-a">
+          Three diagnostic commands:
+          <pre># Preview all 7 day messages without sending
+python plugins/restock_reminder.py
+
+# Preview a specific day
+python plugins/restock_reminder.py --day WED
+
+# Send today's reminder right now (test)
+python plugins/restock_reminder.py --send</pre>
+          The reminder fires automatically at 8:30 AM every day when the tracker is running. It sends once per day maximum - if it already sent today, <code>--send</code> will skip it. To force resend, delete today's entry from <code>data/restock_reminder_history.json</code>.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)"><span class="faq-q-text">What message does each day send?</span><span class="faq-chevron">&#9658;</span></button>
+        <div class="faq-a">
+          <ul>
+            <li><strong>Monday</strong> - Low activity. Check Target overnight results.</li>
+            <li><strong>Tuesday</strong> - High priority. Vendor route day - check in-store at Target and Walmart mid-morning. Alt retailer scan runs at 9 AM automatically.</li>
+            <li><strong>Wednesday</strong> - Urgent. Walmart Wednesday - public drop 12 PM ET. Tracker monitors automatically.</li>
+            <li><strong>Thursday</strong> - Check post-Wednesday results. Best Buy in-store possible.</li>
+            <li><strong>Friday</strong> - High priority. Target restock day - 3-6 PM ET window. Tracker ramps to 3-minute checks automatically.</li>
+            <li><strong>Saturday</strong> - In-store browsing day. ALDI Finds, Marshalls, TJ Maxx.</li>
+            <li><strong>Sunday</strong> - Low. Planning day, review the Future page.</li>
+            <li><strong>Launch days</strong> - Urgent override regardless of day (Chaos Rising May 22, Pitch Black July 17, 30th Celebration Sept 18).</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="faq-section">
+      <div class="faq-section-title">Store Inventory Checker</div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)"><span class="faq-q-text">How do I run an immediate in-store inventory check?</span><span class="faq-chevron">&#9658;</span></button>
+        <div class="faq-a">
+          The store inventory checker runs automatically at 8 AM daily. To run it immediately:
+          <pre>python plugins/store_inventory.py</pre>
+          It will ask for your zip code, then scan the nearest Target and Walmart stores and tell you which specific store has stock, what aisle, and how many units. Results are also saved to <code>data/store_inventory.json</code>.
+          <div class="tip">Best days to run an in-store check are Tuesday and Wednesday when vendor routes refill shelves. Mid-morning (9-11 AM) typically has the freshest stock.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="faq-section">
+      <div class="faq-section-title">Alternative Retailer Monitor</div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)"><span class="faq-q-text">Which retailers does the alternative monitor cover and when does it run?</span><span class="faq-chevron">&#9658;</span></button>
+        <div class="faq-a">
+          Runs automatically every Tuesday and Friday at 9 AM. Covers:
+          <ul>
+            <li><strong>Five Below</strong> - $5 packs, blisters, mini tins at below-MSRP prices</li>
+            <li><strong>Marshalls / TJ Maxx</strong> - clearance Pokemon TCG stock. In-store only - monitor generates reminders to check in person</li>
+            <li><strong>Ollie's Bargain Outlet</strong> - overstock at 30-50% below MSRP. In-store only</li>
+            <li><strong>GameStop</strong> - exclusive bundles and trade-in credit opportunities</li>
+            <li><strong>ALDI</strong> - seasonal Pokemon Finds (March-April and October-November). Reminds you when ALDI season is active</li>
+          </ul>
+          Run manually anytime: <code>python plugins/alternative_retailers.py</code>. Results saved to <code>data/alt_retailers.json</code>.
+        </div>
+      </div>
+    </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- FILE REFERENCE -->
+  <!-- ══════════════════════════════════════════ -->
+  <div id="tab-files" class="tab-content">
+
+    <div style="font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted);margin-bottom:20px;letter-spacing:.08em">All files belong in the same tcg_tracker folder. Keep products_backup.txt as a safe copy of your PRODUCTS list.</div>
+
+    <div class="file-grid">
+      <div class="file-card">
+        <div class="file-name">tracker.py</div>
+        <div class="file-type">Python · Core script</div>
+        <div class="file-desc">The main tracker. Checks all 52 products across Target, Walmart, Best Buy, and Pokemon Center every 3 minutes. Orchestrates all other scripts. Run this to start everything.</div>
+        <div class="file-runs">Run: python tracker.py</div>
+      </div>
+      <div class="file-card">
+        <div class="file-name">cart_preloader.py</div>
+        <div class="file-type">Python · Auto-triggered</div>
+        <div class="file-desc">Opens a browser, adds a product to cart, and navigates to checkout automatically when MSRP price is detected. Never purchases — you click Buy. Also has --setup and --test modes.</div>
+        <div class="file-runs">Auto-runs via tracker.py. Test: python cart_preloader.py --test --retailer target --url [URL]</div>
+      </div>
+      <div class="file-card">
+        <div class="file-name">msrp_alert.py</div>
+        <div class="file-type">Python · Auto-triggered</div>
+        <div class="file-desc">Reads status_snapshot.json after every stock check and fires ntfy alerts when products are at or below MSRP. Tracks alert history to prevent spam.</div>
+        <div class="file-runs">Auto-runs via tracker.py. Standalone: python msrp_alert.py</div>
+      </div>
+      <div class="file-card">
+        <div class="file-name">store_inventory.py</div>
+        <div class="file-type">Python · Scheduled daily 8AM</div>
+        <div class="file-desc">Checks Target and Walmart store-level inventory near your zip code. Tells you which specific store has stock, what aisle, and how many units.</div>
+        <div class="file-runs">Auto-runs via tracker.py at 8AM. Standalone: python store_inventory.py</div>
+      </div>
+      <div class="file-card">
+        <div class="file-name">alternative_retailers.py</div>
+        <div class="file-type">Python · Scheduled Tue & Fri 9AM</div>
+        <div class="file-desc">Scrapes Five Below, Marshalls, TJ Maxx, Ollie's, GameStop for Pokemon TCG products at or below MSRP. Includes ALDI seasonal monitoring.</div>
+        <div class="file-runs">Auto-runs via tracker.py Tue/Fri 9AM. Standalone: python alternative_retailers.py</div>
+      </div>
+      <div class="file-card">
+        <div class="file-name">news_scraper.py</div>
+        <div class="file-type">Python · Scheduled daily 6AM</div>
+        <div class="file-desc">Scrapes PokeBeach, CollectorStation, and Pokemon.com for new release announcements. Updates future_events.json and retail_drops.json used by the Future and Retail Drops pages.</div>
+        <div class="file-runs">Auto-runs via tracker.py at 6AM. Standalone: python news_scraper.py</div>
+      </div>
+      <div class="file-card">
+        <div class="file-name">test_ntfy.py</div>
+        <div class="file-type">Python · Diagnostic tool</div>
+        <div class="file-desc">Sends a test push notification to diagnose ntfy.sh issues. Auto-reads your topic from tracker.py. Run this first whenever notifications aren't working.</div>
+        <div class="file-runs">python test_ntfy.py</div>
+      </div>
+      <div class="file-card">
+        <div class="file-name">shared.py</div>
+        <div class="file-type">Python · Core utility</div>
+        <div class="file-desc">Single source of truth for all shared code: HEADERS, MSRP_TABLE, send_ntfy(), open_browser(), parse_price(), get_msrp(), price_vs_msrp(), load_history(), save_history(). All plugin modules import from here. Never define these things in a plugin file.</div>
+        <div class="file-runs">Not run directly — imported by all other scripts</div>
+      </div>
+      <div class="file-card">
+        <div class="file-name">shared.py</div>
+        <div class="file-type">Python · Core utility library</div>
+        <div class="file-desc">Single source of truth for HEADERS, MSRP table, get_msrp(), parse_price(), send_ntfy(), open_browser(), load_history(), save_history(). Every other module imports from here. Never define these things in another file.</div>
+        <div class="file-runs">Never run directly — imported by all other scripts</div>
+      </div>
+      <div class="file-card">
+        <div class="file-name">plugins/bestbuy_invites.py</div>
+        <div class="file-type">Python · Plugin (auto-loaded)</div>
+        <div class="file-desc">Two-phase Best Buy invite monitor. Phase 1: detects when Request Invite button is live and auto-clicks it. Phase 2: detects when you are selected and opens browser to checkout. Checks every 10 minutes. Never clicks purchase buttons.</div>
+        <div class="file-runs">Auto-loaded via plugins.py. Standalone: python plugins/bestbuy_invites.py</div>
+      </div>
+      <div class="file-card">
+        <div class="file-name">plugins/price_history.py</div>
+        <div class="file-type">Python - Plugin (auto-loaded)</div>
+        <div class="file-desc">Hourly price logging to SQLite. Generates price_summary.json for dashboard. CSV and Excel export. 90-day retention with auto-purge.</div>
+        <div class="file-runs">Auto-loads via plugins.py. Diagnostic: python plugins/price_history.py. Force log: python plugins/price_history.py --log. CSV export: python plugins/price_history.py --csv</div>
+      </div>
+      <div class="file-card">
+        <div class="file-name">plugins/restock_reminder.py</div>
+        <div class="file-type">Python - Plugin (auto-loaded)</div>
+        <div class="file-desc">Daily 8:30 AM restock reminder with day-aware messaging. Launch day override sends urgent alert on known drop dates.</div>
+        <div class="file-runs">Auto-loads via plugins.py. Preview: python plugins/restock_reminder.py. Test send: python plugins/restock_reminder.py --send. Day preview: python plugins/restock_reminder.py --day WED</div>
+      </div>
+      <div class="file-card">
+        <div class="file-name">plugins/amazon_monitor.py</div>
+        <div class="file-type">Python - Plugin (auto-loaded)</div>
+        <div class="file-desc">Amazon MSRP monitor - checks every 15 minutes. Alerts only on Amazon.com direct listings. FBA sellers flagged separately. 8 ASINs pre-loaded.</div>
+        <div class="file-runs">Auto-loads via plugins.py. Diagnostic: python plugins/amazon_monitor.py. Setup Amazon login: python plugins/cart_preloader.py --setup --retailer amazon</div>
+      </div>
+      <div class="file-card">
+        <div class="file-name">plugins/bestbuy_invites.py</div>
+        <div class="file-type">Python - Plugin (auto-loaded)</div>
+        <div class="file-desc">Best Buy invite monitor - checks every 10 minutes. Phase 1 auto-clicks Request Invite button. Phase 2 opens browser to checkout when selected. Never clicks purchase buttons.</div>
+        <div class="file-runs">Auto-loads via plugins.py. Diagnostic: python plugins/bestbuy_invites.py</div>
+      </div>
+      <div class="file-card">
+        <div class="file-name">plugins/walmart_queue.py</div>
+        <div class="file-type">Python - Plugin (auto-loaded)</div>
+        <div class="file-desc">Walmart Wednesday drop monitor + clearance/rollback scanner + new listing detector. Sends alert at 11:45 AM ET on Wednesdays. Clearance scan runs twice daily.</div>
+        <div class="file-runs">Auto-loads via plugins.py. No standalone run needed.</div>
+      </div>
+      <div class="file-card">
+        <div class="file-name">plugins/restock_reminder.py</div>
+        <div class="file-type">Python - Plugin (auto-loaded)</div>
+        <div class="file-desc">Daily 8:30 AM push notification with day-specific restock intelligence.</div>
+        <div class="file-runs">Auto-loads via plugins.py. Test: python plugins/restock_reminder.py --send</div>
+      </div>
+      <div class="file-card">
+        <div class="file-name">data/price_history.db</div>
+        <div class="file-type">SQLite Database - Generated automatically</div>
+        <div class="file-desc">Price history database. Open with DB Browser for SQLite (free at sqlitebrowser.org) to browse all records and run custom queries. Auto-purges records older than 90 days.</div>
+        <div class="file-runs">Open in DB Browser for SQLite. Export: python plugins/price_history.py --csv</div>
+      </div>
+      <div class="file-card">
+        <div class="file-name">plugins.py</div>
+        <div class="file-type">Python · Architecture</div>
+        <div class="file-desc">Central plugin coordinator. Lists all enabled features. Comment out a line to disable a feature without deleting anything. Add one line to enable a new future feature.</div>
+        <div class="file-runs">No direct run needed — loaded automatically by tracker.py</div>
+      </div>
+      <div class="file-card">
+        <div class="file-name">walmart_queue.py</div>
+        <div class="file-type">Python · Plugin (auto-loaded)</div>
+        <div class="file-desc">Monitors all Walmart Pokemon TCG activity: Wednesday noon drops, restocks, clearance, rollbacks, new listings. Sends ntfy alert with clickable URL + opens browser on detection.</div>
+        <div class="file-runs">Auto-loaded via plugins.py. No direct run needed.</div>
+      </div>
+      <div class="file-card">
+        <div class="file-name">products_backup.txt</div>
+        <div class="file-type">Text · Backup</div>
+        <div class="file-desc">A safe copy of your full 52-product PRODUCTS list. Use this to restore your tracking list if tracker.py is overwritten by a new download.</div>
+        <div class="file-runs">Open in Notepad. Copy PRODUCTS = [...] block into tracker.py</div>
+      </div>
+      <div class="file-card">
+        <div class="file-name">requirements.txt</div>
+        <div class="file-type">Text · Dependencies</div>
+        <div class="file-desc">Lists all Python packages needed. Install with: pip install -r requirements.txt</div>
+        <div class="file-runs">pip install -r requirements.txt</div>
+      </div>
+      <div class="file-card">
+        <div class="file-name">.gitignore</div>
+        <div class="file-type">Text · Security</div>
+        <div class="file-desc">Prevents sensitive files (.browser_profile/, log files, JSON data) from being shared if you ever put this folder on GitHub or a cloud drive.</div>
+        <div class="file-runs">No action needed — works automatically</div>
+      </div>
+      <div class="file-card">
+        <div class="file-name">status_snapshot.json</div>
+        <div class="file-type">JSON · Generated automatically</div>
+        <div class="file-desc">Created by tracker.py after each check cycle. Contains current stock status and price for all products. Read by the dashboard every 3 minutes.</div>
+        <div class="file-runs">Auto-generated. Do not edit manually.</div>
+      </div>
+      <div class="file-card">
+        <div class="file-name">.browser_profile/</div>
+        <div class="file-type">Folder · Sensitive</div>
+        <div class="file-desc">Contains your retailer login cookies for the cart preloader browser. Keep this folder private — never share it or upload it anywhere. Excluded by .gitignore.</div>
+        <div class="file-runs">Created automatically by cart_preloader.py --setup</div>
+      </div>
+    </div>
+
+  </div>
+
+</main>
+<script>
+function showTab(id, btn) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.help-tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  btn.classList.add('active');
+}
+
+function toggleFaq(btn) {
+  const answer = btn.nextElementSibling;
+  const isOpen = btn.classList.contains('open');
+  // Close all
+  document.querySelectorAll('.faq-q.open').forEach(q => {
+    q.classList.remove('open');
+    q.nextElementSibling.classList.remove('open');
+  });
+  // Open this one if it wasn't open
+  if (!isOpen) {
+    btn.classList.add('open');
+    answer.classList.add('open');
+  }
+}
+</script>
+</body>
+</html>

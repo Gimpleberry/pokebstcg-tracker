@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Keith's PokeBS — Pricing</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#0a0a0f;--surface:#111118;--surface2:#18181f;--border:#2a2a38;
+    --accent:#f0c040;--accent2:#e8503a;--green:#3ddc84;--purple:#a78bfa;
+    --muted:#555570;--text:#e8e8f0;--text2:#9090a8;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh}
+  body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.08) 2px,rgba(0,0,0,.08) 4px);pointer-events:none;z-index:999}
+  header{display:flex;align-items:center;justify-content:space-between;padding:24px 40px;border-bottom:1px solid var(--border);background:rgba(10,10,15,.95);backdrop-filter:blur(12px);position:sticky;top:0;z-index:100}
+  .logo{display:flex;align-items:baseline;gap:10px}
+  .logo-main{font-family:'Bebas Neue',sans-serif;font-size:2.2rem;letter-spacing:.04em;color:var(--accent);text-shadow:0 0 30px rgba(240,192,64,.4)}
+  .logo-sub{font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted);letter-spacing:.2em;text-transform:uppercase}
+  .header-right{font-family:'DM Mono',monospace;font-size:.65rem;color:var(--muted);letter-spacing:.1em}
+  .nav-bar{display:flex;align-items:center;gap:4px;padding:0 40px;background:var(--surface2);border-bottom:1px solid var(--border)}
+  .nav-link{font-family:'DM Mono',monospace;font-size:.72rem;letter-spacing:.15em;text-transform:uppercase;padding:12px 18px;color:var(--muted);text-decoration:none;border-bottom:2px solid transparent;transition:all .15s}
+  .nav-link:hover{color:var(--text)}.nav-link.active{color:var(--accent);border-bottom-color:var(--accent)}
+  main{padding:40px;max-width:1400px;margin:0 auto}
+  .page-title{font-family:'Bebas Neue',sans-serif;font-size:1.8rem;letter-spacing:.06em;color:var(--text2);margin-bottom:4px}
+  .page-subtitle{font-family:'DM Mono',monospace;font-size:.72rem;color:var(--muted);letter-spacing:.1em;margin-bottom:10px}
+  .data-note{font-family:'DM Mono',monospace;font-size:.65rem;color:rgba(240,192,64,.7);background:rgba(240,192,64,.05);border:1px solid rgba(240,192,64,.15);border-radius:3px;padding:8px 14px;display:inline-block;margin-bottom:36px}
+  .loading-overlay{text-align:center;padding:60px 20px}
+  .loading-spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .loading-text{font-family:'DM Mono',monospace;font-size:.75rem;color:var(--muted);letter-spacing:.1em}
+  .era-divider{display:flex;align-items:center;gap:14px;margin:48px 0 28px}
+  .era-label{font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:.12em;color:var(--muted);white-space:nowrap}
+  .era-line{flex:1;height:1px;background:var(--border)}
+  .set-section{margin-bottom:48px}
+  .set-header{display:flex;align-items:center;gap:14px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border)}
+  .set-symbol-img{width:48px;height:48px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .set-symbol-img img{width:36px;height:36px;object-fit:contain;filter:drop-shadow(0 1px 3px rgba(0,0,0,.5))}
+  .set-title{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:.04em;color:var(--text);margin-bottom:4px}
+  .set-meta-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .set-meta-tag{font-family:'DM Mono',monospace;font-size:.6rem;padding:2px 8px;border-radius:2px;letter-spacing:.1em}
+  .tag-code{background:rgba(240,192,64,.08);color:var(--accent);border:1px solid rgba(240,192,64,.2)}
+  .tag-date{color:var(--muted);font-size:.65rem}
+  .tag-count{background:rgba(232,80,58,.06);color:#ff8a80;border:1px solid rgba(232,80,58,.2)}
+  .card-table{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--border);border-radius:6px;overflow:hidden}
+  .card-table thead tr{background:var(--surface2);border-bottom:1px solid var(--border)}
+  .card-table thead th{font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);padding:11px 16px;text-align:left;font-weight:500}
+  .th-right{text-align:right}
+  .card-table tbody tr{border-bottom:1px solid var(--border);transition:background .15s}
+  .card-table tbody tr:last-child{border-bottom:none}
+  .card-table tbody tr:hover{background:rgba(255,255,255,.025)}
+  .card-table td{padding:12px 16px;vertical-align:middle}
+  .td-rank{font-family:'Bebas Neue',sans-serif;font-size:1.5rem;width:40px;text-align:center;color:var(--muted)}
+  .td-rank.r1{color:var(--accent)}.td-rank.r2{color:#c0c0c0}.td-rank.r3{color:#cd7f32}
+  .td-img{width:70px;padding:8px 10px 8px 16px}
+  .card-img-box{width:54px;height:76px;border-radius:5px;overflow:hidden;background:var(--surface2);border:1px solid var(--border);position:relative;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer}
+  .card-img-box img{width:100%;height:100%;object-fit:cover;border-radius:4px;transition:transform .2s;display:none}
+  .card-img-box:hover img{transform:scale(1.05)}
+  .img-loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:var(--surface2)}
+  .img-spinner{width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
+  .card-name{font-weight:500;font-size:.88rem;color:var(--text);margin-bottom:5px}
+  .card-badges{display:flex;gap:5px;flex-wrap:wrap}
+  .badge{font-family:'DM Mono',monospace;font-size:.58rem;padding:2px 7px;border-radius:2px;letter-spacing:.06em}
+  .b-sir{background:rgba(167,139,250,.12);color:var(--purple);border:1px solid rgba(167,139,250,.25)}
+  .b-hr{background:rgba(240,192,64,.1);color:var(--accent);border:1px solid rgba(240,192,64,.2)}
+  .b-ir{background:rgba(61,220,132,.08);color:var(--green);border:1px solid rgba(61,220,132,.2)}
+  .b-num{background:rgba(144,144,168,.06);color:var(--muted);border:1px solid rgba(144,144,168,.15)}
+  .td-price{text-align:right}
+  .price-main{font-family:'DM Mono',monospace;font-size:.95rem;font-weight:500}
+  .price-main.tier-high{color:var(--accent2)}.price-main.tier-mid{color:var(--accent)}.price-main.tier-low{color:var(--green)}
+  .price-trend{font-family:'DM Mono',monospace;font-size:.58rem;margin-top:2px;color:var(--muted)}
+  .price-trend.up{color:var(--green)}.price-trend.down{color:var(--accent2)}
+  .psa10-main{font-family:'DM Mono',monospace;font-size:.95rem;font-weight:500;color:var(--purple)}
+  .psa10-mult{font-family:'DM Mono',monospace;font-size:.58rem;color:var(--muted);margin-top:2px}
+  .tcg-btn{font-family:'DM Mono',monospace;font-size:.58rem;letter-spacing:.08em;color:var(--muted);text-decoration:none;border:1px solid var(--border);border-radius:2px;padding:4px 9px;transition:all .15s;white-space:nowrap;display:inline-block}
+  .tcg-btn:hover{border-color:var(--accent);color:var(--accent)}
+  .summary-chips{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap}
+  .chip{font-family:'DM Mono',monospace;font-size:.62rem;color:var(--text2);background:var(--surface2);border:1px solid var(--border);border-radius:3px;padding:5px 11px;letter-spacing:.04em}
+  .chip b{color:var(--accent);font-weight:500}
+  .disclaimer{margin-top:52px;padding:20px 24px;background:var(--surface);border:1px solid var(--border);border-radius:6px}
+  .disclaimer-title{font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+  .disclaimer-text{font-size:.78rem;color:var(--text2);line-height:1.6}
+  .img-zoom-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:1000;align-items:center;justify-content:center}
+  .img-zoom-overlay.open{display:flex}
+  .img-zoom-overlay img{max-width:350px;max-height:90vh;border-radius:10px;box-shadow:0 20px 80px rgba(0,0,0,.8);animation:zoomIn .2s ease}
+  @keyframes zoomIn{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:scale(1)}}
+  @media(max-width:768px){header{padding:16px 20px}main{padding:20px}.logo-main{font-size:1.6rem}.nav-bar{padding:0 20px}.td-img{display:none}.card-table thead th:nth-child(6){display:none}.card-table td:nth-child(6){display:none}}
+</style>
+</head>
+<body>
+
+<div class="img-zoom-overlay" id="zoom-overlay" onclick="closeZoom()">
+  <img id="zoom-img" src="" alt="Card zoom">
+</div>
+
+<header>
+  <div class="logo">
+    <span class="logo-main">Keith's PokeBS</span>
+    <span class="logo-sub">Pricing</span>
+  </div>
+  <div class="header-right">Prices sourced from TCGPlayer · Apr 2026</div>
+</header>
+
+<nav class="nav-bar">
+  <a class="nav-link" href="dashboard.html">📡 Tracker</a>
+  <a class="nav-link" href="info.html">📖 Set Info</a>
+  <a class="nav-link active" href="pricing.html">💰 Pricing</a>
+  <a class="nav-link" href="binder.html">📂 Binder</a>
+  <a class="nav-link" href="future.html">📅 Future</a>
+  <a class="nav-link" href="retail-drops.html">🛒 Retail Drops</a>
+  <a class="nav-link" href="help.html">❓ Help</a>
+</nav>
+
+<main>
+  <div class="page-title">Card Pricing Guide</div>
+  <div class="page-subtitle">Top 5 chase cards per set · Raw NM avg &amp; PSA 10 estimated value · Newest sets first</div>
+  <div class="data-note">⚠ Prices reflect TCGPlayer market data (Apr 2026). PSA 10 values estimated from recent eBay/PSA sales. Card images via pokemontcg.io — click any card to zoom.</div>
+
+  <div id="pricing-content">
+    <div class="loading-overlay">
+      <div class="loading-spinner"></div>
+      <div class="loading-text">Loading card images from PokémonTCG.io...</div>
+    </div>
+  </div>
+
+  <div class="disclaimer">
+    <div class="disclaimer-title">Disclaimer</div>
+    <div class="disclaimer-text">All prices are estimates based on publicly available market data from TCGPlayer, eBay, and PriceCharting as of April 2026. Raw prices reflect Near Mint condition averages. PSA 10 values are estimated from recent completed sales and may vary significantly. Pokémon TCG card prices are highly volatile. This page is for informational purposes only and does not constitute financial or investment advice.</div>
+  </div>
+</main>
+
+<script>
+const SETS = [
+  {
+    era:'Mega Evolution Era',
+    name:'Mega Evolution — Ascended Heroes',code:'ME02.5 · ASC',date:'Jan 30, 2026',cardCount:'295 Cards',
+    symbol:'https://pokesymbols.com/images/tcg/sets/symbols/ascended-heroes.png',symAbbr:'ASC',
+    pullRate:'~1 in 70 packs (SIR)',topRaw:'~$1,145',top5Total:'~$3,366',
+    cards:[
+      {id:'me2pt5-284',name:"Mega Gengar ex",badge:'b-sir',badgeLabel:'SIR',num:'284/217',rawPrice:'$1,145',tier:'tier-high',trend:'↑ climbing weekly',trendClass:'up',psa10:'~$3,800+',mult:'~3.3× raw',tcg:'https://www.tcgplayer.com/search/pokemon/me-ascended-heroes?q=mega+gengar+ex+sir'},
+      {id:'me2pt5-285',name:"Pikachu ex",badge:'b-sir',badgeLabel:'SIR',num:'285/217',rawPrice:'$745',tier:'tier-high',trend:'↑ strong demand',trendClass:'up',psa10:'~$2,200+',mult:'~3× raw',tcg:'https://www.tcgplayer.com/search/pokemon/me-ascended-heroes?q=pikachu+ex+sir'},
+      {id:'me2pt5-283',name:"Mega Dragonite ex",badge:'b-sir',badgeLabel:'SIR',num:'283/217',rawPrice:'$690',tier:'tier-high',trend:'↑ steady rise',trendClass:'up',psa10:'~$2,100+',mult:'~3× raw',tcg:'https://www.tcgplayer.com/search/pokemon/me-ascended-heroes?q=mega+dragonite+ex+sir'},
+      {id:'me2pt5-295',name:"Mega Charizard Y ex",badge:'b-hr',badgeLabel:'Hyper Rare',num:'295/217',rawPrice:'$445',tier:'tier-mid',trend:'— stable',trendClass:'',psa10:'~$1,400+',mult:'~3.1× raw',tcg:'https://www.tcgplayer.com/search/pokemon/me-ascended-heroes?q=mega+charizard+y+hyper+rare'},
+      {id:'me2pt5-286',name:"Pikachu ex (Tera Variant)",badge:'b-sir',badgeLabel:'SIR',num:'286/217',rawPrice:'$341',tier:'tier-mid',trend:'↑ rising',trendClass:'up',psa10:'~$1,000+',mult:'~3× raw',tcg:'https://www.tcgplayer.com/search/pokemon/me-ascended-heroes?q=pikachu+ex+tera+sir'},
+    ]
+  },
+  {
+    era:'Scarlet & Violet Era',
+    name:"Scarlet &amp; Violet — Destined Rivals",code:'SV10 · DRI',date:'May 30, 2025',cardCount:'244 Cards',
+    symbol:'https://pokesymbols.com/images/tcg/sets/symbols/destined-rivals.png',symAbbr:'DRI',
+    pullRate:'~1 in 70–90 packs (SIR)',topRaw:'~$480',top5Total:'~$1,172',
+    cards:[
+      {id:'sv10-231',name:"Team Rocket's Mewtwo ex",badge:'b-sir',badgeLabel:'SIR',num:'231/182',rawPrice:'~$480',tier:'tier-high',trend:'↓ slight correction',trendClass:'down',psa10:'~$1,600+',mult:'~3.3× raw',tcg:'https://www.tcgplayer.com/search/pokemon/scarlet-violet-destined-rivals?q=mewtwo+ex+sir'},
+      {id:'sv10-232',name:"Cynthia's Garchomp ex",badge:'b-sir',badgeLabel:'SIR',num:'232/182',rawPrice:'~$290',tier:'tier-high',trend:'↓ normalizing',trendClass:'down',psa10:'~$950+',mult:'~3.3× raw',tcg:'https://www.tcgplayer.com/search/pokemon/scarlet-violet-destined-rivals?q=cynthia+garchomp+ex+sir'},
+      {id:'sv10-230',name:"Ethan's Ho-Oh ex",badge:'b-sir',badgeLabel:'SIR',num:'230/182',rawPrice:'~$185',tier:'tier-mid',trend:'↓ settling',trendClass:'down',psa10:'~$600+',mult:'~3.2× raw',tcg:'https://www.tcgplayer.com/search/pokemon/scarlet-violet-destined-rivals?q=ethan+ho-oh+ex+sir'},
+      {id:'sv10-233',name:"Team Rocket's Moltres ex",badge:'b-sir',badgeLabel:'SIR',num:'233/182',rawPrice:'~$145',tier:'tier-mid',trend:'↑ rising',trendClass:'up',psa10:'~$480+',mult:'~3.3× raw',tcg:'https://www.tcgplayer.com/search/pokemon/scarlet-violet-destined-rivals?q=moltres+ex+sir'},
+      {id:'sv10-241',name:"Cynthia's Garchomp ex (Gold HR)",badge:'b-hr',badgeLabel:'Hyper Rare',num:'241/182',rawPrice:'~$72',tier:'tier-low',trend:'— stable',trendClass:'',psa10:'~$240+',mult:'~3.3× raw',tcg:'https://www.tcgplayer.com/search/pokemon/scarlet-violet-destined-rivals?q=cynthia+garchomp+hyper+rare'},
+    ]
+  },
+  {
+    era:null,
+    name:"Scarlet &amp; Violet — Journey Together",code:'SV9 · JTG',date:'Mar 28, 2025',cardCount:'190 Cards',
+    symbol:'https://pokesymbols.com/images/tcg/sets/symbols/journey-together.png',symAbbr:'JTG',
+    pullRate:'~1 in 70–90 packs (SIR)',topRaw:'~$126',top5Total:'~$310',extraNote:'PSA 10 premiums unusually high — strong grading upside',
+    cards:[
+      {id:'sv9-184',name:"Lillie's Clefairy ex",badge:'b-sir',badgeLabel:'SIR',num:'184/162',rawPrice:'~$126',tier:'tier-mid',trend:'↓ stabilizing',trendClass:'down',psa10:'~$950',mult:'~7.5× raw',tcg:'https://www.tcgplayer.com/search/pokemon/scarlet-violet-journey-together?q=lillie+clefairy+ex+sir'},
+      {id:'sv9-187',name:"Salamence ex",badge:'b-sir',badgeLabel:'SIR',num:'187/162',rawPrice:'~$55',tier:'tier-low',trend:'— stable',trendClass:'',psa10:'~$750',mult:'~13.6× raw',tcg:'https://www.tcgplayer.com/search/pokemon/scarlet-violet-journey-together?q=salamence+ex+sir'},
+      {id:'sv9-185',name:"N's Zoroark ex",badge:'b-sir',badgeLabel:'SIR',num:'185/162',rawPrice:'~$51',tier:'tier-low',trend:'— stable',trendClass:'',psa10:'~$900',mult:'~17.6× raw',tcg:'https://www.tcgplayer.com/search/pokemon/scarlet-violet-journey-together?q=n+zoroark+ex+sir'},
+      {id:'sv9-183',name:"Iono's Bellibolt ex",badge:'b-sir',badgeLabel:'SIR',num:'183/162',rawPrice:'~$42',tier:'tier-low',trend:'— stable',trendClass:'',psa10:'~$380',mult:'~9× raw',tcg:'https://www.tcgplayer.com/search/pokemon/scarlet-violet-journey-together?q=iono+bellibolt+ex+sir'},
+      {id:'sv9-186',name:"Hop's Zacian ex",badge:'b-sir',badgeLabel:'SIR',num:'186/162',rawPrice:'~$36',tier:'tier-low',trend:'— stable',trendClass:'',psa10:'~$300',mult:'~8.3× raw',tcg:'https://www.tcgplayer.com/search/pokemon/scarlet-violet-journey-together?q=hop+zacian+ex+sir'},
+    ]
+  },
+  {
+    era:null,
+    name:"Scarlet &amp; Violet — Prismatic Evolutions",code:'SV8.5 · PRE',date:'Jan 17, 2025',cardCount:'180 Cards',
+    symbol:'https://pokesymbols.com/images/tcg/sets/symbols/prismatic-evolutions.png',symAbbr:'PRE',
+    pullRate:'~1 in 36–45 packs (SIR)',topRaw:'$1,486',top5Total:'~$2,651',extraNote:'God Packs confirmed — ~1 in 2,000 packs',
+    cards:[
+      {id:'sv8pt5-161',name:"Umbreon ex",badge:'b-sir',badgeLabel:'SIR',num:'161/131',rawPrice:'$1,486',tier:'tier-high',trend:'↑ near all-time high',trendClass:'up',psa10:'~$4,500+',mult:'~3× raw',tcg:'https://www.tcgplayer.com/search/pokemon/scarlet-violet-prismatic-evolutions?q=umbreon+ex+sir'},
+      {id:'sv8pt5-156',name:"Sylveon ex",badge:'b-sir',badgeLabel:'SIR',num:'156/131',rawPrice:'$387',tier:'tier-high',trend:'↑ climbing',trendClass:'up',psa10:'~$900+',mult:'~2.3× raw',tcg:'https://www.tcgplayer.com/search/pokemon/scarlet-violet-prismatic-evolutions?q=sylveon+ex+sir'},
+      {id:'sv8pt5-144',name:"Leafeon ex",badge:'b-sir',badgeLabel:'SIR',num:'144/131',rawPrice:'$274',tier:'tier-mid',trend:'— stable',trendClass:'',psa10:'~$750+',mult:'~2.7× raw',tcg:'https://www.tcgplayer.com/search/pokemon/scarlet-violet-prismatic-evolutions?q=leafeon+ex+sir'},
+      {id:'sv8pt5-155',name:"Espeon ex",badge:'b-sir',badgeLabel:'SIR',num:'155/131',rawPrice:'$279',tier:'tier-mid',trend:'— stable',trendClass:'',psa10:'~$675+',mult:'~2.4× raw',tcg:'https://www.tcgplayer.com/search/pokemon/scarlet-violet-prismatic-evolutions?q=espeon+ex+sir'},
+      {id:'sv8pt5-149',name:"Vaporeon ex",badge:'b-sir',badgeLabel:'SIR',num:'149/131',rawPrice:'$225',tier:'tier-mid',trend:'— stable',trendClass:'',psa10:'~$751+',mult:'~3.3× raw',tcg:'https://www.tcgplayer.com/search/pokemon/scarlet-violet-prismatic-evolutions?q=vaporeon+ex+sir'},
+    ]
+  },
+];
+
+const imageCache={};
+async function fetchCardImage(id){
+  if(imageCache[id]!==undefined)return imageCache[id];
+  try{
+    const r=await fetch(`https://api.pokemontcg.io/v2/cards/${id}`);
+    if(!r.ok)throw new Error(r.status);
+    const d=await r.json();
+    const url=d.data?.images?.large||d.data?.images?.small||null;
+    imageCache[id]=url;return url;
+  }catch(e){imageCache[id]=null;return null;}
+}
+
+function sid(id){return id.replace(/[^a-z0-9]/gi,'_');}
+
+function buildSetHTML(set){
+  const eraDiv=set.era?`<div class="era-divider"><div class="era-label">${set.era}</div><div class="era-line"></div></div>`:'';
+  const rows=set.cards.map((c,i)=>{
+    const rk=['r1','r2','r3'][i]||'';
+    const s=sid(c.id);
+    return `<tr>
+      <td class="td-rank ${rk}">${i+1}</td>
+      <td class="td-img">
+        <div class="card-img-box" onclick="zoomCard('${c.id}')" title="Click to zoom">
+          <div class="img-loading" id="ld-${s}"><div class="img-spinner"></div></div>
+          <img id="img-${s}" src="" alt="${c.name}" onload="this.style.display='block';document.getElementById('ld-${s}').style.display='none'">
+        </div>
+      </td>
+      <td>
+        <div class="card-name">${c.name}</div>
+        <div class="card-badges">
+          <span class="badge ${c.badge}">${c.badgeLabel}</span>
+          <span class="badge b-num">#${c.num}</span>
+        </div>
+      </td>
+      <td class="td-price">
+        <div class="price-main ${c.tier}">${c.rawPrice}</div>
+        <div class="price-trend ${c.trendClass}">${c.trend}</div>
+      </td>
+      <td class="td-price">
+        <div class="psa10-main">${c.psa10}</div>
+        <div class="psa10-mult">${c.mult}</div>
+      </td>
+      <td><a class="tcg-btn" href="${c.tcg}" target="_blank">TCGPlayer ↗</a></td>
+    </tr>`;
+  }).join('');
+  const chips=`<div class="chip">Top card: <b>${set.topRaw}</b></div><div class="chip">Top 5 total: <b>${set.top5Total}</b></div><div class="chip">SIR rate: <b>${set.pullRate}</b></div>${set.extraNote?`<div class="chip">⚡ ${set.extraNote}</div>`:''}`;
+  return `${eraDiv}<div class="set-section">
+    <div class="set-header">
+      <div class="set-symbol-img"><img src="${set.symbol}" alt="${set.symAbbr}" onerror="this.parentNode.innerHTML='<span style=\\'font-family:Bebas Neue;font-size:1rem;color:var(--muted)\\'>${set.symAbbr}</span>'"></div>
+      <div><div class="set-title">${set.name}</div><div class="set-meta-row"><span class="set-meta-tag tag-date">${set.date}</span><span class="set-meta-tag tag-code">${set.code}</span><span class="set-meta-tag tag-count">${set.cardCount}</span></div></div>
+    </div>
+    <table class="card-table">
+      <thead><tr><th>#</th><th></th><th>Card</th><th class="th-right">Raw NM Avg</th><th class="th-right">PSA 10 Est.</th><th class="th-right">Links</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <div class="summary-chips">${chips}</div>
+  </div>`;
+}
+
+async function loadImages(){
+  for(const set of SETS){
+    for(const card of set.cards){
+      const url=await fetchCardImage(card.id);
+      const s=sid(card.id);
+      const img=document.getElementById(`img-${s}`);
+      const ld=document.getElementById(`ld-${s}`);
+      if(img&&url){img.src=url;}
+      else if(ld){ld.innerHTML='<span style="font-size:1.3rem">🃏</span>';}
+    }
+  }
+}
+
+function zoomCard(id){
+  const s=sid(id);
+  const img=document.getElementById(`img-${s}`);
+  if(img&&img.src&&img.src!==window.location.href){
+    document.getElementById('zoom-img').src=img.src;
+    document.getElementById('zoom-overlay').classList.add('open');
+  }
+}
+function closeZoom(){document.getElementById('zoom-overlay').classList.remove('open');}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeZoom();});
+
+document.getElementById('pricing-content').innerHTML=SETS.map(buildSetHTML).join('');
+loadImages();
+</script>
+</body>
+</html>

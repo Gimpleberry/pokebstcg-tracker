@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Keith's PokeBS — Future</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0a0f;--surface:#111118;--surface2:#18181f;--border:#2a2a38;--accent:#f0c040;--accent2:#e8503a;--green:#3ddc84;--purple:#a78bfa;--blue:#60a5fa;--muted:#555570;--text:#e8e8f0;--text2:#9090a8}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.08) 2px,rgba(0,0,0,.08) 4px);pointer-events:none;z-index:999}
+header{display:flex;align-items:center;justify-content:space-between;padding:24px 40px;border-bottom:1px solid var(--border);background:rgba(10,10,15,.95);backdrop-filter:blur(12px);position:sticky;top:0;z-index:100}
+.logo{display:flex;align-items:baseline;gap:10px}
+.logo-main{font-family:'Bebas Neue',sans-serif;font-size:2.2rem;letter-spacing:.04em;color:var(--accent);text-shadow:0 0 30px rgba(240,192,64,.4)}
+.logo-sub{font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted);letter-spacing:.2em;text-transform:uppercase}
+.nav-bar{display:flex;align-items:center;gap:4px;padding:0 40px;background:var(--surface2);border-bottom:1px solid var(--border)}
+.nav-link{font-family:'DM Mono',monospace;font-size:.72rem;letter-spacing:.15em;text-transform:uppercase;padding:12px 18px;color:var(--muted);text-decoration:none;border-bottom:2px solid transparent;transition:all .15s}
+.nav-link:hover{color:var(--text)}.nav-link.active{color:var(--accent);border-bottom-color:var(--accent)}
+main{padding:40px;max-width:1400px;margin:0 auto}
+.page-title{font-family:'Bebas Neue',sans-serif;font-size:1.8rem;letter-spacing:.06em;color:var(--text2);margin-bottom:4px}
+.page-subtitle{font-family:'DM Mono',monospace;font-size:.72rem;color:var(--muted);letter-spacing:.1em;margin-bottom:32px}
+
+/* Category filter */
+.cat-tabs{display:flex;gap:6px;margin-bottom:28px;flex-wrap:wrap}
+.cat-btn{font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;padding:7px 14px;background:var(--surface);border:1px solid var(--border);border-radius:3px;color:var(--muted);cursor:pointer;transition:all .15s}
+.cat-btn:hover,.cat-btn.active{border-color:var(--accent);color:var(--accent)}
+
+/* Timeline */
+.timeline{position:relative;padding-left:32px}
+.timeline::before{content:'';position:absolute;left:8px;top:0;bottom:0;width:2px;background:var(--border)}
+
+.month-group{margin-bottom:40px}
+.month-label{font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:.1em;color:var(--muted);margin-bottom:16px;padding-left:4px}
+
+.tl-event{position:relative;margin-bottom:12px;animation:cardIn .35s ease both}
+@keyframes cardIn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
+
+.tl-dot{position:absolute;left:-28px;top:50%;transform:translateY(-50%);width:14px;height:14px;border-radius:50%;border:2px solid var(--bg);z-index:1}
+.dot-set{background:var(--accent)}.dot-prerelease{background:var(--purple)}.dot-product{background:var(--green)}.dot-collection{background:var(--blue)}.dot-promo{background:#ff8a80}.dot-event{background:#fb923c}.dot-confirmed{background:var(--accent)}.dot-rumored{background:var(--muted)}
+
+.tl-card{background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:14px 18px;display:flex;align-items:flex-start;gap:14px;transition:border-color .2s}
+.tl-card:hover{border-color:rgba(240,192,64,.3)}
+.tl-card.past{opacity:.55}
+.tl-card.today{border-color:rgba(240,192,64,.5);box-shadow:0 0 16px rgba(240,192,64,.08)}
+.tl-card.soon{border-color:rgba(61,220,132,.3)}
+
+.tl-date-col{flex-shrink:0;width:100px}
+.tl-date{font-family:'DM Mono',monospace;font-size:.78rem;color:var(--text);font-weight:500}
+.tl-days{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--muted);margin-top:2px}
+.tl-days.soon{color:var(--green)}.tl-days.past{color:var(--muted)}.tl-days.today-lbl{color:var(--accent)}
+
+.tl-main{flex:1}
+.tl-title{font-weight:500;font-size:.92rem;color:var(--text);margin-bottom:4px}
+.tl-desc{font-size:.78rem;color:var(--text2);line-height:1.5;margin-bottom:6px}
+.tl-tags{display:flex;gap:6px;flex-wrap:wrap}
+.tl-tag{font-family:'DM Mono',monospace;font-size:.58rem;padding:2px 8px;border-radius:2px;letter-spacing:.08em}
+.tag-set{background:rgba(240,192,64,.1);color:var(--accent);border:1px solid rgba(240,192,64,.2)}
+.tag-prerelease{background:rgba(167,139,250,.1);color:var(--purple);border:1px solid rgba(167,139,250,.2)}
+.tag-product{background:rgba(61,220,132,.08);color:var(--green);border:1px solid rgba(61,220,132,.2)}
+.tag-collection{background:rgba(96,165,250,.08);color:var(--blue);border:1px solid rgba(96,165,250,.2)}
+.tag-promo{background:rgba(255,138,128,.08);color:#ff8a80;border:1px solid rgba(255,138,128,.2)}
+.tag-event{background:rgba(251,146,60,.08);color:#fb923c;border:1px solid rgba(251,146,60,.2)}
+.tag-confirmed{background:rgba(61,220,132,.08);color:var(--green);border:1px solid rgba(61,220,132,.2)}
+.tag-rumored{background:rgba(85,85,112,.15);color:var(--muted);border:1px solid var(--border)}
+.tag-milestone{background:rgba(240,192,64,.15);color:var(--accent);border:1px solid rgba(240,192,64,.3)}
+
+.tl-retailer-col{flex-shrink:0;display:flex;flex-direction:column;gap:4px;align-items:flex-end}
+.tl-msrp{font-family:'DM Mono',monospace;font-size:.75rem;color:var(--text2)}
+.tl-retailers{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+.tl-ret-badge{font-family:'DM Mono',monospace;font-size:.55rem;padding:2px 6px;border-radius:2px;letter-spacing:.06em}
+.ret-target{background:rgba(204,0,0,.1);color:#ff6b6b;border:1px solid rgba(204,0,0,.2)}
+.ret-walmart{background:rgba(0,113,206,.1);color:#5ab5ff;border:1px solid rgba(0,113,206,.2)}
+.ret-bestbuy{background:rgba(255,237,0,.08);color:#ffe566;border:1px solid rgba(255,237,0,.15)}
+.ret-pc{background:rgba(232,80,58,.08);color:#ff8a80;border:1px solid rgba(232,80,58,.2)}
+.ret-lgs{background:rgba(167,139,250,.08);color:var(--purple);border:1px solid rgba(167,139,250,.2)}
+
+/* Calendar */
+.section-divider{display:flex;align-items:center;gap:14px;margin:40px 0 24px}
+.section-divider-label{font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:.1em;color:var(--muted);white-space:nowrap}
+.section-divider-line{flex:1;height:1px;background:var(--border)}
+
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:32px}
+.cal-header{font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);text-align:center;padding:6px 0}
+.cal-day{background:var(--surface);border:1px solid var(--border);border-radius:3px;min-height:72px;padding:6px;position:relative;transition:border-color .2s;cursor:default}
+.cal-day:hover{border-color:rgba(240,192,64,.2)}
+.cal-day.other-month{opacity:.3}
+.cal-day.today{border-color:var(--accent);box-shadow:0 0 12px rgba(240,192,64,.1)}
+.cal-day.has-event{border-color:rgba(61,220,132,.25)}
+.cal-day-num{font-family:'DM Mono',monospace;font-size:.65rem;color:var(--muted);margin-bottom:4px}
+.cal-day.today .cal-day-num{color:var(--accent);font-weight:700}
+.cal-event-dot{font-size:.62rem;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text2);margin-bottom:1px}
+.cal-nav{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.cal-month-label{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:.06em;color:var(--text)}
+.cal-nav-btn{font-family:'DM Mono',monospace;font-size:.72rem;padding:7px 14px;background:var(--surface);border:1px solid var(--border);border-radius:3px;color:var(--muted);cursor:pointer;transition:all .15s}
+.cal-nav-btn:hover{border-color:var(--accent);color:var(--accent)}
+
+@media(max-width:768px){header{padding:16px 20px}main{padding:20px}.logo-main{font-size:1.6rem}.nav-bar{padding:0 20px}.tl-retailer-col{display:none}.cal-grid{grid-template-columns:repeat(7,1fr);gap:2px}.cal-day{min-height:48px;padding:3px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo"><span class="logo-main">Keith's PokeBS</span><span class="logo-sub">Future</span></div>
+  <div style="font-family:'DM Mono',monospace;font-size:.65rem;color:var(--muted)">2026 TCG Launch Calendar</div>
+</header>
+<nav class="nav-bar">
+  <a class="nav-link" href="dashboard.html">📡 Tracker</a>
+  <a class="nav-link" href="info.html">📖 Set Info</a>
+  <a class="nav-link" href="pricing.html">💰 Pricing</a>
+  <a class="nav-link" href="binder.html">📂 Binder</a>
+  <a class="nav-link active" href="future.html">📅 Future</a>
+  <a class="nav-link" href="retail-drops.html">🛒 Retail Drops</a>
+  <a class="nav-link" href="help.html">❓ Help</a>
+</nav>
+<main>
+  <div class="page-title">2026 TCG Calendar</div>
+  <div class="page-subtitle">All confirmed & rumored Pokémon TCG launches, prereleases, and product drops · Sources: pokemon.com, PokeBeach, CollectorStation</div>
+
+  <!-- Category filters -->
+  <div class="cat-tabs">
+    <button class="cat-btn active" onclick="filterCat('all',this)">All</button>
+    <button class="cat-btn" onclick="filterCat('set',this)">Set Releases</button>
+    <button class="cat-btn" onclick="filterCat('prerelease',this)">Prereleases</button>
+    <button class="cat-btn" onclick="filterCat('product',this)">Product Waves</button>
+    <button class="cat-btn" onclick="filterCat('collection',this)">Collections</button>
+    <button class="cat-btn" onclick="filterCat('promo',this)">Promos</button>
+    <button class="cat-btn" onclick="filterCat('event',this)">Events</button>
+    <button class="cat-btn" onclick="filterCat('rumored',this)">Rumored</button>
+  </div>
+
+  <!-- Mini Calendar -->
+  <div class="section-divider"><div class="section-divider-label">Monthly View</div><div class="section-divider-line"></div><button class="cal-nav-btn" onclick="prevMonth()">◀</button><span class="cal-month-label" id="cal-label"></span><button class="cal-nav-btn" onclick="nextMonth()">▶</button></div>
+  <div class="cal-grid" id="cal-headers"></div>
+  <div class="cal-grid" id="cal-days"></div>
+
+  <!-- Timeline -->
+  <div class="section-divider"><div class="section-divider-label">Full Timeline</div><div class="section-divider-line"></div></div>
+  <div class="timeline" id="timeline"></div>
+</main>
+
+<script>
+const TODAY = new Date(2026, 3, 24); // April 24, 2026
+
+// ── EVENT DATA ────────────────────────────────────────────────────────
+const EVENTS = [
+  // ── ALREADY RELEASED ──
+  { date:'2026-01-30', title:'Ascended Heroes — Launch Day', desc:'295-card special expansion. First wave: Tech Sticker Collections. Largest English set ever at time of release.', cats:['set'], tags:['Set Release','Confirmed'], msrp:'', retailers:['target','walmart','bestbuy','pc'], past:true },
+  { date:'2026-02-20', title:'Ascended Heroes ETB & Mini Tins', desc:'Elite Trainer Box ($49.99) and Pokemon Center ETB ($59.99) with N\'s Zekrom promo. Mini Tins and Premium Poster Collections also release.', cats:['product'], tags:['Product Wave','Confirmed'], msrp:'$49.99', retailers:['target','walmart','bestbuy','pc'], past:true },
+  { date:'2026-03-20', title:'Ascended Heroes — First Partner Illustration Collection', desc:'Features Chikorita, Tepig, Totodile foil promos + Enamel Pin + 5 ASC packs. Celebrates 30 years of starters.', cats:['collection','promo'], tags:['Collection','Confirmed'], msrp:'$39.99', retailers:['target','walmart','bestbuy','pc'], past:true },
+  { date:'2026-03-27', title:'Perfect Order — Launch Day', desc:'130-card Mega Evolution mini-set. Stars Mega Zygarde ex, Mega Starmie ex, Mega Clefable ex. Dragon-themed.', cats:['set'], tags:['Set Release','Confirmed'], msrp:'', retailers:['target','walmart','bestbuy','pc'], past:true },
+  { date:'2026-04-24', title:'Ascended Heroes Mega ex Boxes', desc:'3 variants: Mega Meganium ex, Mega Emboar ex, Mega Feraligatr ex. Each includes foil promo + lenticular card + 4 ASC packs.', cats:['product'], tags:['Product Wave','Confirmed'], msrp:'$21.99', retailers:['target','walmart','bestbuy','pc'], past:false },
+
+  // ── MAY 2026 ──
+  { date:'2026-05-09', title:'Chaos Rising — Prerelease Begins', desc:'Prereleases at participating Play! Pokémon stores (local game stores). Build & Battle Boxes go on sale. Promos: Delphox, Ampharos, Crobat, or Goodra.', cats:['prerelease','event'], tags:['Prerelease','Confirmed'], msrp:'$14.99', retailers:['lgs'], past:false },
+  { date:'2026-05-17', title:'Chaos Rising — Prerelease Ends', desc:'Last day for prerelease events. TCG Live digital release on May 21.', cats:['prerelease','event'], tags:['Prerelease','Confirmed'], msrp:'', retailers:['lgs'], past:false },
+  { date:'2026-05-21', title:'Chaos Rising — TCG Live Digital', desc:'Chaos Rising cards unlock on Pokémon TCG Live app, one day before physical retail. Good for deck testing.', cats:['event'], tags:['Digital','Confirmed'], msrp:'', retailers:[], past:false },
+  { date:'2026-05-22', title:'Chaos Rising — Launch Day 🔥', desc:'122-card Mega Evolution set adapting Japan\'s Ninja Spinner. Stars Mega Greninja ex, Mega Pyroar ex, Mega Floette ex, Mega Dragalge ex. ETB features Mega Greninja on cover.', cats:['set'], tags:['Set Release','Confirmed'], msrp:'', retailers:['target','walmart','bestbuy','pc'], past:false },
+  { date:'2026-05-22', title:'Chaos Rising ETB', desc:'9 packs + Fennekin Illustration Rare promo card + accessories.', cats:['product'], tags:['Product Wave','Confirmed'], msrp:'$49.99', retailers:['target','walmart','bestbuy'], past:false },
+  { date:'2026-05-22', title:'Chaos Rising PC Elite Trainer Box', desc:'Pokemon Center exclusive with 11 packs + stamped PC promo. Usually sells out within minutes.', cats:['product'], tags:['Product Wave','Confirmed'], msrp:'$64.99', retailers:['pc'], past:false },
+  { date:'2026-05-22', title:'Chaos Rising Booster Bundle', desc:'6-pack booster bundle at accessible price point.', cats:['product'], tags:['Product Wave','Confirmed'], msrp:'$26.99', retailers:['target','walmart','bestbuy'], past:false },
+  { date:'2026-05-22', title:'Chaos Rising 3-Pack Blister', desc:'Charmeleon foil promo + 3 booster packs. Charmeleon variant confirmed from retailer listings.', cats:['product'], tags:['Product Wave','Confirmed'], msrp:'$14.99', retailers:['target','walmart','bestbuy'], past:false },
+
+  // ── JUNE 2026 ──
+  { date:'2026-06-19', title:'First Partner Illustration Collection Series 2', desc:'Johto, Unova, and Galar starters. Follows up the Kanto/Sinnoh/Alola version from March. Illustration Rare style promos.', cats:['collection','promo'], tags:['Collection','Confirmed'], msrp:'$14.99', retailers:['target','walmart','bestbuy','pc'], past:false },
+
+  // ── JULY 2026 ──
+  { date:'2026-07-04', title:'Pitch Black — Prerelease Begins', desc:'Prereleases begin at participating LGS. Mega Darkrai ex themed set.', cats:['prerelease','event'], tags:['Prerelease','Confirmed'], msrp:'$14.99', retailers:['lgs'], past:false },
+  { date:'2026-07-12', title:'Pitch Black — Prerelease Ends', desc:'Last day of Pitch Black prerelease events.', cats:['prerelease','event'], tags:['Prerelease','Confirmed'], msrp:'', retailers:['lgs'], past:false },
+  { date:'2026-07-17', title:'Pitch Black — Launch Day 🔥', desc:'5th Mega Evolution set. English adaptation of Japan\'s Abyss Eye. Stars Mega Darkrai ex. Features Dark Bell Trainer card + new Malamar. Smaller set.', cats:['set'], tags:['Set Release','Confirmed'], msrp:'', retailers:['target','walmart','bestbuy','pc'], past:false },
+
+  // ── AUGUST / SEPTEMBER 2026 ──
+  { date:'2026-09-16', title:'30th Celebration Set — Japan Launch', desc:'Japanese release. First-ever worldwide simultaneous launch follows Sep 18. All-foil 6-card packs with brand-new rarity. Features Pikachu, Mewtwo, Mew.', cats:['set','event'], tags:['Set Release','Confirmed','Milestone'], msrp:'', retailers:[], past:false },
+  { date:'2026-09-18', title:'30th Celebration Set — Worldwide Launch 🎉', desc:'Historic first simultaneous worldwide Pokémon TCG release. All-foil packs, 6 cards per pack, new rarity type. Premium Deck Set Espeon & Umbreon releases same day.', cats:['set','event'], tags:['Set Release','Confirmed','Milestone'], msrp:'', retailers:['target','walmart','bestbuy','pc'], past:false },
+  { date:'2026-09-18', title:'30th Celebration Premium Deck Set Espeon & Umbreon', desc:'Premium product releasing alongside 30th Celebration set on the same day.', cats:['product'], tags:['Product Wave','Confirmed'], msrp:'', retailers:['target','walmart','bestbuy','pc'], past:false },
+
+  // ── OCTOBER 2026 ──
+  { date:'2026-10-16', title:'30th Celebration Card Sets (x9)', desc:'Nine "30th Celebration Card Sets" featuring all 27 Starter Pokémon. Collector-focused products.', cats:['collection'], tags:['Collection','Confirmed'], msrp:'', retailers:['target','walmart','bestbuy','pc'], past:false },
+
+  // ── RUMORED ──
+  { date:'2026-08-01', title:'Storm Emerald (Mega Rayquaza ex) — Expected', desc:'RUMORED: Based on Japan\'s Storm Emeralda set releasing July 31 JP. Mega Rayquaza ex expected as headliner — one of the most popular Pokémon ever. No English date confirmed yet.', cats:['set','rumored'], tags:['Rumored','Set Release'], msrp:'', retailers:[], past:false },
+  { date:'2026-11-01', title:'Aura Seeker (Mega Lucario Z?) — Rumored', desc:'RUMORED: Possible late 2026 set featuring Mega Lucario Z. No official announcement. Based on Japanese set rumor data.', cats:['set','rumored'], tags:['Rumored','Set Release'], msrp:'', retailers:[], past:false },
+];
+
+let catFilter = 'all';
+let calMonth = 4; // May (0-indexed)
+let calYear = 2026;
+
+// ── Helpers ──
+function daysUntil(dateStr) {
+  const d = new Date(dateStr + 'T12:00:00');
+  const diff = Math.round((d - TODAY) / 86400000);
+  return diff;
+}
+
+function daysLabel(diff) {
+  if (diff < 0) return { txt: `${Math.abs(diff)}d ago`, cls: 'past' };
+  if (diff === 0) return { txt: 'TODAY', cls: 'today-lbl' };
+  if (diff <= 14) return { txt: `In ${diff}d`, cls: 'soon' };
+  return { txt: `In ${diff}d`, cls: '' };
+}
+
+function fmtDate(str) {
+  const [y,m,d] = str.split('-').map(Number);
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return `${months[m-1]} ${d}`;
+}
+
+function filterCat(cat, btn) {
+  catFilter = cat;
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderTimeline();
+}
+
+function retBadge(r) {
+  const map = { target:'TARGET', walmart:'WALMART', bestbuy:'BEST BUY', pc:'PKMN CTR', lgs:'LOCAL LGS' };
+  const cls = { target:'ret-target', walmart:'ret-walmart', bestbuy:'ret-bestbuy', pc:'ret-pc', lgs:'ret-lgs' };
+  return `<span class="tl-ret-badge ${cls[r]||''}">${map[r]||r}</span>`;
+}
+
+// ── Timeline ──
+function renderTimeline() {
+  const tl = document.getElementById('timeline');
+  const filtered = EVENTS.filter(e => {
+    if (catFilter === 'all') return true;
+    if (catFilter === 'rumored') return e.cats.includes('rumored');
+    return e.cats.includes(catFilter);
+  });
+
+  // Group by month
+  const months = {};
+  filtered.forEach(e => {
+    const [y,m] = e.date.split('-');
+    const key = `${y}-${m}`;
+    if (!months[key]) months[key] = [];
+    months[key].push(e);
+  });
+
+  const monthNames = ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  let html = '';
+
+  Object.keys(months).sort().forEach(key => {
+    const [y,m] = key.split('-').map(Number);
+    html += `<div class="month-group"><div class="month-label">${monthNames[m]} ${y}</div>`;
+    months[key].sort((a,b) => a.date.localeCompare(b.date)).forEach((e, i) => {
+      const diff = daysUntil(e.date);
+      const dl = daysLabel(diff);
+      const cardCls = e.past ? ' past' : diff === 0 ? ' today' : diff <= 14 && diff >= 0 ? ' soon' : '';
+      const dotCls = e.cats.includes('set') ? 'dot-set' : e.cats.includes('prerelease') ? 'dot-prerelease' : e.cats.includes('collection') ? 'dot-collection' : e.cats.includes('promo') ? 'dot-promo' : e.cats.includes('rumored') ? 'dot-rumored' : 'dot-product';
+
+      const tagHtml = e.tags.map(t => {
+        const cls = t === 'Set Release' ? 'tag-set' : t === 'Prerelease' ? 'tag-prerelease' : t === 'Product Wave' ? 'tag-product' : t === 'Collection' ? 'tag-collection' : t === 'Rumored' ? 'tag-rumored' : t === 'Confirmed' ? 'tag-confirmed' : t === 'Milestone' ? 'tag-milestone' : 'tag-promo';
+        return `<span class="tl-tag ${cls}">${t}</span>`;
+      }).join('');
+
+      html += `<div class="tl-event" style="animation-delay:${i*.04}s">
+        <div class="tl-dot ${dotCls}"></div>
+        <div class="tl-card${cardCls}">
+          <div class="tl-date-col">
+            <div class="tl-date">${fmtDate(e.date)}</div>
+            <div class="tl-days ${dl.cls}">${dl.txt}</div>
+          </div>
+          <div class="tl-main">
+            <div class="tl-title">${e.title}</div>
+            <div class="tl-desc">${e.desc}</div>
+            <div class="tl-tags">${tagHtml}${e.msrp ? `<span class="tl-tag tag-product">MSRP ${e.msrp}</span>` : ''}</div>
+          </div>
+          <div class="tl-retailer-col">
+            <div class="tl-retailers">${e.retailers.map(retBadge).join('')}</div>
+          </div>
+        </div>
+      </div>`;
+    });
+    html += '</div>';
+  });
+
+  tl.innerHTML = html || '<div style="padding:40px;text-align:center;font-family:DM Mono,monospace;font-size:.75rem;color:var(--muted)">No events match this filter</div>';
+}
+
+// ── Calendar ──
+function renderCalendar() {
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  document.getElementById('cal-label').textContent = `${months[calMonth]} ${calYear}`;
+
+  // Headers
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  document.getElementById('cal-headers').innerHTML = days.map(d => `<div class="cal-header">${d}</div>`).join('');
+
+  // Build calendar
+  const first = new Date(calYear, calMonth, 1).getDay();
+  const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+  const daysInPrev = new Date(calYear, calMonth, 0).getDate();
+
+  // Map events to dates
+  const eventsByDate = {};
+  EVENTS.forEach(e => {
+    const [y,m,d] = e.date.split('-').map(Number);
+    if (y === calYear && m - 1 === calMonth) {
+      if (!eventsByDate[d]) eventsByDate[d] = [];
+      eventsByDate[d].push(e);
+    }
+  });
+
+  let cells = '';
+  // Prev month padding
+  for (let i = first - 1; i >= 0; i--) {
+    cells += `<div class="cal-day other-month"><div class="cal-day-num">${daysInPrev - i}</div></div>`;
+  }
+  // Current month
+  for (let d = 1; d <= daysInMonth; d++) {
+    const isToday = calYear === TODAY.getFullYear() && calMonth === TODAY.getMonth() && d === TODAY.getDate();
+    const evts = eventsByDate[d] || [];
+    const hasEvt = evts.length > 0;
+    cells += `<div class="cal-day${isToday?' today':''}${hasEvt?' has-event':''}">
+      <div class="cal-day-num">${d}</div>
+      ${evts.slice(0,3).map(e => `<div class="cal-event-dot">${e.cats.includes('set')?'🔥':e.cats.includes('prerelease')?'🎮':e.cats.includes('product')?'📦':'📌'} ${e.title.replace(' — Launch Day 🔥','').replace(' — Worldwide Launch 🎉','').substring(0,20)}</div>`).join('')}
+      ${evts.length > 3 ? `<div class="cal-event-dot" style="color:var(--muted)">+${evts.length-3} more</div>` : ''}
+    </div>`;
+  }
+  // Next month padding
+  const remaining = 42 - first - daysInMonth;
+  for (let d = 1; d <= remaining; d++) {
+    cells += `<div class="cal-day other-month"><div class="cal-day-num">${d}</div></div>`;
+  }
+
+  document.getElementById('cal-days').innerHTML = cells;
+}
+
+function prevMonth() {
+  calMonth--;
+  if (calMonth < 0) { calMonth = 11; calYear--; }
+  renderCalendar();
+}
+function nextMonth() {
+  calMonth++;
+  if (calMonth > 11) { calMonth = 0; calYear++; }
+  renderCalendar();
+}
+
+// ── Load from JSON (written by news_scraper.py) ──
+async function loadEvents() {
+  try {
+    const r = await fetch('../data/future_events.json?t=' + Date.now());
+    if (r.ok) {
+      const data = await r.json();
+      if (data.events && data.events.length) {
+        EVENTS.length = 0;
+        data.events.forEach(e => EVENTS.push(e));
+        const updated = new Date(data.last_updated);
+        document.querySelector('header div:last-child').textContent =
+          'Updated: ' + updated.toLocaleString();
+      }
+    }
+  } catch(e) {
+    console.log('Using static event data:', e.message);
+  }
+  renderCalendar();
+  renderTimeline();
+}
+
+// Auto-refresh every 6 hours
+setInterval(loadEvents, 6 * 60 * 60 * 1000);
+
+// ── Init ──
+loadEvents();
+</script>
+</body>
+</html>
