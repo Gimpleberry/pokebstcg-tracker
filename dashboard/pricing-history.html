@@ -6,180 +6,325 @@
 <title>Keith's PokeBS -- Price History</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0a0a0f;--surface:#111118;--surface2:#18181f;--border:#2a2a38;--accent:#f0c040;--accent2:#e8503a;--green:#3ddc84;--purple:#a78bfa;--blue:#60a5fa;--muted:#555570;--text:#e8e8f0;--text2:#9090a8}
+:root{
+  --bg:#0a0a0f;--surface:#111118;--surface2:#18181f;--border:#2a2a38;
+  --accent:#f0c040;--accent2:#e8503a;--green:#3ddc84;
+  --purple:#a78bfa;--blue:#60a5fa;--muted:#555570;--text:#e8e8f0;--text2:#9090a8;
+  --target:#e8503a;--walmart:#0071ce;--bestbuy:#ffd200;--pc:#e05a6a;
+}
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh}
 body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.08) 2px,rgba(0,0,0,.08) 4px);pointer-events:none;z-index:999}
+
+/* -- Header -- */
 header{display:flex;align-items:center;justify-content:space-between;padding:24px 40px;border-bottom:1px solid var(--border);background:rgba(10,10,15,.95);backdrop-filter:blur(12px);position:sticky;top:0;z-index:100}
 .logo{display:flex;align-items:baseline;gap:10px}
 .logo-main{font-family:'Bebas Neue',sans-serif;font-size:2.2rem;letter-spacing:.04em;color:var(--accent);text-shadow:0 0 30px rgba(240,192,64,.4)}
 .logo-sub{font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted);letter-spacing:.2em;text-transform:uppercase}
-.nav-bar{display:flex;align-items:center;gap:4px;padding:0 40px;background:var(--surface2);border-bottom:1px solid var(--border);flex-wrap:wrap}
-.nav-link{font-family:'DM Mono',monospace;font-size:.72rem;letter-spacing:.15em;text-transform:uppercase;padding:12px 18px;color:var(--muted);text-decoration:none;border-bottom:2px solid transparent;transition:all .15s}
-.nav-link:hover{color:var(--text)}.nav-link.active{color:var(--accent);border-bottom-color:var(--accent)}
-main{padding:40px;max-width:1500px;margin:0 auto}
+#last-updated{font-family:'DM Mono',monospace;font-size:.68rem;color:var(--muted)}
+
+/* -- Nav -- */
+.nav-bar{display:flex;align-items:center;gap:4px;padding:0 40px;background:var(--surface2);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none}
+.nav-bar::-webkit-scrollbar{display:none}
+.nav-link{font-family:'DM Mono',monospace;font-size:.72rem;letter-spacing:.15em;text-transform:uppercase;padding:12px 18px;color:var(--muted);text-decoration:none;border-bottom:2px solid transparent;white-space:nowrap;transition:all .15s}
+.nav-link:hover{color:var(--text)}
+.nav-link.active{color:var(--accent);border-bottom-color:var(--accent)}
+
+/* -- Main -- */
+main{padding:40px;max-width:1400px;margin:0 auto}
 .page-title{font-family:'Bebas Neue',sans-serif;font-size:1.8rem;letter-spacing:.06em;color:var(--text2);margin-bottom:4px}
 .page-subtitle{font-family:'DM Mono',monospace;font-size:.72rem;color:var(--muted);letter-spacing:.1em;margin-bottom:28px}
 
-/* Stats bar */
-.stats-bar{display:flex;gap:14px;margin-bottom:28px;flex-wrap:wrap}
-.stat-chip{background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:12px 18px;flex:1;min-width:130px}
-.stat-label{font-family:'DM Mono',monospace;font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
-.stat-value{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:.04em;color:var(--accent)}
-.stat-sub{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--muted)}
+/* -- KPI Bar -- */
+.kpi-bar{display:grid;grid-template-columns:repeat(6,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-bottom:28px}
+.kpi-card{background:var(--surface);padding:18px 20px;position:relative;overflow:hidden}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.kpi-card:nth-child(1)::before{background:var(--blue)}
+.kpi-card:nth-child(2)::before{background:var(--green)}
+.kpi-card:nth-child(3)::before{background:var(--accent)}
+.kpi-card:nth-child(4)::before{background:var(--accent2)}
+.kpi-card:nth-child(5)::before{background:var(--purple)}
+.kpi-card:nth-child(6)::before{background:var(--muted)}
+.kpi-label{font-family:'DM Mono',monospace;font-size:.58rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.kpi-value{font-family:'Bebas Neue',sans-serif;font-size:1.8rem;letter-spacing:.04em;line-height:1;color:var(--text)}
+.kpi-value.green{color:var(--green)}
+.kpi-value.accent{color:var(--accent)}
+.kpi-value.red{color:var(--accent2)}
+.kpi-sub{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--muted);margin-top:3px}
+.kpi-sub.green{color:var(--green)}
 
-/* Explorer controls */
-.explorer-controls{background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:20px;margin-bottom:20px;display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end}
-.ctrl-group{display:flex;flex-direction:column;gap:5px}
-.ctrl-label{font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
-.ctrl-input,.ctrl-select{font-family:'DM Mono',monospace;font-size:.72rem;background:var(--surface2);border:1px solid var(--border);border-radius:3px;padding:8px 12px;color:var(--text);outline:none;min-width:160px}
-.ctrl-input:focus,.ctrl-select:focus{border-color:var(--accent)}
-.ctrl-input::placeholder{color:var(--muted)}
-.sort-btn{font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;padding:8px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:3px;color:var(--muted);cursor:pointer;transition:all .15s}
+/* -- Section header -- */
+.section-hdr{display:flex;align-items:center;gap:14px;margin-bottom:16px;margin-top:32px}
+.section-title{font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:.1em;color:var(--text2)}
+.section-line{flex:1;height:1px;background:var(--border)}
+
+/* -- Two-column charts -- */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:28px}
+@media(max-width:1000px){.two-col{grid-template-columns:1fr}}
+
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:20px}
+.chart-title{font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+.chart-card canvas{display:block;width:100%}
+
+/* Retailer legend */
+.ret-legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px}
+.ret-leg{display:flex;align-items:center;gap:6px;font-family:'DM Mono',monospace;font-size:.62rem;color:var(--muted)}
+.ret-dot{width:8px;height:8px;border-radius:1px}
+.d-target{background:var(--target)}.d-walmart{background:var(--walmart)}
+.d-bestbuy{background:var(--bestbuy)}.d-pc{background:var(--pc)}
+
+/* Best deals strip */
+.deals-strip{display:flex;gap:10px;overflow-x:auto;scrollbar-width:none;padding-bottom:4px;margin-bottom:28px}
+.deals-strip::-webkit-scrollbar{display:none}
+.deal-card{flex-shrink:0;min-width:200px;background:var(--surface);border:1px solid rgba(61,220,132,.2);border-top:2px solid var(--green);border-radius:4px;padding:12px 16px;cursor:pointer;transition:border-color .15s,transform .15s}
+.deal-card:hover{transform:translateY(-2px);border-color:rgba(61,220,132,.4)}
+.deal-saving{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:.04em;color:var(--green);line-height:1;margin-bottom:2px}
+.deal-label{font-family:'DM Mono',monospace;font-size:.58rem;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px}
+.deal-name{font-size:.78rem;font-weight:500;line-height:1.3;margin-bottom:3px}
+.deal-retailer{font-family:'DM Mono',monospace;font-size:.62rem;color:var(--muted)}
+.deal-price{font-family:'DM Mono',monospace;font-size:.7rem;color:var(--accent)}
+
+/* Controls */
+.controls-row{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.search-input{font-family:'DM Mono',monospace;font-size:.72rem;background:var(--surface);border:1px solid var(--border);border-radius:3px;padding:8px 12px;color:var(--text);outline:none;width:220px;transition:border-color .15s}
+.search-input:focus{border-color:var(--accent)}
+.search-input::placeholder{color:var(--muted)}
+.filter-select{font-family:'DM Mono',monospace;font-size:.68rem;background:var(--surface);border:1px solid var(--border);border-radius:3px;padding:8px 12px;color:var(--text2);outline:none;cursor:pointer;transition:border-color .15s}
+.filter-select:focus{border-color:var(--accent)}
+.filter-select option{background:var(--surface2)}
+.sort-btn{font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:3px;color:var(--muted);cursor:pointer;transition:all .15s}
 .sort-btn.active{border-color:var(--accent);color:var(--accent)}
-.sort-btn:hover{border-color:rgba(240,192,64,.5);color:var(--text)}
+.sort-btn:hover{border-color:rgba(240,192,64,.4);color:var(--text2)}
+.ml-auto{margin-left:auto}
+.exp-btn{font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;padding:8px 14px;border-radius:3px;cursor:pointer;transition:all .15s}
+.exp-csv{border:1px solid rgba(96,165,250,.3);color:var(--blue);background:rgba(96,165,250,.06)}
+.exp-csv:hover{background:rgba(96,165,250,.12)}
+.exp-sheets{border:1px solid rgba(61,220,132,.3);color:var(--green);background:rgba(61,220,132,.06)}
+.exp-sheets:hover{background:rgba(61,220,132,.12)}
 
-/* Export buttons */
-.export-row{display:flex;gap:8px;margin-left:auto;flex-wrap:wrap}
-.exp-btn{font-family:'DM Mono',monospace;font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;padding:8px 14px;border-radius:3px;cursor:pointer;transition:all .15s;border:1px solid}
-.exp-csv{background:rgba(96,165,250,.08);border-color:rgba(96,165,250,.25);color:var(--blue)}
-.exp-csv:hover{background:rgba(96,165,250,.15)}
-.exp-sheets{background:rgba(61,220,132,.08);border-color:rgba(61,220,132,.25);color:var(--green)}
-.exp-sheets:hover{background:rgba(61,220,132,.15)}
+/* Sort row */
+.sort-row{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}
 
-/* Result count */
-.result-meta{font-family:'DM Mono',monospace;font-size:.68rem;color:var(--muted);margin-bottom:12px;display:flex;align-items:center;gap:16px}
-.result-count{color:var(--accent)}
+/* Table */
+.table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:6px}
+table{width:100%;border-collapse:collapse;min-width:780px}
+thead th{font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);background:var(--surface2);padding:10px 14px;text-align:left;border-bottom:1px solid var(--border);cursor:pointer;user-select:none;white-space:nowrap;transition:color .15s}
+thead th:hover{color:var(--text2)}
+thead th.sorted{color:var(--accent)}
+tbody tr{background:var(--surface);border-bottom:1px solid rgba(42,42,56,.5);transition:background .1s;cursor:pointer}
+tbody tr:hover{background:var(--surface2)}
+tbody tr:last-child{border-bottom:none}
+tbody tr.selected-row{background:rgba(240,192,64,.04);border-left:2px solid var(--accent)}
+tbody td{padding:10px 14px;font-size:.82rem;vertical-align:middle}
+.td-mono{font-family:'DM Mono',monospace;font-size:.74rem}
+.td-name{font-weight:500;max-width:240px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ret-badge{display:inline-flex;align-items:center;gap:5px;font-family:'DM Mono',monospace;font-size:.62rem;padding:2px 8px;border-radius:2px}
+.rb-target{background:rgba(232,80,58,.1);color:#ff8a80;border:1px solid rgba(232,80,58,.2)}
+.rb-walmart{background:rgba(0,113,206,.1);color:#5ab5ff;border:1px solid rgba(0,113,206,.2)}
+.rb-bestbuy{background:rgba(255,210,0,.08);color:#ffe566;border:1px solid rgba(255,210,0,.15)}
+.rb-pokemoncenter{background:rgba(224,90,106,.1);color:#ff8a80;border:1px solid rgba(224,90,106,.2)}
+.status-badge{font-family:'DM Mono',monospace;font-size:.58rem;padding:2px 7px;border-radius:2px}
+.sb-msrp{background:rgba(61,220,132,.1);color:var(--green);border:1px solid rgba(61,220,132,.2)}
+.sb-above{background:rgba(232,80,58,.08);color:#ff8a80;border:1px solid rgba(232,80,58,.2)}
+.sb-na{background:rgba(85,85,112,.1);color:var(--muted);border:1px solid var(--border)}
+.sb-stock{background:rgba(61,220,132,.08);color:var(--green);border:1px solid rgba(61,220,132,.15)}
+.td-saving{font-family:'DM Mono',monospace;font-size:.72rem}
+.saving-pos{color:var(--green)}.saving-neg{color:var(--accent2)}.saving-zero{color:var(--muted)}
 
-/* Price table */
-.price-table{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--border);border-radius:4px;overflow:hidden}
-.price-table thead tr{background:var(--surface2);border-bottom:1px solid var(--border)}
-.price-table thead th{font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);padding:11px 14px;text-align:left;white-space:nowrap;cursor:pointer;user-select:none;transition:color .15s}
-.price-table thead th:hover{color:var(--text)}
-.price-table thead th.sorted{color:var(--accent)}
-.th-right{text-align:right}
-.price-table tbody tr{border-bottom:1px solid var(--border);transition:background .15s}
-.price-table tbody tr:last-child{border-bottom:none}
-.price-table tbody tr:hover{background:rgba(255,255,255,.025)}
-.price-table td{padding:10px 14px;vertical-align:middle;font-size:.82rem}
-
-/* Sparkline */
+/* Sparkline col */
+.spark-wrap{width:80px}
 canvas.spark{display:block}
 
-/* Badges */
-.badge{font-family:'DM Mono',monospace;font-size:.58rem;padding:2px 7px;border-radius:2px;margin-left:4px}
-.b-msrp{background:rgba(61,220,132,.1);color:var(--green);border:1px solid rgba(61,220,132,.2)}
-.b-above{background:rgba(232,80,58,.08);color:#ff8a80;border:1px solid rgba(232,80,58,.2)}
-.b-na{background:rgba(85,85,112,.1);color:var(--muted);border:1px solid var(--border)}
-.b-stock{background:rgba(61,220,132,.08);color:var(--green);border:1px solid rgba(61,220,132,.2);font-size:.58rem;padding:2px 7px;border-radius:2px}
+.no-data-row td{text-align:center;padding:48px 20px;color:var(--muted);font-family:'DM Mono',monospace;font-size:.75rem}
 
-/* Retailer dot */
-.ret-dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px;flex-shrink:0}
-.d-target{background:#e8503a}.d-walmart{background:#0071ce}
-.d-bestbuy{background:#ffd200}.d-pokemoncenter{background:#e05a6a}
+/* Result meta */
+.result-meta{font-family:'DM Mono',monospace;font-size:.65rem;color:var(--muted);margin-top:8px}
+.result-accent{color:var(--accent)}
 
-/* Detail panel */
-.detail-panel{background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:20px;margin-top:20px;display:none}
+/* -- Detail panel -- */
+.detail-panel{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:24px;margin-top:16px;display:none;animation:slideIn .15s ease}
 .detail-panel.open{display:block}
-.detail-title{font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:.06em;color:var(--text);margin-bottom:4px}
-.detail-sub{font-family:'DM Mono',monospace;font-size:.65rem;color:var(--muted);margin-bottom:16px}
-.detail-chart-wrap{width:100%;height:120px;position:relative}
-canvas.detail-chart{width:100%;height:120px}
+@keyframes slideIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+.detail-top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:20px;flex-wrap:wrap}
+.detail-title{font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:.04em}
+.detail-close{border:none;background:none;cursor:pointer;color:var(--muted);font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;padding:5px 10px;border:1px solid var(--border);border-radius:3px;transition:all .15s}
+.detail-close:hover{border-color:var(--text2);color:var(--text)}
+.detail-kpis{display:flex;gap:20px;flex-wrap:wrap;margin-bottom:16px}
+.dk{display:flex;flex-direction:column;gap:2px}
+.dk-label{font-family:'DM Mono',monospace;font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.dk-val{font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:.04em;color:var(--text)}
+.dk-val.green{color:var(--green)}.dk-val.red{color:var(--accent2)}.dk-val.accent{color:var(--accent)}
+.detail-chart-wrap{width:100%;height:140px;position:relative}
+canvas.detail-chart{width:100%;height:140px}
 
-/* No data */
-.no-data{text-align:center;padding:48px;font-family:'DM Mono',monospace;font-size:.75rem;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:4px}
-.no-data code{background:var(--surface2);padding:2px 8px;border-radius:2px;color:var(--accent)}
+/* Sheets modal */
+.sheets-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:200;align-items:center;justify-content:center}
+.sheets-modal.open{display:flex}
+.sheets-box{background:var(--surface2);border:1px solid #3a3a50;border-radius:6px;padding:32px;max-width:500px;width:90%}
+.sheets-title{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:var(--accent);margin-bottom:16px}
+.sheets-body{font-size:.82rem;color:var(--text2);line-height:1.7;margin-bottom:20px}
+.sheets-body code{font-family:'DM Mono',monospace;background:var(--surface);padding:3px 8px;border-radius:3px;color:var(--accent);display:inline-block;margin:4px 0}
+.sheets-body a{color:var(--accent);text-decoration:none}
+.sheets-close{font-family:'DM Mono',monospace;font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;padding:8px 18px;background:var(--surface);border:1px solid var(--border);border-radius:3px;color:var(--muted);cursor:pointer;transition:all .15s}
+.sheets-close:hover{border-color:var(--text2);color:var(--text)}
 
 /* Loading */
-.loading{text-align:center;padding:50px;font-family:'DM Mono',monospace;font-size:.75rem;color:var(--muted)}
-.spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px}
+.loading{text-align:center;padding:60px 20px;font-family:'DM Mono',monospace;font-size:.75rem;color:var(--muted)}
+.spinner{width:28px;height:28px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px}
 @keyframes spin{to{transform:rotate(360deg)}}
+
+@media(max-width:768px){header{padding:16px 20px}main{padding:20px}.logo-main{font-size:1.6rem}.nav-bar{padding:0 20px}.kpi-bar{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:500px){.kpi-bar{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
 <body>
-<header>
-  <div class="logo"><span class="logo-main">Keith's PokeBS</span><span class="logo-sub">Price History</span></div>
-  <div style="font-family:'DM Mono',monospace;font-size:.65rem;color:var(--muted)" id="last-updated">Loading...</div>
-</header>
-<nav class="nav-bar">
-  <a class="nav-link" href="dashboard.html">Tracker</a>
-  <a class="nav-link" href="info.html">Set Info</a>
-  <a class="nav-link" href="pricing.html">Pricing</a>
-  <a class="nav-link" href="binder.html">Binder</a>
-  <a class="nav-link" href="future.html">Future</a>
-  <a class="nav-link" href="retail-drops.html">Retail Drops</a>
-  <a class="nav-link" href="local.html">🗺️ Local</a>
-  <a class="nav-link active" href="pricing-history.html">Price History</a>
-  <a class="nav-link" href="help.html">Help</a>
-</nav>
-<main>
-  <div class="page-title">Price History Explorer</div>
-  <div class="page-subtitle">30-day display -- 90 days retained -- logged hourly -- click any column header to sort</div>
 
-  <!-- Stats -->
-  <div class="stats-bar">
-    <div class="stat-chip"><div class="stat-label">Products</div><div class="stat-value" id="s-products">--</div><div class="stat-sub">with price data</div></div>
-    <div class="stat-chip"><div class="stat-label">Records</div><div class="stat-value" id="s-records">--</div><div class="stat-sub">30-day total</div></div>
-    <div class="stat-chip"><div class="stat-label">At/Below MSRP</div><div class="stat-value" id="s-deals">--</div><div class="stat-sub">currently</div></div>
-    <div class="stat-chip"><div class="stat-label">In Stock Now</div><div class="stat-value" id="s-instock">--</div><div class="stat-sub">products</div></div>
-    <div class="stat-chip"><div class="stat-label">DB Size</div><div class="stat-value" id="s-size">--</div><div class="stat-sub">price_history.db</div></div>
-    <div class="stat-chip"><div class="stat-label">Oldest Record</div><div class="stat-value" id="s-oldest" style="font-size:1rem;padding-top:4px">--</div><div class="stat-sub">first log date</div></div>
+<header>
+  <div class="logo">
+    <span class="logo-main">Keith's PokeBS</span>
+    <span class="logo-sub">Price History</span>
+  </div>
+  <div id="last-updated">Loading...</div>
+</header>
+
+<nav class="nav-bar">
+  <a class="nav-link" href="dashboard.html">&#128225; Tracker</a>
+  <a class="nav-link" href="info.html">&#128218; Set Info</a>
+  <a class="nav-link" href="pricing.html">&#128176; Pricing</a>
+  <a class="nav-link" href="binder.html">&#128194; Binder</a>
+  <a class="nav-link" href="calendar.html">&#128197; Calendar</a>
+  <a class="nav-link" href="retail-drops.html">&#128722; Retail Drops</a>
+  <a class="nav-link" href="local.html">&#128506; Local</a>
+  <a class="nav-link" href="invest.html">&#128200; Invest</a>
+  <a class="nav-link active" href="pricing-history.html">Price History</a>
+  <a class="nav-link" href="help.html">&#10067; Help</a>
+</nav>
+
+<main>
+  <div class="page-title">Price History</div>
+  <div class="page-subtitle">Hourly price tracking across all retailers -- 30-day history, MSRP comparison, deal alerts</div>
+
+  <!-- KPI Bar -->
+  <div class="kpi-bar" id="kpi-bar">
+    <div class="kpi-card">
+      <div class="kpi-label">Products Tracked</div>
+      <div class="kpi-value" id="k-products">--</div>
+      <div class="kpi-sub" id="k-retailers">across all retailers</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">In Stock Now</div>
+      <div class="kpi-value green" id="k-instock">--</div>
+      <div class="kpi-sub green" id="k-instock-sub">of tracked products</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">At / Below MSRP</div>
+      <div class="kpi-value accent" id="k-msrp">--</div>
+      <div class="kpi-sub" id="k-msrp-sub">buy opportunities</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Best Deal Right Now</div>
+      <div class="kpi-value red" id="k-deal">--</div>
+      <div class="kpi-sub" id="k-deal-sub">below MSRP</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Records Logged</div>
+      <div class="kpi-value" id="k-records">--</div>
+      <div class="kpi-sub" id="k-size">price_history.db</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Tracking Since</div>
+      <div class="kpi-value" id="k-since" style="font-size:1rem;padding-top:6px">--</div>
+      <div class="kpi-sub" id="k-since-sub">first log date</div>
+    </div>
   </div>
 
-  <!-- Explorer controls -->
-  <div class="explorer-controls">
-    <div class="ctrl-group">
-      <div class="ctrl-label">Search</div>
-      <input type="text" class="ctrl-input" id="search" placeholder="Product name..." oninput="applyFilters()">
-    </div>
-    <div class="ctrl-group">
-      <div class="ctrl-label">Retailer</div>
-      <select class="ctrl-select" id="f-retailer" onchange="applyFilters()">
-        <option value="all">All Retailers</option>
-        <option value="target">Target</option>
-        <option value="walmart">Walmart</option>
-        <option value="bestbuy">Best Buy</option>
-        <option value="pokemoncenter">Pokemon Center</option>
-      </select>
-    </div>
-    <div class="ctrl-group">
-      <div class="ctrl-label">Status</div>
-      <select class="ctrl-select" id="f-status" onchange="applyFilters()">
-        <option value="all">All Products</option>
-        <option value="in_stock">In Stock Now</option>
-        <option value="at_msrp">At or Below MSRP</option>
-        <option value="above_msrp">Above MSRP</option>
-      </select>
-    </div>
-    <div class="ctrl-group">
-      <div class="ctrl-label">Sort By</div>
-      <div style="display:flex;gap:5px;flex-wrap:wrap">
-        <button class="sort-btn active" id="sort-name"    onclick="setSort('name',this)">Name</button>
-        <button class="sort-btn"        id="sort-price"   onclick="setSort('price',this)">Price</button>
-        <button class="sort-btn"        id="sort-min"     onclick="setSort('min',this)">30d Min</button>
-        <button class="sort-btn"        id="sort-savings" onclick="setSort('savings',this)">vs MSRP</button>
-        <button class="sort-btn"        id="sort-stock"   onclick="setSort('stock',this)">In Stock</button>
+  <!-- Charts row -->
+  <div class="section-hdr">
+    <div class="section-title">Live Snapshot</div>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="two-col">
+    <!-- Retailer breakdown -->
+    <div class="chart-card">
+      <div class="chart-title">Stock Status by Retailer</div>
+      <canvas id="chart-retailer" height="160"></canvas>
+      <div class="ret-legend">
+        <div class="ret-leg"><div class="ret-dot d-target"></div>Target</div>
+        <div class="ret-leg"><div class="ret-dot d-walmart"></div>Walmart</div>
+        <div class="ret-leg"><div class="ret-dot d-bestbuy"></div>Best Buy</div>
+        <div class="ret-leg"><div class="ret-dot d-pc"></div>Pokemon Center</div>
       </div>
     </div>
-    <div class="export-row">
-      <button class="exp-btn exp-csv"    onclick="downloadCSV()">Download CSV</button>
-      <button class="exp-btn exp-sheets" onclick="openSheetsInstructions()">Google Sheets</button>
+
+    <!-- Price vs MSRP distribution -->
+    <div class="chart-card">
+      <div class="chart-title">Price vs MSRP Distribution</div>
+      <canvas id="chart-msrp" height="160"></canvas>
+      <div class="ret-legend" id="msrp-legend"></div>
     </div>
   </div>
 
-  <!-- Results -->
-  <div class="result-meta">
-    <span>Showing <span class="result-count" id="result-count">0</span> products</span>
-    <span id="result-note" style="color:var(--muted)"></span>
+  <!-- Best deals strip -->
+  <div class="section-hdr">
+    <div class="section-title">Best Deals Now</div>
+    <div class="section-line"></div>
   </div>
-  <div id="table-wrap">
-    <div class="loading"><div class="spinner"></div>Loading price history...</div>
+  <div class="deals-strip" id="deals-strip">
+    <div style="font-family:'DM Mono',monospace;font-size:.72rem;color:var(--muted);padding:20px 0">Loading deals...</div>
   </div>
 
-  <!-- Detail panel (shown on row click) -->
+  <!-- Product explorer -->
+  <div class="section-hdr">
+    <div class="section-title">Product Explorer</div>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="controls-row">
+    <input type="text" class="search-input" id="search" placeholder="Search product name..." oninput="applyFilters()">
+    <select class="filter-select" id="f-retailer" onchange="applyFilters()">
+      <option value="all">All Retailers</option>
+      <option value="target">Target</option>
+      <option value="walmart">Walmart</option>
+      <option value="bestbuy">Best Buy</option>
+      <option value="pokemoncenter">Pokemon Center</option>
+    </select>
+    <select class="filter-select" id="f-status" onchange="applyFilters()">
+      <option value="all">All Products</option>
+      <option value="in_stock">In Stock Now</option>
+      <option value="at_msrp">At / Below MSRP</option>
+      <option value="above_msrp">Above MSRP</option>
+    </select>
+    <div class="ml-auto" style="display:flex;gap:8px">
+      <button class="exp-btn exp-csv"    onclick="downloadCSV()">CSV</button>
+      <button class="exp-btn exp-sheets" onclick="document.getElementById('sheets-modal').classList.add('open')">G. Sheets</button>
+    </div>
+  </div>
+
+  <div class="sort-row">
+    <span style="font-family:'DM Mono',monospace;font-size:.6rem;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;align-self:center">Sort:</span>
+    <button class="sort-btn active" id="sort-name"    onclick="setSort('name',this)">Name</button>
+    <button class="sort-btn"        id="sort-price"   onclick="setSort('price',this)">Price</button>
+    <button class="sort-btn"        id="sort-min"     onclick="setSort('min',this)">30d Min</button>
+    <button class="sort-btn"        id="sort-savings" onclick="setSort('savings',this)">vs MSRP</button>
+    <button class="sort-btn"        id="sort-stock"   onclick="setSort('stock',this)">In Stock</button>
+  </div>
+
+  <div class="table-wrap" id="table-wrap">
+    <div class="loading"><div class="spinner"></div>Loading price history...</div>
+  </div>
+  <div class="result-meta" id="result-meta"></div>
+
+  <!-- Detail panel -->
   <div class="detail-panel" id="detail-panel">
-    <div class="detail-title" id="detail-title"></div>
-    <div class="detail-sub" id="detail-sub"></div>
+    <div class="detail-top">
+      <div>
+        <div class="detail-title" id="detail-title">-</div>
+        <div style="font-family:'DM Mono',monospace;font-size:.65rem;color:var(--muted);margin-top:2px" id="detail-sub">-</div>
+      </div>
+      <button class="detail-close" onclick="closeDetail()">Close</button>
+    </div>
+    <div class="detail-kpis" id="detail-kpis"></div>
     <div class="detail-chart-wrap">
       <canvas class="detail-chart" id="detail-chart"></canvas>
     </div>
@@ -188,65 +333,271 @@ canvas.detail-chart{width:100%;height:120px}
 </main>
 
 <!-- Google Sheets modal -->
-<div id="sheets-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:2000;align-items:center;justify-content:center">
-  <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:32px;max-width:500px;width:90%">
-    <div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:var(--accent);margin-bottom:16px">Open in Google Sheets</div>
-    <div style="font-size:.85rem;color:var(--text2);line-height:1.7;margin-bottom:20px">
-      <strong style="color:var(--text)">Step 1</strong> — Export the CSV file:<br>
-      <code style="font-family:'DM Mono',monospace;background:var(--surface2);padding:4px 10px;border-radius:3px;color:var(--accent);display:inline-block;margin:6px 0">python plugins/price_history.py --csv</code><br>
-      This creates <code style="font-family:'DM Mono',monospace;color:var(--green)">data/price_summary_30d.csv</code> and <code style="font-family:'DM Mono',monospace;color:var(--green)">data/price_history_90d.csv</code><br><br>
-      <strong style="color:var(--text)">Step 2</strong> — Go to <a href="https://sheets.google.com" target="_blank" style="color:var(--accent)">sheets.google.com</a> and click <strong>Blank</strong><br><br>
-      <strong style="color:var(--text)">Step 3</strong> — Click <strong>File > Import > Upload</strong> and drag your CSV file in<br><br>
-      <strong style="color:var(--text)">Step 4</strong> — Select <strong>Replace spreadsheet</strong> and click Import<br><br>
-      You now have full sort, filter, pivot table and chart access.
+<div class="sheets-modal" id="sheets-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="sheets-box">
+    <div class="sheets-title">Open in Google Sheets</div>
+    <div class="sheets-body">
+      <strong style="color:var(--text)">Step 1</strong> -- Export the CSV:<br>
+      <code>python plugins/price_history.py --csv</code><br>
+      Creates <code style="color:var(--green)">data/price_summary_30d.csv</code> and <code style="color:var(--green)">data/price_history_90d.csv</code><br><br>
+      <strong style="color:var(--text)">Step 2</strong> -- Go to <a href="https://sheets.google.com" target="_blank">sheets.google.com</a> and click <strong>Blank</strong><br><br>
+      <strong style="color:var(--text)">Step 3</strong> -- Click <strong>File &gt; Import &gt; Upload</strong> and drag your CSV in<br><br>
+      <strong style="color:var(--text)">Step 4</strong> -- Select <strong>Replace spreadsheet</strong> and click Import
     </div>
-    <button onclick="document.getElementById('sheets-modal').style.display='none'" style="font-family:'DM Mono',monospace;font-size:.7rem;padding:8px 18px;background:var(--surface2);border:1px solid var(--border);border-radius:3px;color:var(--muted);cursor:pointer">Close</button>
+    <button class="sheets-close" onclick="document.getElementById('sheets-modal').classList.remove('open')">Close</button>
   </div>
 </div>
 
 <script>
-// ── State ─────────────────────────────────────────────────────────────
-let allRows      = [];
-let sparklines   = {};
-let sortKey      = 'name';
-let sortDir      = 1;
-let selectedUrl  = null;
+// -- State --
+let allRows    = [];
+let sparklines = {};
+let sortKey    = 'name';
+let sortDir    = 1;
+let selectedUrl= null;
 
-// ── Load data ─────────────────────────────────────────────────────────
+// -- Helpers --
+const fmt$ = n => n == null ? '--' : '$' + Number(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');
+const retClass = r => ({target:'rb-target',walmart:'rb-walmart',bestbuy:'rb-bestbuy',pokemoncenter:'rb-pokemoncenter'}[r]||'');
+const retLabel = r => ({target:'Target',walmart:'Walmart',bestbuy:'Best Buy',pokemoncenter:'Poke Center'}[r]||r);
+const retColor = r => ({target:'#e8503a',walmart:'#0071ce',bestbuy:'#ffd200',pokemoncenter:'#e05a6a'}[r]||'#555570');
+
+function parsePrice(str) { return parseFloat((str||'').replace(/[^0-9.]/g,''))||null; }
+function savingVsMsrp(row) {
+  const p = parsePrice(row.latest_price_str);
+  if (!p || !row.msrp) return null;
+  return row.msrp - p;
+}
+
+// -- Load --
 async function loadData() {
   try {
     const r = await fetch('../data/price_summary.json?t=' + Date.now());
-    if (!r.ok) throw new Error('not found');
+    if (!r.ok) throw new Error();
     const data = await r.json();
-
-    // Stats
-    const st = data.stats || {};
-    const sum = data.summary || [];
-    document.getElementById('s-products').textContent = sum.length;
-    document.getElementById('s-records').textContent  = (st.total_records || 0).toLocaleString();
-    document.getElementById('s-size').textContent     = st.db_size_kb ? st.db_size_kb + ' KB' : '--';
-    document.getElementById('s-oldest').textContent   = st.oldest_record ? st.oldest_record.slice(0,10) : '--';
-    document.getElementById('s-deals').textContent    = sum.filter(r => r.latest_price_str && r.msrp &&
-      parseFloat(r.latest_price_str.replace(/[^0-9.]/g,'')) <= r.msrp).length;
-    document.getElementById('s-instock').textContent  = sum.filter(r => r.latest_in_stock).length;
-    document.getElementById('last-updated').textContent =
-      'Updated: ' + new Date(data.last_updated).toLocaleString();
+    const st   = data.stats   || {};
+    const sum  = data.summary || [];
 
     allRows    = sum;
     sparklines = data.sparklines || {};
+
+    updateKPIs(st, sum);
+    drawCharts(sum);
+    renderDeals(sum);
     applyFilters();
-  } catch(e) {
-    document.getElementById('table-wrap').innerHTML = `
-      <div class="no-data">
-        <div style="font-size:1.4rem;margin-bottom:12px">No price history yet</div>
+
+    document.getElementById('last-updated').textContent =
+      data.last_updated ? 'Updated: ' + new Date(data.last_updated).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}) : 'Live';
+  } catch {
+    document.getElementById('table-wrap').innerHTML =
+      `<div class="loading" style="display:block">
+        <div style="font-size:1.1rem;margin-bottom:10px;color:var(--text2)">No price history yet</div>
         <div>Prices are logged hourly once the tracker is running.</div>
-        <div style="margin-top:10px">Force an immediate log:</div>
-        <div style="margin-top:6px"><code>python plugins/price_history.py --log</code></div>
+        <div style="margin-top:12px;font-family:'DM Mono',monospace;font-size:.72rem;color:var(--accent)">python plugins/price_history.py --log</div>
       </div>`;
+    clearKPIs();
+    document.getElementById('last-updated').textContent = 'No data';
   }
 }
 
-// ── Filters & sort ────────────────────────────────────────────────────
+function clearKPIs() {
+  ['k-products','k-instock','k-msrp','k-deal','k-records','k-since'].forEach(id=>{
+    document.getElementById(id).textContent='--';
+  });
+}
+
+// -- KPIs --
+function updateKPIs(st, sum) {
+  const inStock = sum.filter(r=>r.latest_in_stock).length;
+  const atMsrp  = sum.filter(r=>{ const p=parsePrice(r.latest_price_str); return p&&r.msrp&&p<=r.msrp; }).length;
+  const deals   = sum.map(r=>({r, s:savingVsMsrp(r)})).filter(x=>x.s>0).sort((a,b)=>b.s-a.s);
+  const bestDeal= deals[0];
+  const retailers= [...new Set(sum.map(r=>r.retailer).filter(Boolean))];
+
+  document.getElementById('k-products').textContent   = sum.length;
+  document.getElementById('k-retailers').textContent  = retailers.length + ' retailer' + (retailers.length===1?'':'s');
+  document.getElementById('k-instock').textContent    = inStock;
+  document.getElementById('k-instock-sub').textContent= Math.round(inStock/sum.length*100||0)+'% in stock';
+  document.getElementById('k-msrp').textContent       = atMsrp;
+  document.getElementById('k-msrp-sub').textContent   = atMsrp ? 'click to see deals' : 'none right now';
+  document.getElementById('k-deal').textContent       = bestDeal ? fmt$(bestDeal.s)+' off' : 'None';
+  document.getElementById('k-deal-sub').textContent   = bestDeal ? bestDeal.r.name.slice(0,28) : 'no MSRP deals';
+  document.getElementById('k-records').textContent    = (st.total_records||0).toLocaleString();
+  document.getElementById('k-size').textContent       = st.db_size_kb ? st.db_size_kb+' KB' : 'price_history.db';
+  document.getElementById('k-since').textContent      = st.oldest_record ? st.oldest_record.slice(0,10) : '--';
+  document.getElementById('k-since-sub').textContent  = 'first log date';
+}
+
+// -- Charts --
+function drawCharts(sum) {
+  drawRetailerChart(sum);
+  drawMsrpChart(sum);
+}
+
+function drawRetailerChart(sum) {
+  const canvas = document.getElementById('chart-retailer');
+  const sc = window.devicePixelRatio||1;
+  const W  = canvas.offsetWidth*sc||600*sc;
+  const H  = 160*sc;
+  canvas.width=W; canvas.height=H;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0,0,W,H);
+
+  const retailers = ['target','walmart','bestbuy','pokemoncenter'];
+  const data = retailers.map(ret => {
+    const rows  = sum.filter(r=>r.retailer===ret);
+    const stock = rows.filter(r=>r.latest_in_stock).length;
+    return {ret, total:rows.length, stock};
+  }).filter(d=>d.total>0);
+
+  if (!data.length) { noDataMsg(ctx,W,H); return; }
+
+  const PAD = {t:12*sc, r:20*sc, b:36*sc, l:20*sc};
+  const bW  = Math.min(48*sc, (W-PAD.l-PAD.r)/data.length/2);
+  const gap = (W-PAD.l-PAD.r)/data.length;
+  const maxV= Math.max(...data.map(d=>d.total), 1);
+
+  // Grid
+  ctx.strokeStyle='rgba(42,42,56,.8)'; ctx.lineWidth=sc;
+  [0,.25,.5,.75,1].forEach(f=>{
+    const y=PAD.t+(H-PAD.t-PAD.b)*(1-f);
+    ctx.beginPath(); ctx.moveTo(PAD.l,y); ctx.lineTo(W-PAD.r,y); ctx.stroke();
+  });
+
+  data.forEach((d,i)=>{
+    const cx = PAD.l + gap*i + gap/2;
+    const maxH = H-PAD.t-PAD.b;
+    const col  = retColor(d.ret);
+
+    // Total bar (dim)
+    const th = (d.total/maxV)*maxH;
+    ctx.fillStyle = col+'28';
+    ctx.fillRect(cx-bW, PAD.t+maxH-th, bW*2, th);
+    ctx.strokeStyle = col+'66'; ctx.lineWidth=sc;
+    ctx.strokeRect(cx-bW, PAD.t+maxH-th, bW*2, th);
+
+    // In-stock bar (bright)
+    if (d.stock>0) {
+      const sh = (d.stock/maxV)*maxH;
+      ctx.fillStyle = col+'cc';
+      ctx.fillRect(cx-bW+2*sc, PAD.t+maxH-sh, bW*2-4*sc, sh);
+    }
+
+    // Labels
+    ctx.fillStyle='rgba(232,234,240,.7)';
+    ctx.font=`${9*sc}px DM Mono, monospace`;
+    ctx.textAlign='center';
+    ctx.fillText(retLabel(d.ret), cx, H-PAD.b/3);
+    ctx.fillStyle=col;
+    ctx.font=`${10*sc}px DM Mono, monospace`;
+    ctx.fillText(d.stock+'/'+d.total, cx, PAD.t+maxH-(d.total/maxV)*maxH-5*sc);
+  });
+}
+
+function drawMsrpChart(sum) {
+  const canvas = document.getElementById('chart-msrp');
+  const sc = window.devicePixelRatio||1;
+  const W  = canvas.offsetWidth*sc||600*sc;
+  const H  = 160*sc;
+  canvas.width=W; canvas.height=H;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0,0,W,H);
+
+  // For each retailer: count below/at/above MSRP
+  const retailers = [...new Set(sum.map(r=>r.retailer).filter(Boolean))];
+  if (!retailers.length) { noDataMsg(ctx,W,H); return; }
+
+  const cats = ['At/Below MSRP','Above MSRP','No Data'];
+  const colors= ['rgba(61,220,132,.8)','rgba(232,80,58,.7)','rgba(85,85,112,.4)'];
+
+  const data = retailers.map(ret => {
+    const rows = sum.filter(r=>r.retailer===ret);
+    let below=0, above=0, nodat=0;
+    rows.forEach(r=>{
+      const p=parsePrice(r.latest_price_str);
+      if (!p || !r.msrp) nodat++;
+      else if (p<=r.msrp) below++;
+      else above++;
+    });
+    return {ret, vals:[below,above,nodat], total:rows.length};
+  });
+
+  const PAD = {t:12*sc, r:20*sc, b:36*sc, l:20*sc};
+  const bW  = Math.min(36*sc, (W-PAD.l-PAD.r)/data.length/3);
+  const gap = (W-PAD.l-PAD.r)/data.length;
+  const maxV= Math.max(...data.map(d=>d.total),1);
+  const cH  = H-PAD.t-PAD.b;
+
+  // Grid
+  ctx.strokeStyle='rgba(42,42,56,.8)'; ctx.lineWidth=sc;
+  [0,.5,1].forEach(f=>{
+    const y=PAD.t+cH*(1-f);
+    ctx.beginPath(); ctx.moveTo(PAD.l,y); ctx.lineTo(W-PAD.r,y); ctx.stroke();
+  });
+
+  data.forEach((d,i)=>{
+    const cx = PAD.l + gap*i + gap/2;
+    d.vals.forEach((v,ci)=>{
+      if (!v) return;
+      const bh=(v/maxV)*cH;
+      const bx=cx+(ci-1.5)*bW;
+      ctx.fillStyle=colors[ci];
+      ctx.fillRect(bx, PAD.t+cH-bh, bW-2*sc, bh);
+    });
+    ctx.fillStyle='rgba(232,234,240,.6)';
+    ctx.font=`${9*sc}px DM Mono, monospace`;
+    ctx.textAlign='center';
+    ctx.fillText(retLabel(d.ret), cx, H-PAD.b/3);
+  });
+
+  // Legend
+  const legendEl = document.getElementById('msrp-legend');
+  legendEl.innerHTML = cats.map((c,i)=>`
+    <div class="ret-leg"><div class="ret-dot" style="background:${colors[i]}"></div>${c}</div>`).join('');
+}
+
+function noDataMsg(ctx,W,H) {
+  ctx.fillStyle='rgba(85,85,112,.5)';
+  ctx.font=`${10*(window.devicePixelRatio||1)}px DM Mono, monospace`;
+  ctx.textAlign='center';
+  ctx.fillText('No data yet -- start the tracker to populate', W/2, H/2);
+}
+
+// -- Best deals strip --
+function renderDeals(sum) {
+  const strip = document.getElementById('deals-strip');
+  const deals = sum
+    .map(r=>({...r, saving:savingVsMsrp(r)}))
+    .filter(r=>r.saving>0 && r.latest_in_stock)
+    .sort((a,b)=>b.saving-a.saving)
+    .slice(0,8);
+
+  if (!deals.length) {
+    strip.innerHTML='<div style="font-family:\'DM Mono\',monospace;font-size:.72rem;color:var(--muted);padding:20px 0">No products currently at or below MSRP. The tracker will alert you when deals appear.</div>';
+    return;
+  }
+
+  strip.innerHTML = deals.map(d=>`
+    <div class="deal-card" onclick="selectRow('${d.url}')">
+      <div class="deal-saving">${fmt$(d.saving)}</div>
+      <div class="deal-label">below MSRP</div>
+      <div class="deal-name">${d.name}</div>
+      <div class="deal-retailer">${retLabel(d.retailer)}</div>
+      <div class="deal-price">${d.latest_price_str||'--'} <span style="color:var(--muted);text-decoration:line-through">${fmt$(d.msrp)}</span></div>
+    </div>`).join('');
+}
+
+// -- Filters / sort --
+let curSortKey='name', curSortDir=1;
+
+function setSort(key, btn) {
+  if (curSortKey===key) curSortDir*=-1;
+  else { curSortKey=key; curSortDir=1; }
+  document.querySelectorAll('.sort-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  applyFilters();
+}
+
 function applyFilters() {
   const search   = document.getElementById('search').value.toLowerCase();
   const retailer = document.getElementById('f-retailer').value;
@@ -254,305 +605,271 @@ function applyFilters() {
 
   let rows = allRows.filter(r => {
     if (search && !r.name.toLowerCase().includes(search)) return false;
-    if (retailer !== 'all' && r.retailer !== retailer) return false;
-    if (status === 'in_stock' && !r.latest_in_stock) return false;
-    if (status === 'at_msrp') {
-      const p = parseFloat((r.latest_price_str || '').replace(/[^0-9.]/g,''));
-      if (!p || !r.msrp || p > r.msrp) return false;
+    if (retailer!=='all' && r.retailer!==retailer) return false;
+    if (status==='in_stock' && !r.latest_in_stock) return false;
+    if (status==='at_msrp') {
+      const p=parsePrice(r.latest_price_str);
+      if (!p||!r.msrp||p>r.msrp) return false;
     }
-    if (status === 'above_msrp') {
-      const p = parseFloat((r.latest_price_str || '').replace(/[^0-9.]/g,''));
-      if (!p || !r.msrp || p <= r.msrp) return false;
+    if (status==='above_msrp') {
+      const p=parsePrice(r.latest_price_str);
+      if (!p||!r.msrp||p<=r.msrp) return false;
     }
     return true;
   });
 
-  // Sort
-  rows.sort((a, b) => {
+  rows.sort((a,b) => {
     let va, vb;
-    switch(sortKey) {
-      case 'price':
-        va = parseFloat((a.latest_price_str||'').replace(/[^0-9.]/g,'')) || 9999;
-        vb = parseFloat((b.latest_price_str||'').replace(/[^0-9.]/g,'')) || 9999;
-        break;
-      case 'min':
-        va = a.min_price || 9999; vb = b.min_price || 9999; break;
-      case 'savings':
-        va = a.msrp && a.min_price ? a.msrp - a.min_price : -999;
-        vb = b.msrp && b.min_price ? b.msrp - b.min_price : -999;
-        break;
-      case 'stock':
-        va = a.latest_in_stock ? 0 : 1; vb = b.latest_in_stock ? 0 : 1; break;
-      default:
-        va = a.name.toLowerCase(); vb = b.name.toLowerCase();
+    switch(curSortKey) {
+      case 'price':   va=parsePrice(a.latest_price_str)||0; vb=parsePrice(b.latest_price_str)||0; break;
+      case 'min':     va=a.min_price||0; vb=b.min_price||0; break;
+      case 'savings': va=savingVsMsrp(a)||0; vb=savingVsMsrp(b)||0; break;
+      case 'stock':   va=a.latest_in_stock?1:0; vb=b.latest_in_stock?1:0; break;
+      default:        va=a.name||''; vb=b.name||'';
     }
-    return va < vb ? -sortDir : va > vb ? sortDir : 0;
+    return (va<vb?-1:va>vb?1:0)*curSortDir;
   });
-
-  document.getElementById('result-count').textContent = rows.length;
-  document.getElementById('result-note').textContent  =
-    rows.length < allRows.length ? `(filtered from ${allRows.length} total)` : '';
 
   renderTable(rows);
 }
 
-function setSort(key, btn) {
-  if (sortKey === key) { sortDir *= -1; }
-  else { sortKey = key; sortDir = 1; }
-  document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  applyFilters();
-}
-
-// ── Table render ──────────────────────────────────────────────────────
+// -- Table --
 function renderTable(rows) {
+  const wrap = document.getElementById('table-wrap');
+
   if (!rows.length) {
-    document.getElementById('table-wrap').innerHTML =
-      '<div class="no-data">No products match your filters</div>';
+    wrap.innerHTML='<table><tbody><tr class="no-data-row"><td colspan="8">No products match your filters.</td></tr></tbody></table>';
+    document.getElementById('result-meta').textContent='';
     return;
   }
 
-  const retDot = r => {
-    const cls = {target:'d-target',walmart:'d-walmart',bestbuy:'d-bestbuy',pokemoncenter:'d-pokemoncenter'}[r]||'';
-    const label = {target:'Target',walmart:'Walmart',bestbuy:'Best Buy',pokemoncenter:'PC'}[r]||r;
-    return `<span class="ret-dot ${cls}"></span>${label}`;
-  };
+  const retBadge = r => `<span class="ret-badge ${retClass(r)}">${retLabel(r)}</span>`;
 
-  const priceBadge = (ps, msrp) => {
-    const p = parseFloat((ps||'').replace(/[^0-9.]/g,''));
-    if (!p || !msrp) return '<span class="badge b-na">N/A</span>';
-    if (p <= msrp)   return `<span class="badge b-msrp">MSRP</span>`;
-    const pct = ((p/msrp-1)*100).toFixed(0);
-    return `<span class="badge b-above">+${pct}%</span>`;
-  };
+  const rowsHtml = rows.map(r => {
+    const p       = parsePrice(r.latest_price_str);
+    const saving  = savingVsMsrp(r);
+    const savClass= saving==null?'saving-zero':saving>0?'saving-pos':'saving-neg';
+    const savStr  = saving==null?'--':saving>0?'+'+fmt$(saving):(fmt$(saving));
+    const statusCls= !p||!r.msrp?'sb-na':p<=r.msrp?'sb-msrp':'sb-above';
+    const statusTxt= !p||!r.msrp?'N/A':p<=r.msrp?'AT MSRP':'ABOVE';
+    const sel = r.url===selectedUrl;
 
-  const fmt = v => v ? `$${v.toFixed(2)}` : '--';
-
-  let html = `<table class="price-table">
-    <thead><tr>
-      <th onclick="setSort('name',document.getElementById('sort-name'))">Product</th>
-      <th>Retailer</th>
-      <th class="th-right" onclick="setSort('price',document.getElementById('sort-price'))">Latest</th>
-      <th class="th-right">MSRP</th>
-      <th class="th-right" onclick="setSort('min',document.getElementById('sort-min'))">30d Min</th>
-      <th class="th-right">30d Max</th>
-      <th class="th-right">30d Avg</th>
-      <th class="th-right" onclick="setSort('stock',document.getElementById('sort-stock'))">In Stock</th>
-      <th class="th-right">Best Saving</th>
-      <th>7d Trend</th>
-    </tr></thead><tbody>`;
-
-  rows.forEach((r, i) => {
-    const saving = (r.msrp && r.min_price) ? r.msrp - r.min_price : null;
-    const savingStr = saving && saving > 0 ? `<span style="color:var(--green)">$${saving.toFixed(2)}</span>` : '--';
-    const inStock = r.latest_in_stock
-      ? '<span class="badge b-stock">YES</span>'
-      : '<span style="color:var(--muted);font-size:.75rem">no</span>';
-    const cid = `spark${i}`;
-
-    html += `<tr onclick="showDetail('${r.url.replace(/'/g,"\\'")}','${r.name.replace(/'/g,"\\'")}')" style="cursor:pointer">
-      <td><span style="color:var(--text)">${r.name}</span></td>
-      <td>${retDot(r.retailer)}</td>
-      <td class="th-right">${r.latest_price_str||'--'} ${priceBadge(r.latest_price_str,r.msrp)}</td>
-      <td class="th-right" style="color:var(--muted)">${fmt(r.msrp)}</td>
-      <td class="th-right" style="color:var(--green)">${fmt(r.min_price)}</td>
-      <td class="th-right" style="color:#ff8a80">${fmt(r.max_price)}</td>
-      <td class="th-right">${fmt(r.avg_price)}</td>
-      <td class="th-right">${inStock}</td>
-      <td class="th-right">${savingStr}</td>
-      <td><canvas id="${cid}" class="spark" width="80" height="26"></canvas></td>
+    return `<tr onclick="selectRow('${r.url}')" class="${sel?'selected-row':''}">
+      <td class="td-name" title="${r.name}">${r.name}</td>
+      <td>${retBadge(r.retailer)}</td>
+      <td class="td-mono">${r.latest_price_str||'--'}
+        ${r.latest_in_stock?'<span class="status-badge sb-stock" style="margin-left:4px">LIVE</span>':''}
+      </td>
+      <td class="td-mono" style="color:var(--muted)">${fmt$(r.msrp)}</td>
+      <td><span class="status-badge ${statusCls}">${statusTxt}</span></td>
+      <td class="td-mono td-saving ${savClass}">${savStr}</td>
+      <td class="td-mono" style="color:var(--text2)">${fmt$(r.min_price)}</td>
+      <td class="spark-wrap"><canvas class="spark" width="80" height="32" data-url="${r.url}"></canvas></td>
     </tr>`;
-  });
+  }).join('');
 
-  html += '</tbody></table>';
-  document.getElementById('table-wrap').innerHTML = html;
+  wrap.innerHTML=`<table>
+    <thead><tr>
+      <th>Product</th><th>Retailer</th><th>Current Price</th>
+      <th>MSRP</th><th>Status</th><th>Saving</th><th>30d Min</th><th>Trend</th>
+    </tr></thead>
+    <tbody>${rowsHtml}</tbody>
+  </table>`;
 
-  requestAnimationFrame(() => {
-    rows.forEach((r, i) => {
-      drawSparkline(document.getElementById(`spark${i}`), sparklines[r.url]||[], 80, 26);
-    });
-  });
+  document.getElementById('result-meta').innerHTML=
+    `<span class="result-accent">${rows.length}</span> products shown`;
+
+  // Draw sparklines after DOM settles
+  requestAnimationFrame(()=>{ wrap.querySelectorAll('canvas.spark').forEach(drawSpark); });
 }
 
-// ── Sparkline ─────────────────────────────────────────────────────────
-function drawSparkline(canvas, points, W, H) {
-  if (!canvas || !points.length) return;
-  const ctx  = canvas.getContext('2d');
-  ctx.clearRect(0, 0, W, H);
-  const prices = points.map(p => p.price).filter(Boolean);
-  if (prices.length < 2) return;
-  const mn  = Math.min(...prices), mx = Math.max(...prices);
-  const rng = mx - mn || 0.01;
-  const tx  = i => (i / (points.length-1)) * W;
-  const ty  = v => H - ((v-mn)/rng)*(H-4) - 2;
-
+// -- Sparklines --
+function drawSpark(canvas) {
+  const url    = canvas.dataset.url;
+  const points = (sparklines[url]||[]).filter(p=>p.price);
+  const sc     = window.devicePixelRatio||1;
+  const W=80*sc, H=32*sc;
+  canvas.width=W; canvas.height=H;
+  if (points.length<2) return;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0,0,W,H);
+  const prices = points.map(p=>p.price);
+  const mn=Math.min(...prices), mx=Math.max(...prices), rng=mx-mn||0.01;
+  const tx=i=>(i/(points.length-1))*(W-4)+2;
+  const ty=v=>H-2-((v-mn)/rng)*(H-8)+2;
   ctx.beginPath();
-  ctx.strokeStyle = '#f0c040';
-  ctx.lineWidth   = 1.5;
-  points.forEach((p, i) => {
-    if (!p.price) return;
-    i===0 ? ctx.moveTo(tx(i),ty(p.price)) : ctx.lineTo(tx(i),ty(p.price));
-  });
+  ctx.strokeStyle='rgba(240,192,64,.8)'; ctx.lineWidth=1.5*sc;
+  points.forEach((p,i)=>{ i===0?ctx.moveTo(tx(i),ty(p.price)):ctx.lineTo(tx(i),ty(p.price)); });
   ctx.stroke();
-
-  // fill
-  ctx.lineTo(tx(points.length-1), H);
-  ctx.lineTo(0, H);
-  ctx.closePath();
-  ctx.fillStyle = 'rgba(240,192,64,.07)';
-  ctx.fill();
-
-  // in-stock dots
-  points.forEach((p, i) => {
-    if (p.in_stock && p.price) {
-      ctx.beginPath();
-      ctx.arc(tx(i), ty(p.price), 2, 0, Math.PI*2);
-      ctx.fillStyle = '#3ddc84';
-      ctx.fill();
+  ctx.lineTo(tx(points.length-1),H); ctx.lineTo(tx(0),H); ctx.closePath();
+  ctx.fillStyle='rgba(240,192,64,.07)'; ctx.fill();
+  points.forEach((p,i)=>{
+    if (p.in_stock&&p.price) {
+      ctx.beginPath(); ctx.arc(tx(i),ty(p.price),2*sc,0,Math.PI*2);
+      ctx.fillStyle='#3ddc84'; ctx.fill();
     }
   });
 }
 
-// ── Detail chart (30 day price chart for one product) ─────────────────
-function showDetail(url, name) {
-  const panel = document.getElementById('detail-panel');
-  const points = sparklines[url] || [];
-
-  if (selectedUrl === url && panel.classList.contains('open')) {
-    panel.classList.remove('open');
-    selectedUrl = null;
-    return;
+// -- Detail panel --
+function selectRow(url) {
+  if (selectedUrl===url && document.getElementById('detail-panel').classList.contains('open')) {
+    closeDetail(); return;
   }
   selectedUrl = url;
+  applyFilters(); // re-render to show selection
+  showDetail(url);
+  document.getElementById('detail-panel').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function showDetail(url) {
+  const row    = allRows.find(r=>r.url===url);
+  const points = sparklines[url]||[];
+  const panel  = document.getElementById('detail-panel');
+  if (!row) return;
+
+  document.getElementById('detail-title').textContent = row.name;
+  document.getElementById('detail-sub').textContent   =
+    retLabel(row.retailer) + '  |  Last seen: ' + (row.last_seen||'--').slice(0,16);
+
+  const p       = parsePrice(row.latest_price_str);
+  const saving  = savingVsMsrp(row);
+  document.getElementById('detail-kpis').innerHTML = [
+    {l:'Current Price', v:row.latest_price_str||'--', c:''},
+    {l:'MSRP',          v:fmt$(row.msrp),             c:''},
+    {l:'Saving vs MSRP',v:saving!=null?(saving>0?'+':'')+fmt$(saving):'--', c:saving>0?'green':saving<0?'red':''},
+    {l:'30d Min',       v:fmt$(row.min_price),         c:'green'},
+    {l:'30d Max',       v:fmt$(row.max_price),         c:''},
+    {l:'30d Avg',       v:fmt$(row.avg_price),         c:''},
+    {l:'Times In Stock',v:row.times_in_stock||0,       c:''},
+    {l:'Records',       v:(row.record_count||0).toLocaleString(), c:''},
+  ].map(k=>`<div class="dk"><div class="dk-label">${k.l}</div><div class="dk-val ${k.c}">${k.v}</div></div>`).join('');
+
   panel.classList.add('open');
+  drawDetailChart(row, points);
+}
 
-  const row = allRows.find(r => r.url === url);
-  document.getElementById('detail-title').textContent = name;
-  document.getElementById('detail-sub').textContent =
-    row ? `${row.retailer} | MSRP $${row.msrp?.toFixed(2)||'N/A'} | 30d Min $${row.min_price?.toFixed(2)||'N/A'} | Max $${row.max_price?.toFixed(2)||'N/A'} | ${row.times_in_stock} times in stock` : '';
-
+function drawDetailChart(row, points) {
   const canvas = document.getElementById('detail-chart');
-  const W = canvas.offsetWidth || 800;
-  const H = 120;
-  canvas.width  = W;
-  canvas.height = H;
-  const ctx = canvas.getContext('2d');
+  const sc = window.devicePixelRatio||1;
+  const W  = canvas.offsetWidth*sc||800*sc;
+  const H  = 140*sc;
+  canvas.width=W; canvas.height=H;
+  const ctx=canvas.getContext('2d');
   ctx.clearRect(0,0,W,H);
 
-  if (!points.length) {
-    ctx.fillStyle = 'var(--muted)';
-    ctx.font = '13px DM Mono, monospace';
-    ctx.fillText('No 7-day trend data yet', 20, H/2);
-    return;
+  const priced = points.filter(p=>p.price);
+  if (priced.length<2) {
+    ctx.fillStyle='rgba(85,85,112,.6)';
+    ctx.font=`${11*sc}px DM Mono, monospace`; ctx.textAlign='center';
+    ctx.fillText('Not enough data yet for this product', W/2, H/2); return;
   }
 
-  const prices = points.map(p=>p.price).filter(Boolean);
-  if (prices.length < 2) return;
-  const mn  = Math.min(...prices), mx = Math.max(...prices);
-  const rng = mx - mn || 0.01;
-  const tx  = i => (i/(points.length-1))*(W-20)+10;
-  const ty  = v => H-10 - ((v-mn)/rng)*(H-30);
+  const prices = priced.map(p=>p.price);
+  const mn=Math.min(...prices,row.msrp||Infinity), mx=Math.max(...prices,row.msrp||0);
+  const rng=mx-mn||0.01;
+  const PAD={t:10*sc,r:10*sc,b:28*sc,l:52*sc};
+  const cW=W-PAD.l-PAD.r, cH=H-PAD.t-PAD.b;
+  const tx=i=>PAD.l+(i/(priced.length-1))*cW;
+  const ty=v=>PAD.t+cH-((v-mn)/rng)*cH;
 
-  // MSRP line
-  if (row && row.msrp) {
-    const msrpY = ty(row.msrp);
-    if (msrpY >= 0 && msrpY <= H) {
-      ctx.setLineDash([4,4]);
-      ctx.strokeStyle = 'rgba(240,192,64,.3)';
-      ctx.lineWidth   = 1;
-      ctx.beginPath();
-      ctx.moveTo(0, msrpY);
-      ctx.lineTo(W, msrpY);
-      ctx.stroke();
+  // Grid & Y labels
+  ctx.strokeStyle='rgba(42,42,56,.8)'; ctx.lineWidth=sc;
+  [0,.25,.5,.75,1].forEach(f=>{
+    const y=PAD.t+cH*(1-f), val=mn+rng*f;
+    ctx.beginPath(); ctx.moveTo(PAD.l,y); ctx.lineTo(W-PAD.r,y); ctx.stroke();
+    ctx.fillStyle='rgba(85,85,112,.7)';
+    ctx.font=`${9*sc}px DM Mono, monospace`; ctx.textAlign='right';
+    ctx.fillText('$'+val.toFixed(0), PAD.l-4, y+3*sc);
+  });
+
+  // Min/Max bands
+  const minY=ty(row.min_price||mn), maxY=ty(row.max_price||mx);
+  ctx.fillStyle='rgba(240,192,64,.04)';
+  ctx.fillRect(PAD.l, maxY, cW, minY-maxY);
+
+  // MSRP dashed line
+  if (row.msrp) {
+    const msrpY=ty(row.msrp);
+    if (msrpY>=PAD.t && msrpY<=PAD.t+cH) {
+      ctx.setLineDash([5*sc,4*sc]);
+      ctx.strokeStyle='rgba(240,192,64,.35)'; ctx.lineWidth=sc;
+      ctx.beginPath(); ctx.moveTo(PAD.l,msrpY); ctx.lineTo(W-PAD.r,msrpY); ctx.stroke();
       ctx.setLineDash([]);
-      ctx.fillStyle = 'rgba(240,192,64,.5)';
-      ctx.font = '10px DM Mono, monospace';
-      ctx.fillText('MSRP', 4, msrpY-3);
+      ctx.fillStyle='rgba(240,192,64,.5)';
+      ctx.font=`${9*sc}px DM Mono, monospace`; ctx.textAlign='left';
+      ctx.fillText('MSRP', PAD.l+3, msrpY-3*sc);
     }
   }
 
   // Price line
   ctx.beginPath();
-  ctx.strokeStyle = '#f0c040';
-  ctx.lineWidth   = 2;
-  points.forEach((p,i) => {
-    if (!p.price) return;
-    i===0 ? ctx.moveTo(tx(i),ty(p.price)) : ctx.lineTo(tx(i),ty(p.price));
-  });
+  ctx.strokeStyle='#f0c040'; ctx.lineWidth=2*sc; ctx.lineJoin='round';
+  priced.forEach((p,i)=>{ i===0?ctx.moveTo(tx(i),ty(p.price)):ctx.lineTo(tx(i),ty(p.price)); });
   ctx.stroke();
 
-  // Fill
-  ctx.lineTo(tx(points.length-1), H);
-  ctx.lineTo(tx(0), H);
-  ctx.closePath();
-  ctx.fillStyle = 'rgba(240,192,64,.06)';
-  ctx.fill();
+  // Fill under line
+  ctx.lineTo(tx(priced.length-1),PAD.t+cH); ctx.lineTo(PAD.l,PAD.t+cH);
+  ctx.closePath(); ctx.fillStyle='rgba(240,192,64,.06)'; ctx.fill();
 
-  // In-stock markers
-  points.forEach((p,i) => {
-    if (p.in_stock && p.price) {
-      ctx.beginPath();
-      ctx.arc(tx(i), ty(p.price), 3, 0, Math.PI*2);
-      ctx.fillStyle = '#3ddc84';
-      ctx.fill();
+  // In-stock dots
+  priced.forEach((p,i)=>{
+    if (p.in_stock) {
+      ctx.beginPath(); ctx.arc(tx(i),ty(p.price),3*sc,0,Math.PI*2);
+      ctx.fillStyle='#3ddc84'; ctx.fill();
     }
   });
 
-  // Price labels
-  ctx.fillStyle = 'rgba(240,192,64,.7)';
-  ctx.font = '10px DM Mono, monospace';
-  ctx.textAlign = 'right';
-  ctx.fillText(`$${mx.toFixed(2)}`, W-4, ty(mx)-3);
-  ctx.fillText(`$${mn.toFixed(2)}`, W-4, ty(mn)+12);
-  ctx.textAlign = 'left';
+  // X axis dates (sample)
+  ctx.fillStyle='rgba(85,85,112,.7)';
+  ctx.font=`${9*sc}px DM Mono, monospace`; ctx.textAlign='center';
+  const skip=Math.ceil(priced.length/6);
+  priced.forEach((p,i)=>{
+    if (i%skip!==0 && i!==priced.length-1) return;
+    if (p.ts) {
+      const d=new Date(p.ts);
+      ctx.fillText((d.getMonth()+1)+'/'+d.getDate(), tx(i), H-PAD.b/4);
+    }
+  });
 }
 
-// ── CSV download (client-side from loaded data) ────────────────────────
+function closeDetail() {
+  selectedUrl=null;
+  document.getElementById('detail-panel').classList.remove('open');
+  applyFilters();
+}
+
+// -- CSV export --
 function downloadCSV() {
-  if (!allRows.length) {
-    alert('No data loaded yet. Wait for the first hourly log or run:\npython plugins/price_history.py --log');
-    return;
-  }
-
-  const headers = [
-    'Product','Retailer','Latest Price','MSRP',
-    '30d Min','30d Max','30d Avg','Times In Stock',
-    'Records','Last Seen','URL'
-  ];
-
-  const fmt = v => v ? v.toFixed(2) : '';
-
-  const rows = allRows.map(r => [
-    `"${r.name}"`,
-    r.retailer,
-    r.latest_price_str || '',
-    fmt(r.msrp),
-    fmt(r.min_price),
-    fmt(r.max_price),
-    fmt(r.avg_price),
-    r.times_in_stock,
-    r.record_count,
-    (r.last_seen||'').slice(0,16),
-    `"${r.url}"`,
-  ]);
-
-  const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
-  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  a.href     = url;
-  a.download = `pokebsprices_${new Date().toISOString().slice(0,10)}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
+  if (!allRows.length) { alert('No data to export yet.'); return; }
+  const hdr=['Product','Retailer','Latest Price','MSRP','Status','Saving','30d Min','30d Max','30d Avg','Times In Stock','Records','Last Seen','URL'];
+  const rows=allRows.map(r=>{
+    const p=parsePrice(r.latest_price_str);
+    const s=savingVsMsrp(r);
+    const st=!p||!r.msrp?'N/A':p<=r.msrp?'AT MSRP':'ABOVE';
+    return [`"${(r.name||'').replace(/"/g,'""')}"`,retLabel(r.retailer),
+      r.latest_price_str||'',(r.msrp||'').toString(),st,
+      s!=null?s.toFixed(2):'',(r.min_price||'').toString(),(r.max_price||'').toString(),
+      (r.avg_price||'').toString(),r.times_in_stock||0,r.record_count||0,
+      (r.last_seen||'').slice(0,16),`"${r.url||''}"`].join(',');
+  });
+  const csv=[hdr.join(','),...rows].join('\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download='pokebs_price_history_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click(); URL.revokeObjectURL(url);
 }
 
-function openSheetsInstructions() {
-  document.getElementById('sheets-modal').style.display = 'flex';
-}
+// -- Resize --
+window.addEventListener('resize',()=>{
+  clearTimeout(window._rt);
+  window._rt=setTimeout(()=>{ if(allRows.length){drawCharts(allRows);} },200);
+});
 
-// ── Init ──────────────────────────────────────────────────────────────
+// -- Init --
 loadData();
-setInterval(loadData, 10 * 60 * 1000);
+setInterval(loadData, 10*60*1000);
 </script>
 </body>
 </html>

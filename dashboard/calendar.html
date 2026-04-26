@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Keith's PokeBS -- Calendar</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0a0f;--surface:#111118;--surface2:#18181f;--border:#2a2a38;
+  --accent:#f0c040;--accent2:#e8503a;--green:#3ddc84;
+  --purple:#a78bfa;--blue:#60a5fa;--muted:#555570;--text:#e8e8f0;--text2:#9090a8;
+  --c-release:#3ddc84;--c-prerelease:#f0c040;--c-wave:#60a5fa;
+  --c-rumored:#a78bfa;--c-drop:#e8503a;
+  --c-release-bg:rgba(61,220,132,.1);--c-prerelease-bg:rgba(240,192,64,.1);
+  --c-wave-bg:rgba(96,165,250,.1);--c-rumored-bg:rgba(167,139,250,.1);
+  --c-drop-bg:rgba(232,80,58,.1);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.08) 2px,rgba(0,0,0,.08) 4px);pointer-events:none;z-index:999}
+header{display:flex;align-items:center;justify-content:space-between;padding:24px 40px;border-bottom:1px solid var(--border);background:rgba(10,10,15,.95);backdrop-filter:blur(12px);position:sticky;top:0;z-index:100}
+.logo{display:flex;align-items:baseline;gap:10px}
+.logo-main{font-family:'Bebas Neue',sans-serif;font-size:2.2rem;letter-spacing:.04em;color:var(--accent);text-shadow:0 0 30px rgba(240,192,64,.4)}
+.logo-sub{font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted);letter-spacing:.2em;text-transform:uppercase}
+#last-updated{font-family:'DM Mono',monospace;font-size:.68rem;color:var(--muted)}
+.nav-bar{display:flex;align-items:center;gap:4px;padding:0 40px;background:var(--surface2);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none}
+.nav-bar::-webkit-scrollbar{display:none}
+.nav-link{font-family:'DM Mono',monospace;font-size:.72rem;letter-spacing:.15em;text-transform:uppercase;padding:12px 18px;color:var(--muted);text-decoration:none;border-bottom:2px solid transparent;white-space:nowrap;transition:all .15s}
+.nav-link:hover{color:var(--text)}
+.nav-link.active{color:var(--accent);border-bottom-color:var(--accent)}
+main{padding:40px;max-width:1400px;margin:0 auto}
+.page-title{font-family:'Bebas Neue',sans-serif;font-size:1.8rem;letter-spacing:.06em;color:var(--text2);margin-bottom:4px}
+.page-subtitle{font-family:'DM Mono',monospace;font-size:.72rem;color:var(--muted);letter-spacing:.1em;margin-bottom:28px}
+
+/* Countdown strip */
+.cd-strip{display:flex;gap:10px;overflow-x:auto;scrollbar-width:none;padding-bottom:4px;margin-bottom:28px}
+.cd-strip::-webkit-scrollbar{display:none}
+.cd-card{flex-shrink:0;min-width:148px;background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:14px 16px;cursor:pointer;transition:border-color .2s,transform .15s}
+.cd-card:hover{transform:translateY(-2px)}
+.cd-card.release{border-top:2px solid var(--c-release)}.cd-card.prerelease{border-top:2px solid var(--c-prerelease)}
+.cd-card.wave{border-top:2px solid var(--c-wave)}.cd-card.rumored{border-top:2px solid var(--c-rumored)}.cd-card.drop{border-top:2px solid var(--c-drop)}
+.cd-num{font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:.04em;line-height:1;margin-bottom:2px}
+.cd-num.release{color:var(--c-release)}.cd-num.prerelease{color:var(--c-prerelease)}.cd-num.wave{color:var(--c-wave)}.cd-num.rumored{color:var(--c-rumored)}.cd-num.drop{color:var(--c-drop)}
+.cd-unit{font-family:'DM Mono',monospace;font-size:.58rem;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px}
+.cd-name{font-size:.78rem;font-weight:500;line-height:1.3;color:var(--text)}
+.cd-date{font-family:'DM Mono',monospace;font-size:.62rem;color:var(--muted);margin-top:3px}
+
+/* Controls */
+.ctrl-row{display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap}
+.win-chip{font-family:'DM Mono',monospace;font-size:.68rem;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:3px;padding:5px 12px}
+.view-toggle{display:flex;background:var(--surface);border:1px solid var(--border);border-radius:3px;overflow:hidden}
+.vbtn{border:none;background:none;cursor:pointer;font-family:'DM Mono',monospace;font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:6px 14px;transition:all .15s}
+.vbtn.active{background:var(--accent);color:#000;font-weight:500}
+.nav-arrows{display:flex;gap:6px;margin-left:auto}
+.arw{border:1px solid var(--border);background:var(--surface);color:var(--text2);cursor:pointer;width:30px;height:30px;border-radius:3px;font-size:.9rem;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.arw:hover{border-color:var(--accent);color:var(--accent)}
+.tod-btn{border:1px solid var(--border);background:var(--surface);color:var(--accent);cursor:pointer;font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;padding:0 12px;height:30px;border-radius:3px;transition:all .15s}
+.tod-btn:hover{border-color:var(--accent);background:rgba(240,192,64,.06)}
+
+/* Legend */
+.legend{display:flex;gap:20px;flex-wrap:wrap;margin-bottom:20px;align-items:center}
+.leg{display:flex;align-items:center;gap:7px;font-family:'DM Mono',monospace;font-size:.65rem;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;cursor:pointer;user-select:none;transition:color .15s}
+.leg:hover{color:var(--text2)}
+.leg.off{opacity:.3}
+.ldot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+.ldot.release{background:var(--c-release)}.ldot.prerelease{background:var(--c-prerelease)}.ldot.wave{background:var(--c-wave)}.ldot.rumored{background:var(--c-rumored)}.ldot.drop{background:var(--c-drop)}
+
+/* Grid */
+.dow-hdr{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px}
+.dow-cell{font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);text-align:center;padding:6px 0}
+.week-row{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px}
+.day-cell{background:var(--surface);border:1px solid var(--border);border-radius:4px;min-height:90px;padding:7px 7px 5px;transition:border-color .15s;position:relative;overflow:hidden}
+.day-cell.dim{opacity:.25}
+.day-cell.today{border-color:var(--accent);background:rgba(240,192,64,.04)}
+.day-cell.today::after{content:'TODAY';position:absolute;top:5px;right:6px;font-family:'DM Mono',monospace;font-size:.48rem;letter-spacing:.1em;color:var(--accent)}
+.day-cell.busy{border-color:#2a2a45}
+.day-num{display:block;font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:.04em;color:var(--muted);margin-bottom:4px}
+.day-cell.today .day-num{color:var(--accent)}
+.day-evs{display:flex;flex-direction:column;gap:3px}
+.ev{border-radius:2px;padding:2px 5px;font-family:'DM Mono',monospace;font-size:.58rem;font-weight:500;line-height:1.35;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:opacity .15s;border-left:2px solid transparent}
+.ev:hover{opacity:.7}
+.ev.release{background:var(--c-release-bg);color:var(--c-release);border-left-color:var(--c-release)}
+.ev.prerelease{background:var(--c-prerelease-bg);color:var(--c-prerelease);border-left-color:var(--c-prerelease)}
+.ev.wave{background:var(--c-wave-bg);color:var(--c-wave);border-left-color:var(--c-wave)}
+.ev.rumored{background:var(--c-rumored-bg);color:var(--c-rumored);border-left-color:var(--c-rumored)}
+.ev.drop{background:var(--c-drop-bg);color:var(--c-drop);border-left-color:var(--c-drop)}
+.ev-more{font-family:'DM Mono',monospace;font-size:.55rem;color:var(--muted);padding:1px 3px}
+
+/* List */
+.lv{display:flex;flex-direction:column;gap:4px}
+.lw-hdr{font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:10px 0 4px;border-bottom:1px solid var(--border);margin-bottom:4px;margin-top:8px}
+.lrow{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:11px 16px;cursor:pointer;transition:border-color .15s,background .15s}
+.lrow:hover{border-color:#3a3a50;background:var(--surface2)}
+.lrow.istoday{border-color:rgba(240,192,64,.3)}
+.ldate{font-family:'DM Mono',monospace;font-size:.7rem;color:var(--text2);min-width:100px;flex-shrink:0}
+.tbadge{font-family:'DM Mono',monospace;font-size:.52rem;letter-spacing:.1em;text-transform:uppercase;background:var(--accent);color:#000;padding:1px 5px;border-radius:2px;margin-left:6px}
+.ldot{width:8px;height:8px;border-radius:1px;flex-shrink:0}
+.ldot.release{background:var(--c-release)}.ldot.prerelease{background:var(--c-prerelease)}.ldot.wave{background:var(--c-wave)}.ldot.rumored{background:var(--c-rumored)}.ldot.drop{background:var(--c-drop)}
+.lname{font-size:.85rem;font-weight:400;flex:1;color:var(--text)}
+.ltype{font-family:'DM Mono',monospace;font-size:.58rem;letter-spacing:.08em;text-transform:uppercase;padding:2px 8px;border-radius:2px;flex-shrink:0}
+.ltype.release{background:var(--c-release-bg);color:var(--c-release)}.ltype.prerelease{background:var(--c-prerelease-bg);color:var(--c-prerelease)}.ltype.wave{background:var(--c-wave-bg);color:var(--c-wave)}.ltype.rumored{background:var(--c-rumored-bg);color:var(--c-rumored)}.ltype.drop{background:var(--c-drop-bg);color:var(--c-drop)}
+.laway{font-family:'DM Mono',monospace;font-size:.62rem;color:var(--muted);min-width:60px;text-align:right;flex-shrink:0}
+.laway.hot{color:var(--c-drop);font-weight:500}.laway.warm{color:var(--c-prerelease)}
+
+/* Modal */
+.m-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.m-overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--surface2);border:1px solid #3a3a50;border-radius:6px;padding:28px 32px;max-width:440px;width:90%;transform:translateY(10px);transition:transform .2s}
+.m-overlay.open .modal{transform:translateY(0)}
+.m-hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px}
+.m-title{font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:.04em;color:var(--text)}
+.m-x{border:none;background:none;cursor:pointer;color:var(--muted);font-size:1.1rem;line-height:1;transition:color .15s}
+.m-x:hover{color:var(--text)}
+.m-row{margin-bottom:12px}
+.m-lbl{font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
+.m-val{font-size:.85rem;color:var(--text2);line-height:1.5}
+
+.empty-msg{text-align:center;padding:60px 20px;font-family:'DM Mono',monospace;font-size:.75rem;color:var(--muted)}
+@media(max-width:768px){header{padding:16px 20px}main{padding:20px}.logo-main{font-size:1.6rem}.nav-bar{padding:0 20px}.day-cell{min-height:60px;padding:4px}.day-num{font-size:.8rem}.ev{font-size:.5rem}.cd-strip{display:none}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <span class="logo-main">Keith's PokeBS</span>
+    <span class="logo-sub">Calendar</span>
+  </div>
+  <div id="last-updated">Loading...</div>
+</header>
+
+<nav class="nav-bar">
+  <a class="nav-link" href="dashboard.html">&#128225; Tracker</a>
+  <a class="nav-link" href="info.html">&#128218; Set Info</a>
+  <a class="nav-link" href="pricing.html">&#128176; Pricing</a>
+  <a class="nav-link" href="binder.html">&#128194; Binder</a>
+  <a class="nav-link active" href="calendar.html">&#128197; Calendar</a>
+  <a class="nav-link" href="retail-drops.html">&#128722; Retail Drops</a>
+  <a class="nav-link" href="local.html">&#128506; Local</a>
+  <a class="nav-link" href="invest.html">&#128200; Invest</a>
+  <a class="nav-link" href="pricing-history.html">Price History</a>
+  <a class="nav-link" href="help.html">&#10067; Help</a>
+</nav>
+
+<main>
+  <div class="page-title">TCG Calendar</div>
+  <div class="page-subtitle" id="page-sub">4-week rolling window -- loading...</div>
+
+  <div class="cd-strip" id="cd-strip"></div>
+
+  <div class="ctrl-row">
+    <span class="win-chip" id="win-chip">Week 1 of 4</span>
+    <div class="view-toggle">
+      <button class="vbtn active" id="btn-grid" onclick="setView('grid')">Grid</button>
+      <button class="vbtn" id="btn-list" onclick="setView('list')">List</button>
+    </div>
+    <div class="nav-arrows">
+      <button class="arw" onclick="shift(-1)">&#8249;</button>
+      <button class="tod-btn" onclick="jumpToday()">Today</button>
+      <button class="arw" onclick="shift(1)">&#8250;</button>
+    </div>
+  </div>
+
+  <div class="legend">
+    <span class="leg" data-t="release"    onclick="tog('release',this)">   <span class="ldot release"></span>Set Release</span>
+    <span class="leg" data-t="prerelease" onclick="tog('prerelease',this)"><span class="ldot prerelease"></span>Prerelease</span>
+    <span class="leg" data-t="wave"       onclick="tog('wave',this)">      <span class="ldot wave"></span>Product Wave</span>
+    <span class="leg" data-t="rumored"    onclick="tog('rumored',this)">   <span class="ldot rumored"></span>Rumored</span>
+    <span class="leg" data-t="drop"       onclick="tog('drop',this)">      <span class="ldot drop"></span>Retail Drop</span>
+  </div>
+
+  <div id="view-grid">
+    <div class="dow-hdr">
+      <div class="dow-cell">Sun</div><div class="dow-cell">Mon</div><div class="dow-cell">Tue</div>
+      <div class="dow-cell">Wed</div><div class="dow-cell">Thu</div><div class="dow-cell">Fri</div>
+      <div class="dow-cell">Sat</div>
+    </div>
+    <div id="grid-body"></div>
+  </div>
+
+  <div id="view-list" style="display:none">
+    <div id="list-body" class="lv"></div>
+  </div>
+</main>
+
+<div class="m-overlay" id="m-overlay" onclick="mClose(event)">
+  <div class="modal">
+    <div class="m-hdr">
+      <div class="m-title" id="m-title">-</div>
+      <button class="m-x" onclick="closeModal()">&#x2715;</button>
+    </div>
+    <div id="m-body"></div>
+  </div>
+</div>
+
+<script>
+const EVENTS=[
+  {date:"2026-04-25",name:"Ascended Heroes Pre-release Weekend",type:"prerelease",set:"Ascended Heroes",note:"Local game store prereleases"},
+  {date:"2026-05-02",name:"Ascended Heroes Pre-release Weekend",type:"prerelease",set:"Ascended Heroes",note:"Final prerelease weekend"},
+  {date:"2026-05-09",name:"Ascended Heroes Launch",type:"release",set:"Ascended Heroes",note:"Full retail launch -- Target ~3AM ET, Pokemon Center ~10AM ET"},
+  {date:"2026-05-14",name:"Ascended Heroes Walmart Wednesday",type:"drop",set:"Ascended Heroes",note:"Walmart typically stocks new sets ~2 weeks post-launch"},
+  {date:"2026-05-15",name:"Chaos Rising Product Wave - ETB / Bundles",type:"wave",set:"Chaos Rising",note:"Amazon/Target ETB and Booster Bundle wave, 1 week pre-launch"},
+  {date:"2026-05-22",name:"Chaos Rising Launch",type:"release",set:"Chaos Rising",note:"Full retail launch -- Target ~3AM ET, Walmart Wed window, PC ~10AM ET"},
+  {date:"2026-05-27",name:"Chaos Rising Walmart Wednesday",type:"drop",set:"Chaos Rising",note:"First Walmart Wednesday after Chaos Rising launch"},
+  {date:"2026-06-05",name:"Destined Rivals Pre-release",type:"prerelease",set:"Destined Rivals",note:"LGS prerelease weekend"},
+  {date:"2026-06-12",name:"Destined Rivals Pre-release",type:"prerelease",set:"Destined Rivals",note:"Second prerelease weekend"},
+  {date:"2026-06-19",name:"Destined Rivals Launch",type:"release",set:"Destined Rivals",note:"Full retail launch"},
+  {date:"2026-06-20",name:"Destined Rivals Product Wave",type:"wave",set:"Destined Rivals",note:"ETB/Bundle wave 1 week after launch"},
+  {date:"2026-07-03",name:"Journey Together Product Wave",type:"wave",set:"Journey Together",note:"Pre-launch ETB/Bundle wave"},
+  {date:"2026-07-10",name:"Journey Together Launch",type:"release",set:"Journey Together",note:"Confirmed launch date"},
+  {date:"2026-07-17",name:"Pitch Black Launch - Mega Darkrai ex",type:"release",set:"Pitch Black",note:"Highly anticipated Mega Darkrai ex set"},
+  {date:"2026-08-14",name:"Black Bolt Launch",type:"release",set:"Black Bolt",note:"Full retail"},
+  {date:"2026-08-14",name:"White Flare Launch",type:"release",set:"White Flare",note:"Same day as Black Bolt"},
+  {date:"2026-09-18",name:"30th Anniversary Celebration Set",type:"release",set:"30th Celebration",note:"Worldwide simultaneous launch -- major pull window"},
+  {date:"2026-10-16",name:"Stellar Veil (rumored)",type:"rumored",set:"Stellar Veil",note:"Unconfirmed -- no official announcement yet"},
+  {date:"2026-11-06",name:"Holiday Collection Sets (rumored)",type:"rumored",set:"Holiday 2026",note:"Holiday gift sets -- historically announced Sep-Oct"},
+  {date:"2026-12-04",name:"Holiday Tins / Advent Calendar (rumored)",type:"rumored",set:"Holiday 2026",note:"Q4 holiday product wave -- estimated"},
+  {date:"2026-05-01",name:"Target Friday Drop Window",type:"drop",set:null,note:"Overnight Thu restock -- check Fri 8-10AM"},
+  {date:"2026-05-08",name:"Target Friday Drop Window",type:"drop",set:null,note:"Overnight Thu restock -- check Fri 8-10AM"},
+  {date:"2026-05-06",name:"Walmart Wednesday Drop Window",type:"drop",set:null,note:"Wed morning 8AM-3PM window"},
+  {date:"2026-05-13",name:"Walmart Wednesday Drop Window",type:"drop",set:null,note:"Wed morning 8AM-3PM window"},
+  {date:"2026-05-20",name:"Walmart Wednesday Drop Window",type:"drop",set:null,note:"Wed morning 8AM-3PM window"},
+];
+
+const TODAY=(()=>{const d=new Date();d.setHours(0,0,0,0);return d;})();
+let winStart=new Date(TODAY);
+let curView='grid';
+let allEvs=[...EVENTS];
+const hidden=new Set();
+
+const pad=n=>String(n).padStart(2,'0');
+const iso=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const addD=(d,n)=>{const r=new Date(d);r.setDate(r.getDate()+n);return r;};
+const winEnd=()=>addD(winStart,27);
+const fmtS=d=>d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+const fmtF=d=>d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
+
+function daysAway(ds){
+  const[y,m,d]=ds.split('-').map(Number);
+  return Math.round((new Date(y,m-1,d)-TODAY)/86400000);
+}
+function awayLbl(n){if(n===0)return'Today';if(n===1)return'Tomorrow';if(n<0)return Math.abs(n)+'d ago';return'in '+n+'d';}
+function awayCls(n){if(n<=1)return'hot';if(n<=7)return'warm';return'';}
+function visEvs(){return allEvs.filter(e=>!hidden.has(e.type));}
+function evsOn(ds){return visEvs().filter(e=>e.date===ds);}
+
+async function load(){
+  try{
+    const r=await fetch('../data/future_events.json');
+    if(!r.ok)throw 0;
+    const data=await r.json();
+    if(Array.isArray(data)){
+      const seen=new Set(allEvs.map(e=>e.date+'|'+e.name));
+      data.forEach(e=>{const k=e.date+'|'+e.name;if(!seen.has(k)){allEvs.push(e);seen.add(k);}});
+    }
+    document.getElementById('last-updated').textContent='Updated: '+new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+  }catch{document.getElementById('last-updated').textContent='Static data';}
+  render();
+}
+
+function shift(dir){winStart=addD(winStart,dir*28);render();}
+function jumpToday(){winStart=new Date(TODAY);render();}
+function setView(v){
+  curView=v;
+  document.getElementById('view-grid').style.display=v==='grid'?'block':'none';
+  document.getElementById('view-list').style.display=v==='list'?'block':'none';
+  document.getElementById('btn-grid').classList.toggle('active',v==='grid');
+  document.getElementById('btn-list').classList.toggle('active',v==='list');
+  render();
+}
+function tog(type,el){if(hidden.has(type)){hidden.delete(type);el.classList.remove('off');}else{hidden.add(type);el.classList.add('off');}render();}
+
+function renderStrip(){
+  const strip=document.getElementById('cd-strip');
+  const upcoming=allEvs
+    .filter(e=>e.type!=='drop')
+    .map(e=>({...e,n:daysAway(e.date)}))
+    .filter(e=>e.n>=0&&e.n<=90)
+    .sort((a,b)=>a.n-b.n).slice(0,8);
+  strip.innerHTML=upcoming.map(ev=>{
+    const dt=new Date(...ev.date.split('-').map((v,i)=>i===1?v-1:+v));
+    return `<div class="cd-card ${ev.type}" onclick='openModal(${JSON.stringify({...ev,note:ev.note||"",set:ev.set||""}).replace(/'/g,"&#39;")})'>
+      <div class="cd-num ${ev.type}">${ev.n===0?'NOW':ev.n}</div>
+      <div class="cd-unit">${ev.n===0?'LAUNCH TODAY':ev.n===1?'DAY AWAY':'DAYS AWAY'}</div>
+      <div class="cd-name">${ev.name}</div>
+      <div class="cd-date">${fmtS(dt)}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderGrid(){
+  const body=document.getElementById('grid-body');
+  body.innerHTML='';
+  const snap=new Date(winStart);
+  snap.setDate(snap.getDate()-snap.getDay());
+  for(let w=0;w<4;w++){
+    const row=document.createElement('div');
+    row.className='week-row';
+    for(let d=0;d<7;d++){
+      const dt=addD(snap,w*7+d);
+      const ds=iso(dt);
+      const evs=evsOn(ds);
+      const inW=dt>=winStart&&dt<=winEnd();
+      const isT=ds===iso(TODAY);
+      const MAX=3;
+      const cell=document.createElement('div');
+      cell.className=['day-cell',!inW?'dim':'',isT?'today':'',evs.length?'busy':''].filter(Boolean).join(' ');
+      const pills=evs.slice(0,MAX).map(ev=>`<div class="ev ${ev.type}" title="${ev.name}" onclick='openModal(${JSON.stringify({...ev,note:ev.note||"",set:ev.set||""}).replace(/'/g,"&#39;")})'>${ev.name}</div>`).join('');
+      const more=evs.length>MAX?`<div class="ev-more">+${evs.length-MAX} more</div>`:'';
+      cell.innerHTML=`<span class="day-num">${dt.getDate()}</span><div class="day-evs">${pills}${more}</div>`;
+      row.appendChild(cell);
+    }
+    body.appendChild(row);
+  }
+}
+
+function renderList(){
+  const body=document.getElementById('list-body');
+  body.innerHTML='';
+  const start=winStart,end=winEnd();
+  const evs=visEvs()
+    .map(e=>({...e,_dt:new Date(...e.date.split('-').map((v,i)=>i===1?v-1:+v))}))
+    .filter(e=>e._dt>=start&&e._dt<=end)
+    .sort((a,b)=>a._dt-b._dt);
+  if(!evs.length){body.innerHTML='<div class="empty-msg">No events in this window match your filters.</div>';return;}
+  const byW={};
+  evs.forEach(e=>{const wk=Math.max(0,Math.floor((e._dt-winStart)/(7*86400000)));(byW[wk]||(byW[wk]=[])).push(e);});
+  Object.entries(byW).forEach(([wk,wevs])=>{
+    const ws=addD(winStart,+wk*7),we=addD(ws,6);
+    const hdr=document.createElement('div');
+    hdr.className='lw-hdr';
+    hdr.textContent=`Week ${+wk+1}  --  ${fmtS(ws)} to ${fmtS(we)}`;
+    body.appendChild(hdr);
+    wevs.forEach(ev=>{
+      const n=daysAway(ev.date);
+      const row=document.createElement('div');
+      row.className='lrow'+(iso(ev._dt)===iso(TODAY)?' istoday':'');
+      const tb=iso(ev._dt)===iso(TODAY)?'<span class="tbadge">Today</span>':'';
+      row.innerHTML=`<div class="ldate">${ev._dt.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}${tb}</div>
+        <div class="ldot ${ev.type}"></div>
+        <div class="lname">${ev.name}</div>
+        <span class="ltype ${ev.type}">${ev.type}</span>
+        <div class="laway ${awayCls(n)}">${awayLbl(n)}</div>`;
+      row.onclick=()=>openModal({...ev,note:ev.note||'',set:ev.set||''});
+      body.appendChild(row);
+    });
+  });
+}
+
+function render(){
+  const end=winEnd();
+  document.getElementById('page-sub').textContent=`${fmtF(winStart)}  to  ${fmtF(end)}  --  4-week rolling window`;
+  renderStrip();
+  if(curView==='grid')renderGrid();
+  else renderList();
+}
+
+function openModal(ev){
+  if(typeof ev==='string')ev=JSON.parse(ev);
+  const[y,m,d]=ev.date.split('-').map(Number);
+  const dt=new Date(y,m-1,d);
+  const n=daysAway(ev.date);
+  const away=n===0?'Today':n>0?n+' days away':Math.abs(n)+' days ago';
+  document.getElementById('m-title').textContent=ev.name;
+  document.getElementById('m-body').innerHTML=`
+    <div class="m-row"><div class="m-lbl">Date</div><div class="m-val">${fmtF(dt)} &nbsp;<span style="color:var(--muted);font-size:.78rem">(${away})</span></div></div>
+    <div class="m-row"><div class="m-lbl">Type</div><div class="m-val"><span class="ltype ${ev.type}">${ev.type}</span></div></div>
+    ${ev.set?`<div class="m-row"><div class="m-lbl">Set</div><div class="m-val">${ev.set}</div></div>`:''}
+    ${ev.note?`<div class="m-row"><div class="m-lbl">Notes</div><div class="m-val">${ev.note}</div></div>`:''}`;
+  document.getElementById('m-overlay').classList.add('open');
+}
+function closeModal(){document.getElementById('m-overlay').classList.remove('open');}
+function mClose(e){if(e.target===document.getElementById('m-overlay'))closeModal();}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+
+load();
+setInterval(load,6*60*60*1000);
+</script>
+</body>
+</html>
