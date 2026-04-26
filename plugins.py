@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-plugins.py — Plugin Coordinator for Keith's PokeBS Tracker
+plugins.py — Plugin Coordinator for Keith's PokeBS Tracker (v6.0.0)
 
 This is the single place to enable or disable optional features.
 Each plugin is a self-contained module with a standard interface.
@@ -10,11 +10,37 @@ TO DISABLE A FEATURE: comment out its line in ENABLED_PLUGINS below.
 TO ADD A NEW FEATURE: write a module following the Plugin base class,
                       then add it to ENABLED_PLUGINS.
 
-Plugin interface (all methods optional — only implement what you need):
-    start(config, products, schedule)  — called once at startup
-    on_stock_change(product, status)   — called when any product flips IN/OUT
-    on_msrp_detected(product, price, msrp) — called when price <= MSRP
-    stop()                             — called on clean shutdown
+LIFECYCLE (v6.0.0 — see V6_0_0_SPEC.md for full design)
+
+The Plugin base class supports two lifecycle styles. Both work; pick whichever
+is appropriate for your plugin.
+
+  NEW STYLE (v6.0.0+):
+      def init(self, config, products) -> None
+          Cold init: DB schemas, file system. Synchronous, fast (<100ms).
+      def register(self, scheduler) -> None
+          Declare jobs with the scheduler. No I/O. Fast (<10ms).
+      def kickoff(self) -> None
+          Optional explicit first-run. Most plugins use kickoff=True on
+          register_job() instead and don't need this method.
+
+  LEGACY STYLE (pre-v6.0.0, still fully supported):
+      def start(self, config, products, schedule) -> None
+          Called once at tracker startup. Register schedules + do first
+          check inline. Used by all 14 wrapper classes in this file.
+          The legacy signature will continue to work through all v6.x
+          releases. Formal deprecation arrives in v7.0.
+
+  EVENT HOOKS (both styles):
+      def on_stock_change(self, product, status) -> None
+      def on_msrp_detected(self, product, listed, msrp) -> None
+      def on_post_check(self) -> None
+      def stop(self) -> None
+
+The lifecycle dispatch happens in load_plugins() below: plugins overriding
+register() use the new path; plugins overriding only start() use the
+back-compat shim. A plugin that overrides both will use register() (new
+takes precedence).
 """
 
 import logging
@@ -67,9 +93,39 @@ class Plugin:
     version = "1.0"
     description = ""
 
-    def start(self, config: dict, products: list, schedule) -> None:
-        """Called once at tracker startup. Register schedules here."""
+    # ── New lifecycle (v6.0.0+) — all optional, default to no-ops ─────────
+
+    def init(self, config: dict, products: list) -> None:
+        """Phase 0: cold init. DB schemas, file system. Synchronous, fast (<100ms)."""
         pass
+
+    def register(self, scheduler) -> None:
+        """Phase 1: declare jobs with the scheduler. No I/O. Fast (<10ms).
+
+        Plugins overriding this method use the new lifecycle. Plugins
+        overriding only the legacy start() method continue to work via
+        the back-compat shim in load_plugins().
+        """
+        pass
+
+    def kickoff(self) -> None:
+        """Phase 3: explicit first-run. Most plugins use kickoff=True on
+        scheduler.register_job() instead and don't need this method.
+        Provided for plugins that need custom kickoff orchestration."""
+        pass
+
+    # ── Legacy lifecycle (pre-v6.0.0) — fully supported through v6.x ──────
+
+    def start(self, config: dict, products: list, schedule) -> None:
+        """LEGACY (pre-v6.0.0). Called once at tracker startup.
+
+        Plugins still using this signature will continue to work
+        unchanged. Formal deprecation arrives in v7.0. Migrating to
+        the new init()/register() lifecycle is encouraged but not required.
+        """
+        pass
+
+    # ── Event hooks (both styles) ─────────────────────────────────────────
 
     def on_stock_change(self, product: dict, status) -> None:
         """Called whenever a product transitions IN or OUT of stock."""
@@ -86,7 +142,10 @@ class Plugin:
 
 # ─────────────────────────────────────────────
 # PLUGIN WRAPPERS
-# Each wraps an existing module in the Plugin interface
+# Each wraps an existing module in the Plugin interface.
+# All 14 currently use the legacy start() lifecycle. They're untouched
+# in v6.0.0; migrations to the new lifecycle happen in v6.0.0 Steps 4-6
+# (the three boot-stall offenders) and in v6.1 (the remaining eight).
 # ─────────────────────────────────────────────
 
 class NewsScraper_Plugin(Plugin):
@@ -293,6 +352,7 @@ class CostcoTracker_Plugin(Plugin):
         if hasattr(self, "_tracker"):
             self._tracker.stop()
 
+
 class InvestStore_Plugin(Plugin):
     name = "invest_store"
     version = "1.0"
@@ -348,6 +408,7 @@ class ApiServer_Plugin(Plugin):
             self._api.stop()
         log.info("  [api_server] Stopped")
 
+
 # ─────────────────────────────────────────────
 # PLUGIN REGISTRY
 # ─────────────────────────────────────────────
@@ -371,34 +432,100 @@ _PLUGIN_CLASSES = {
 _loaded_plugins: list[Plugin] = []
 
 
-def load_plugins(config: dict, products: list, schedule) -> list[Plugin]:
+# ─────────────────────────────────────────────
+# LIFECYCLE DISPATCH HELPERS
+# ─────────────────────────────────────────────
+def _overrides(instance: Plugin, method_name: str) -> bool:
+    """True iff the plugin's class overrides the named method from the base Plugin."""
+    method      = getattr(type(instance), method_name, None)
+    base_method = getattr(Plugin, method_name, None)
+    if method is None or base_method is None:
+        return False
+    return method is not base_method
+
+
+def _resolve_schedule_lib(schedule_or_scheduler):
+    """
+    Accept either a Scheduler instance or the raw `schedule` library.
+    Returns (scheduler_or_None, schedule_lib).
+
+    Detection rule: anything with a `register_job` method is a Scheduler.
+    Anything else is treated as a raw schedule library (legacy mode).
+
+    This dual-mode shim is what lets v6.0.0 Step 2 ship without breaking
+    the existing tracker.py call site. tracker.py keeps passing the raw
+    `schedule` lib until Step 3 refactors it to construct a Scheduler.
+    """
+    if hasattr(schedule_or_scheduler, "register_job"):
+        scheduler    = schedule_or_scheduler
+        schedule_lib = scheduler._schedule
+        return scheduler, schedule_lib
+    return None, schedule_or_scheduler
+
+
+# ─────────────────────────────────────────────
+# LOAD PLUGINS (PHASED BOOT)
+# ─────────────────────────────────────────────
+def load_plugins(config: dict, products: list, schedule_or_scheduler) -> list[Plugin]:
     """
     Load and start all enabled plugins.
     Called once from tracker.py main().
     Returns list of loaded plugin instances.
+
+    Accepts either a Scheduler instance (v6.0.0+) or the raw `schedule`
+    library (legacy). When a Scheduler is provided, plugins overriding
+    register() use the new phased lifecycle. Plugins overriding only
+    start() always use the back-compat shim, regardless of which is passed.
     """
     global _loaded_plugins
     _loaded_plugins = []
 
-    log.info(f"Loading {len(ENABLED_PLUGINS)} plugins...")
+    scheduler, schedule_lib = _resolve_schedule_lib(schedule_or_scheduler)
+    mode_str = "phased (Scheduler)" if scheduler else "legacy (schedule lib)"
+    log.info(f"Loading {len(ENABLED_PLUGINS)} plugins... (mode: {mode_str})")
 
+    # ── PHASE 0: init() on every plugin (no-op default) ──
+    instances: list[Plugin] = []
     for plugin_id in ENABLED_PLUGINS:
         cls = _PLUGIN_CLASSES.get(plugin_id)
         if not cls:
-            log.warning(f"  Unknown plugin: {plugin_id} — skipping")
+            log.warning(f"  Unknown plugin: {plugin_id} -- skipping")
             continue
         try:
             instance = cls()
-            instance.start(config, products, schedule)
-            _loaded_plugins.append(instance)
-            log.info(f"  ✅ {instance.name} v{instance.version} loaded")
+            if _overrides(instance, "init"):
+                instance.init(config, products)
+            instances.append(instance)
         except Exception as e:
-            log.warning(f"  ❌ {plugin_id} failed to load: {e}")
+            log.warning(f"  X {plugin_id} failed in init phase: {e}")
+
+    # ── PHASE 1: register() OR legacy start() shim ──
+    for instance in instances:
+        plugin_id = next(
+            (pid for pid, c in _PLUGIN_CLASSES.items() if isinstance(instance, c)),
+            instance.name,
+        )
+        try:
+            if _overrides(instance, "register") and scheduler is not None:
+                # New lifecycle: plugin declares jobs with the Scheduler.
+                instance.register(scheduler)
+            else:
+                # Back-compat shim: hand the plugin the underlying schedule
+                # library (whether we received a Scheduler or a raw schedule
+                # lib makes no difference here -- we always pass the lib).
+                instance.start(config, products, schedule_lib)
+            _loaded_plugins.append(instance)
+            log.info(f"  OK {instance.name} v{instance.version} loaded")
+        except Exception as e:
+            log.warning(f"  X {plugin_id} failed in register phase: {e}")
 
     log.info(f"Plugins loaded: {len(_loaded_plugins)}/{len(ENABLED_PLUGINS)}")
     return _loaded_plugins
 
 
+# ─────────────────────────────────────────────
+# EVENT BROADCAST + LIFECYCLE TEARDOWN
+# ─────────────────────────────────────────────
 def notify_stock_change(product: dict, status) -> None:
     """Broadcast a stock change event to all loaded plugins."""
     for plugin in _loaded_plugins:
