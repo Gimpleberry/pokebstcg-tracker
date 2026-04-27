@@ -685,8 +685,17 @@ def _scrape_walmart_fallback(url: str):
 def check_bestbuy(product: dict) -> ProductStatus:
     """
     Best Buy now blocks plain HTTP requests (timeouts, 403s).
-    Uses the shared Playwright session like Target - reuses one
-    browser across all BB products to minimise CPU.
+    Playwright runs in a daemon thread (v6.0.0 step 4.5) to avoid
+    sync_playwright conflict with tracker.py's asyncio event loop.
+    Each thread spawns its own Playwright session — the previous
+    persistent-session optimization was dropped because Playwright
+    objects are not safe to share across threads.
+
+    Performance trade-off: each Best Buy product check now incurs
+    ~2-3s session startup overhead (vs ~0s when sessions were
+    shared). For ~6 BB products per cycle, that's ~15s extra per
+    full check cycle, in exchange for eliminating the asyncio
+    error and the spurious circuit-breaker trips it caused.
 
     Circuit breaker: if Best Buy fails 3 consecutive times it backs
     off for 30 minutes before trying again, preventing the check
@@ -711,115 +720,135 @@ def check_bestbuy(product: dict) -> ProductStatus:
             checked_at=datetime.now().isoformat(),
         )
 
-    try:
-        from playwright.sync_api import sync_playwright, TimeoutError as PWTimeout
-    except ImportError:
-        log.warning("Playwright not installed - Best Buy checks disabled")
-        return ProductStatus(
-            name=product["name"], retailer="Best Buy",
-            url=url, in_stock=False, price="N/A",
-            checked_at=datetime.now().isoformat(),
-        )
+    # ── Run Playwright in a daemon thread (v6.0.0 step 4.5) ──────
+    # sync_playwright cannot run inside tracker.py's asyncio event
+    # loop; this isolates the Playwright work to its own thread,
+    # matching the pattern used by amazon_monitor and costco_tracker.
+    import threading
+    result = {"in_stock": False, "price": "N/A", "error": None}
 
-    try:
-        # ── Reuse shared BB browser session ──────────────────────
-        if not hasattr(check_bestbuy, "_pw") or check_bestbuy._pw is None:
-            check_bestbuy._pw = sync_playwright().start()
-            os.makedirs(BROWSER_PROFILE, exist_ok=True)
-            check_bestbuy._context = check_bestbuy._pw.chromium.launch_persistent_context(
-                BROWSER_PROFILE,
-                headless=True,
-                args=[
-                    "--disable-blink-features=AutomationControlled",
-                    "--no-sandbox",
-                    "--disable-dev-shm-usage",
-                    "--disable-gpu",
-                    "--blink-settings=imagesEnabled=false",
-                ],
-                user_agent=HEADERS["User-Agent"],
-            )
-            log.debug("Best Buy: launched Playwright browser session")
-
-        page = check_bestbuy._context.new_page()
-        page.route("**/*", lambda r: r.abort()
-            if r.request.resource_type in ("image", "media", "font", "stylesheet")
-            else r.continue_()
-        )
+    def _run():
+        try:
+            from playwright.sync_api import sync_playwright, TimeoutError as PWTimeout
+        except ImportError:
+            log.warning("Playwright not installed - Best Buy checks disabled")
+            return
 
         try:
-            page.goto(url, wait_until="domcontentloaded", timeout=18000)
-            try:
-                page.wait_for_selector(
-                    ".add-to-cart-button, [data-button-state], "
-                    ".fulfillment-add-to-cart-button",
-                    timeout=7000,
+            with sync_playwright() as p:
+                os.makedirs(BROWSER_PROFILE, exist_ok=True)
+                context = p.chromium.launch_persistent_context(
+                    BROWSER_PROFILE,
+                    headless=True,
+                    args=[
+                        "--disable-blink-features=AutomationControlled",
+                        "--no-sandbox",
+                        "--disable-dev-shm-usage",
+                        "--disable-gpu",
+                        "--blink-settings=imagesEnabled=false",
+                    ],
+                    user_agent=HEADERS["User-Agent"],
                 )
-            except PWTimeout:
-                pass
 
-            content = page.content()
-
-            # Read rendered button state
-            btn_el = page.query_selector(
-                ".add-to-cart-button, [data-button-state]"
-            )
-            btn_state   = ""
-            btn_text    = ""
-            if btn_el:
-                btn_state = btn_el.get_attribute("data-button-state") or ""
-                btn_text  = btn_el.inner_text().strip().upper()
-
-            # Scan rendered JSON fragments
-            states = re.findall(r'data-button-state=["\']([^"\']+)["\']', content)
-            states += re.findall(r'"buttonState"\s*:\s*"([A-Z_]+)"', content)
-
-            avail_states  = {"ADD_TO_CART"}
-            unavail_states = {
-                "SOLD_OUT", "COMING_SOON", "PRE_ORDER",
-                "CHECK_STORES", "UNAVAILABLE", "NOT_AVAILABLE",
-            }
-
-            if btn_state in avail_states:
-                in_stock = True
-            elif btn_state in unavail_states:
-                in_stock = False
-            elif "ADD TO CART" in btn_text:
-                in_stock = True
-            elif set(states) & avail_states:
-                in_stock = True
-            elif set(states) & unavail_states:
-                in_stock = False
-
-            # Price
-            price_match = re.search(
-                r'"currentPrice"\s*:\s*([\d.]+)', content
-            )
-            if price_match:
-                price = f"${float(price_match.group(1)):.2f}"
-            else:
-                price_el = page.query_selector(
-                    ".priceView-customer-price span, "
-                    ".priceView-hero-price span"
+                page = context.new_page()
+                page.route("**/*", lambda r: r.abort()
+                    if r.request.resource_type in ("image", "media", "font", "stylesheet")
+                    else r.continue_()
                 )
-                if price_el:
-                    price = price_el.inner_text().strip()
 
-            log.debug(
-                f"Best Buy {product['name']}: "
-                f"btn_state={btn_state} btn_text={btn_text} "
-                f"in_stock={in_stock} price={price}"
+                try:
+                    page.goto(url, wait_until="domcontentloaded", timeout=18000)
+                    try:
+                        page.wait_for_selector(
+                            ".add-to-cart-button, [data-button-state], "
+                            ".fulfillment-add-to-cart-button",
+                            timeout=7000,
+                        )
+                    except PWTimeout:
+                        pass
+
+                    content = page.content()
+
+                    # Read rendered button state
+                    btn_el = page.query_selector(
+                        ".add-to-cart-button, [data-button-state]"
+                    )
+                    btn_state   = ""
+                    btn_text    = ""
+                    if btn_el:
+                        btn_state = btn_el.get_attribute("data-button-state") or ""
+                        btn_text  = btn_el.inner_text().strip().upper()
+
+                    # Scan rendered JSON fragments
+                    states = re.findall(r'data-button-state=["\']([^"\']+)["\']', content)
+                    states += re.findall(r'"buttonState"\s*:\s*"([A-Z_]+)"', content)
+
+                    avail_states  = {"ADD_TO_CART"}
+                    unavail_states = {
+                        "SOLD_OUT", "COMING_SOON", "PRE_ORDER",
+                        "CHECK_STORES", "UNAVAILABLE", "NOT_AVAILABLE",
+                    }
+
+                    local_in_stock = False
+                    if btn_state in avail_states:
+                        local_in_stock = True
+                    elif btn_state in unavail_states:
+                        local_in_stock = False
+                    elif "ADD TO CART" in btn_text:
+                        local_in_stock = True
+                    elif set(states) & avail_states:
+                        local_in_stock = True
+                    elif set(states) & unavail_states:
+                        local_in_stock = False
+
+                    # Price
+                    local_price = "N/A"
+                    price_match = re.search(
+                        r'"currentPrice"\s*:\s*([\d.]+)', content
+                    )
+                    if price_match:
+                        local_price = f"${float(price_match.group(1)):.2f}"
+                    else:
+                        price_el = page.query_selector(
+                            ".priceView-customer-price span, "
+                            ".priceView-hero-price span"
+                        )
+                        if price_el:
+                            local_price = price_el.inner_text().strip()
+
+                    log.debug(
+                        f"Best Buy {product['name']}: "
+                        f"btn_state={btn_state} btn_text={btn_text} "
+                        f"in_stock={local_in_stock} price={local_price}"
+                    )
+
+                    result["in_stock"] = local_in_stock
+                    result["price"]    = local_price
+
+                finally:
+                    page.close()
+                    context.close()
+
+        except Exception as e:
+            result["error"] = e
+
+    t = threading.Thread(target=_run, daemon=True, name="bestbuy_check")
+    t.start()
+    t.join(timeout=60)  # 60s max per product
+
+    if t.is_alive():
+        # Thread still running — timed out
+        log.warning(f"Best Buy check timed out for {product['name']} (>60s)")
+        cb["failures"] += 1
+        if cb["failures"] >= 3:
+            cb["open_until"] = time.time() + (30 * 60)
+            log.warning(
+                "Best Buy circuit breaker OPEN - "
+                "backing off 30 minutes after 3 consecutive failures"
             )
-
-            # Reset circuit breaker on success
-            cb["failures"] = 0
-
-        finally:
-            page.close()
-
-    except Exception as e:
-        log.warning(f"Best Buy Playwright error for {product['name']}: {e}")
-
-        # Increment circuit breaker
+    elif result["error"] is not None:
+        # Thread completed but with an error
+        log.warning(f"Best Buy Playwright error for {product['name']}: {result['error']}")
         cb["failures"] += 1
         if cb["failures"] >= 3:
             cb["open_until"] = time.time() + (30 * 60)  # 30-minute backoff
@@ -827,16 +856,11 @@ def check_bestbuy(product: dict) -> ProductStatus:
                 "Best Buy circuit breaker OPEN - "
                 "backing off 30 minutes after 3 consecutive failures"
             )
-
-        # Reset browser session on error
-        try:
-            if hasattr(check_bestbuy, "_pw") and check_bestbuy._pw:
-                check_bestbuy._context.close()
-                check_bestbuy._pw.stop()
-        except Exception:
-            pass
-        check_bestbuy._pw = None
-        in_stock = False
+    else:
+        # Success
+        in_stock = result["in_stock"]
+        price    = result["price"]
+        cb["failures"] = 0  # Reset on success
 
     return ProductStatus(
         name=product["name"],
