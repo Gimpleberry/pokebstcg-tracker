@@ -224,13 +224,25 @@ class AmazonMSRPMonitor:
 
         log.info(f"[amazon_monitor] Watching {len(self.watch_list)} Amazon products")
 
-    def start(self, schedule) -> None:
-        """Register scheduled checks."""
-        # Check every 15 minutes - Amazon restocks are random, not scheduled
-        # Less frequent than other retailers to reduce CPU load
-        schedule.every(15).minutes.do(self._check_all)
-        self._check_all()
-        log.info("[amazon_monitor] Scheduled - checking every 15 minutes")
+    def register(self, scheduler) -> None:
+        """Register with the unified Scheduler (v6.0.0 step 5).
+
+        Cadence: every 15 minutes (Amazon restocks are random, not scheduled).
+        Kickoff: T+90s after boot_ready() for an immediate first check.
+
+        The 90s delay staggers behind bestbuy_invites (T+30s) so we don't
+        stack two heavy Playwright sessions during boot. amazon_monitor
+        timeout is up to 5 minutes for a full cycle, so spacing matters.
+        """
+        scheduler.register_job(
+            name="amazon_monitor.check_all",
+            fn=self._check_all,
+            cadence="every 15 minutes",
+            kickoff=True,
+            kickoff_delay=90,
+            owner="amazon_monitor",
+        )
+        log.info("[amazon_monitor] Registered - kickoff @ T+90s, then every 15 min")
 
     def _check_all(self) -> None:
         """Check all watched Amazon products. Runs in a thread to avoid

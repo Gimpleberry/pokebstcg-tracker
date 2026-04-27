@@ -292,17 +292,32 @@ class BestBuyInvites_Plugin(Plugin):
 
 class AmazonMonitor_Plugin(Plugin):
     name = "amazon_monitor"
-    version = "1.0"
+    version = "1.1"
     description = "Amazon MSRP monitor — alerts and opens browser when Amazon.com sells at MSRP"
 
-    def start(self, config, products, schedule):
+    def init(self, config, products):
+        """Phase 1 (v6.0.0 step 5): instantiate the monitor only.
+
+        The legacy start() method ran a synchronous _check_all() which
+        could block plugin loading for up to 5 minutes. In the new
+        lifecycle, that initial check is deferred to a kickoff job that
+        fires asynchronously after boot_ready().
+        """
         try:
             from amazon_monitor import AmazonMSRPMonitor
             self._monitor = AmazonMSRPMonitor(config, products)
-            self._monitor.start(schedule)
+        except Exception as e:
+            self._monitor = None
+            log.warning(f"  [amazon_monitor] Failed to init: {e}")
+
+    def register(self, scheduler):
+        """Phase 2 (v6.0.0 step 5): hand off to the unified Scheduler."""
+        if self._monitor is None: return
+        try:
+            self._monitor.register(scheduler)
             log.info("  [amazon_monitor] Started — checking every 15 min (Amazon-sold only)")
         except Exception as e:
-            log.warning(f"  [amazon_monitor] Failed to start: {e}")
+            log.warning(f"  [amazon_monitor] Failed to register: {e}")
 
     def stop(self):
         log.info("  [amazon_monitor] Stopped")
