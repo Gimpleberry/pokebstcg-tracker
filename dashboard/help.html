@@ -77,7 +77,7 @@ main{padding:40px;max-width:1200px;margin:0 auto}
 <body>
 <header>
   <div class="logo"><span class="logo-main">Keith's PokeBS</span><span class="logo-sub">Help</span></div>
-  <div style="font-family:'DM Mono',monospace;font-size:.65rem;color:var(--muted)">v5.9 — Apr 2026</div>
+  <div style="font-family:'DM Mono',monospace;font-size:.65rem;color:var(--muted)">v6.0.0 — Apr 2026</div>
 </header>
 <nav class="nav-bar">
   <a class="nav-link" href="dashboard.html">&#128225; Tracker</a>
@@ -105,6 +105,121 @@ main{padding:40px;max-width:1200px;margin:0 auto}
   <div id="tab-changelog" class="tab-content active">
 
 
+
+<!-- ═══ v6.0.0 ════════════════════════════════════════════════════════ -->
+<div class="version-block">
+  <div class="version-header">
+    <div class="version-number">v6.0.0</div>
+    <div class="version-date">Apr 27, 2026</div>
+    <span class="version-tag tag-major">Major</span>
+    <span class="version-tag tag-feature">Architecture</span>
+    <span class="version-tag tag-fix">Boot Speed</span>
+    <span class="version-tag tag-security">Crash Isolation</span>
+    <div class="version-line"></div>
+  </div>
+  <div class="change-list">
+
+    <div class="change-item">
+      <div class="change-icon">&#9889;</div>
+      <div class="change-body">
+        <div class="change-title">Boot time: 1:43 -- 0:02 (44x faster)</div>
+        <div class="change-desc">Three plugins (bestbuy_invites, amazon_monitor, costco_tracker) were running synchronous _check_all() calls during plugin loading -- each blocked the tracker for up to 90 seconds before the dashboard could even bind. Steps 4, 5, and 6 migrated all three to a phased lifecycle: init() instantiates only, register() declares schedule, and the initial check fires asynchronously T+30/90/150 seconds AFTER the main loop is already running. Total tracker boot now completes in 2.3 seconds.</div>
+        <div class="change-file">plugins/bestbuy_invites.py, plugins/amazon_monitor.py, plugins/costco_tracker.py, plugins.py</div>
+      </div>
+    </div>
+
+    <div class="change-item">
+      <div class="change-icon">&#128274;</div>
+      <div class="change-body">
+        <div class="change-title">Scheduler exception isolation -- single point of failure eliminated</div>
+        <div class="change-desc">The 8:30 AM Monday crash this week was caused by a POSIX-only strftime directive in restock_reminder.py raising ValueError. The exception bubbled through schedule.run_pending() and killed the entire tracker. Step 4.8.7 wraps every scheduled job at the per-job boundary: errors are logged with full traceback and recorded in last_status, but no longer propagate. A single buggy plugin can never again take down the whole process. The job retries on its next cadence cycle.</div>
+        <div class="change-file">scheduler.py</div>
+      </div>
+    </div>
+
+    <div class="change-item">
+      <div class="change-icon">&#128300;</div>
+      <div class="change-body">
+        <div class="change-title">Unified Scheduler -- per-job diagnostics for every cadenced task</div>
+        <div class="change-desc">Replaces ad-hoc schedule.every().minutes.do() calls scattered across plugins with a single Scheduler class. Every job is registered by name with owner, cadence, kickoff settings, and tracks last_run / last_status / next_run. Foundation for the v6.0.2 introspection panel. Migrated plugins now register 6 jobs total (1 bestbuy + 1 amazon + 4 costco), each independently visible.</div>
+        <div class="change-file">scheduler.py</div>
+      </div>
+    </div>
+
+    <div class="change-item">
+      <div class="change-icon">&#127757;</div>
+      <div class="change-body">
+        <div class="change-title">Cross-platform safety -- POSIX-only strftime directives eliminated</div>
+        <div class="change-desc">Step 4.8.6 fixed three occurrences of %-d (POSIX-only) in restock_reminder.py that crashed on Windows. Step 4.8.6 also added a project-wide audit: findstr /S "%-" plugins\\*.py tracker.py returns empty. The crash class that brought down the tracker on Monday morning is now structurally impossible.</div>
+        <div class="change-file">plugins/restock_reminder.py</div>
+      </div>
+    </div>
+
+    <div class="change-item">
+      <div class="change-icon">&#129529;</div>
+      <div class="change-body">
+        <div class="change-title">Best Buy reliability -- prewarm + retry + clean errors</div>
+        <div class="change-desc">Steps 4.7 and 4.8 added per-product retry on Playwright timeouts, browser context prewarm during boot, and asyncio cleanup (page.unroute before close in step 4.8.5). BB batch went from 0/6 in stock to 4/6 in stock. The 2/6 still-failing products are HTTP/2 protocol errors on Best Buy's /site/ URLs -- their server, not ours. Failures now produce a single WARNING line instead of 50+ traceback chains.</div>
+        <div class="change-file">plugins/bestbuy_batch.py, plugins/bestbuy_invites.py</div>
+      </div>
+    </div>
+
+    <div class="change-item">
+      <div class="change-icon">&#128737;</div>
+      <div class="change-body">
+        <div class="change-title">Boot stall regression test -- 44x speedup locked in as a contract</div>
+        <div class="change-desc">Step 7 added tests/test_boot_stall_regression.py with 4 static lifecycle tests. Catches accidental re-introduction of synchronous I/O in init() or register() bodies, missing register() methods on monitor classes, and removal of kickoff parameter from Scheduler.register_job. Validated against 4 deliberately-injected sabotages -- all caught with actionable error messages. Future patches that touch plugins.py, scheduler.py, or any migrated monitor will REFUSE to install if they break the boot architecture.</div>
+        <div class="change-file">tests/test_boot_stall_regression.py (new)</div>
+      </div>
+    </div>
+
+    <div class="change-item">
+      <div class="change-icon">&#129514;</div>
+      <div class="change-body">
+        <div class="change-title">Test suite expanded -- 61 tests across 9 suites</div>
+        <div class="change-desc">Each lifecycle migration added a permanent regression test: test_bestbuy_invites_v6 (4), test_amazon_monitor_v6 (4), test_costco_tracker_v6 (4), test_boot_stall_regression (4), test_scheduler (10, +1 for exception isolation). Combined with pre-existing test_check_bestbuy_batch (9), test_python_safety (4), test_plugin_lifecycle (7), test_invest_store (15) -- every patch script now runs the full 61-test chain before installing. Apply scripts auto-rollback if any test fails.</div>
+        <div class="change-file">tests/ (5 new test files)</div>
+      </div>
+    </div>
+
+    <div class="change-item">
+      <div class="change-icon">&#128202;</div>
+      <div class="change-body">
+        <div class="change-title">Stagger schedule -- three Playwright sessions, properly spaced</div>
+        <div class="change-desc">After Step 6, three heavy Playwright sessions are scheduled 60 seconds apart at boot: bestbuy_invites at T+30s (3-min cycle), amazon_monitor at T+90s (5-min cycle), costco_tracker at T+150s (30-sec cycle). None overlap in normal operation. The tracker's main loop is fully responsive throughout.</div>
+        <div class="change-file">scheduler.py + 3 migrated plugins</div>
+      </div>
+    </div>
+
+    <div class="change-item">
+      <div class="change-icon">&#128221;</div>
+      <div class="change-body">
+        <div class="change-title">15 patches deployed via reproducible apply scripts</div>
+        <div class="change-desc">v6.0.0 shipped as 15 sequential patches, each with sandbox QC before deployment: dry-run, apply, verify, idempotent re-run check, byte-perfect rollback test. Every patch script self-archives to .patches_archive/ on --finalize. Find/replace anchors are surgical (matched exactly once per file) and CRLF-preserving. Workflow specified in PATCH_WORKFLOW_SPEC.md, end-of-session lessons captured in LESSONS_LEARNED_step4_6.md.</div>
+        <div class="change-file">.patches_archive/ (15 scripts), V6_0_0_SPEC.md, PATCH_WORKFLOW_SPEC.md</div>
+      </div>
+    </div>
+
+    <div class="change-item">
+      <div class="change-icon">&#128203;</div>
+      <div class="change-body">
+        <div class="change-title">Architectural state -- 3 of 14 plugins on phased lifecycle</div>
+        <div class="change-desc">bestbuy_invites, amazon_monitor, and costco_tracker are migrated to init() + register(). The remaining 11 plugins (news_scraper, msrp_alert, cart_preloader, store_inventory, alt_retailer, walmart_queue, restock_reminder, price_history, invest_store, market_data_refresh, api_server) still use legacy start(config, products, schedule) -- but none of them block boot, so the practical urgency is gone. Future migrations will be batched in v6.1+ at a more leisurely pace.</div>
+        <div class="change-file">plugins.py</div>
+      </div>
+    </div>
+
+    <div class="change-item">
+      <div class="change-icon">&#128203;</div>
+      <div class="change-body">
+        <div class="change-title">Known issue: Walmart API endpoint change (deferred to v6.1)</div>
+        <div class="change-desc">As of Apr 26, 2026, every Walmart product check returns 404 from walmart.com/product/v2/pdpData. Walmart appears to have changed their endpoint. Tracker correctly fails-safe to "Out of stock" rather than misreporting -- no missed drops, just no positive Walmart signal until reverse-engineered in v6.1 (planned as Step 4.8.8 / first post-v6.0.0 patch).</div>
+        <div class="change-file">tracker.py (Walmart check), known issue tracker</div>
+      </div>
+    </div>
+
+  </div>
+</div>
 
 <!-- ═══ v5.9 ════════════════════════════════════════════════════════ -->
 <div class="version-block">
