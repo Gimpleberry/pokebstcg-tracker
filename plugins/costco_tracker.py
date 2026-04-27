@@ -160,22 +160,49 @@ class CostcoTracker:
         self.active = [p for p in self.watch_list if p.get("item")]
         log.info(f"[costco] Monitoring {len(self.active)} products")
 
-    def start(self, schedule) -> None:
-        """Register scheduled checks."""
-        # Check every 15 minutes -- Costco drops are unpredictable
-        # but tend to cluster around 11 AM and 5 PM ET
-        schedule.every(15).minutes.do(self._check_all_online)
+    def register(self, scheduler) -> None:
+        """Register with the unified Scheduler (v6.0.0 step 6).
 
-        # In-warehouse check once per day at 9 AM
-        # (warehouses stock shelves shortly after opening)
-        schedule.every().day.at("09:00").do(self._check_warehouses)
+        Four jobs:
+          - main online check every 15 min (kickoff at T+150s)
+          - warehouse stock check daily at 09:00
+          - extra online check daily at 10:45 (late-morning drop window)
+          - extra online check daily at 16:45 (afternoon drop window)
 
-        # Extra online check at known drop windows
-        schedule.every().day.at("10:45").do(self._check_all_online)
-        schedule.every().day.at("16:45").do(self._check_all_online)
-
-        self._check_all_online()
-        log.info("[costco] Scheduled -- 15-min online checks, daily warehouse check at 09:00")
+        Kickoff at T+150s staggers behind amazon_monitor (T+90s) and
+        bestbuy_invites (T+30s). All three run heavy Playwright sessions,
+        so spacing during boot prevents stacking three browser launches.
+        """
+        scheduler.register_job(
+            name="costco_tracker.check_online",
+            fn=self._check_all_online,
+            cadence="every 15 minutes",
+            kickoff=True,
+            kickoff_delay=150,
+            owner="costco_tracker",
+        )
+        scheduler.register_job(
+            name="costco_tracker.check_warehouses",
+            fn=self._check_warehouses,
+            cadence="daily 09:00",
+            owner="costco_tracker",
+        )
+        scheduler.register_job(
+            name="costco_tracker.check_online_window_am",
+            fn=self._check_all_online,
+            cadence="daily 10:45",
+            owner="costco_tracker",
+        )
+        scheduler.register_job(
+            name="costco_tracker.check_online_window_pm",
+            fn=self._check_all_online,
+            cadence="daily 16:45",
+            owner="costco_tracker",
+        )
+        log.info(
+            "[costco] Registered -- kickoff @ T+150s, every 15 min + "
+            "daily windows at 09:00/10:45/16:45"
+        )
 
     def stop(self) -> None:
         log.info("[costco] Stopped")

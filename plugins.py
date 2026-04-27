@@ -361,20 +361,34 @@ class PriceHistory_Plugin(Plugin):
 
 class CostcoTracker_Plugin(Plugin):
     name = "costco_tracker"
-    version = "1.0"
+    version = "1.1"
     description = "Costco online + warehouse monitor for Cherry Hill NJ and Princeton NJ"
 
-    def start(self, config, products, schedule):
+    def init(self, config, products):
+        """Phase 1 (v6.0.0 step 6): instantiate the tracker only.
+
+        The legacy start() method ran a synchronous _check_all_online()
+        which could block plugin loading for ~11 seconds. The initial
+        check is now deferred to a kickoff job at T+150s.
+        """
         try:
             from costco_tracker import CostcoTracker
             self._tracker = CostcoTracker(config, products)
-            self._tracker.start(schedule)
+        except Exception as e:
+            self._tracker = None
+            log.warning(f"  [costco_tracker] Failed to init: {e}")
+
+    def register(self, scheduler):
+        """Phase 2 (v6.0.0 step 6): hand off to the unified Scheduler."""
+        if self._tracker is None: return
+        try:
+            self._tracker.register(scheduler)
             log.info("  [costco_tracker] Started -- monitoring online + Cherry Hill/Princeton NJ")
         except Exception as e:
-            log.warning(f"  [costco_tracker] Failed to start: {e}")
+            log.warning(f"  [costco_tracker] Failed to register: {e}")
 
     def stop(self):
-        if hasattr(self, "_tracker"):
+        if hasattr(self, "_tracker") and self._tracker is not None:
             self._tracker.stop()
 
 
