@@ -241,6 +241,105 @@ If it errors, you can see which line. Use `git status` and `git diff` to see wha
 
 ---
 
+## 🔧 Patch System (v6.0.0+)
+
+Starting with v6.0.0, code changes are delivered as **self-contained patch scripts** instead of hand-copied files. Each patch knows what to back up, what to install, what to verify, and what to clean up.
+
+### Quick reference
+
+| Command | What it does |
+|---|---|
+| `python apply_<version>.py` | Apply the patch (preflight → backup → install → verify → cleanup) |
+| `python apply_<version>.py --dry-run` | Show the plan without changing anything |
+| `python apply_<version>.py --show <file>` | Print the embedded file content (or PATCH preview) for review |
+| `python apply_<version>.py --rollback` | Reverse the patch using `.bak` files (only works pre-finalize) |
+| `python apply_<version>.py --finalize` | After git commit confirmed: delete backups + archive the script |
+| `python apply_<version>.py --force` | Bypass soft preflight warnings (use sparingly) |
+
+### Day-to-day workflow
+
+```
+# 1. Apply
+python apply_v6_0_0_stepN.py
+
+# 2. Optional smoke test on real machine
+python tracker.py    # then Ctrl+C after confirming it works
+
+# 3. Commit (run the suggested git commands)
+git add <files>
+git commit -m "<suggested message>"
+
+# 4. Clean up artifacts
+python apply_v6_0_0_stepN.py --finalize
+```
+
+After step 4, your project root is clean — no `.bak` files, no leftover apply script. Old apply scripts get archived to `.patches_archive/` (gitignored) for audit-trail purposes.
+
+### The 7-phase patch lifecycle
+
+Every patch script follows the same flow:
+
+| Phase | Stage | What happens | Side effects |
+|---|---|---|---|
+| 1 | **Preflight** | Validate project root, git state, manifest find/replace counts, idempotency check | None |
+| 2 | **Backup** | Copy each REPLACE/PATCH target to `<file>.pre_<label>.bak` | `.bak` files created |
+| 3 | **Install** | Apply NEW/REPLACE/PATCH actions per manifest | Source files modified |
+| 4 | **Verify** | Run syntax checks + test suites, match output patterns | `.log` file if anything WARNs or FAILs |
+| 5 | **Auto-cleanup** | (only if no FAIL) Delete `__pycache__`, transient logs | Transient files removed |
+| 6 | **Suggest commit** | Print `git add` + `git commit` lines | None — user runs them |
+| 7 | **Finalize** | (separate `--finalize` invocation, after commit) Verify commit in git, delete `.bak`, archive script | `.patches_archive/` populated, project root cleaned |
+
+If anything fails before phase 4 completes, **`--rollback` works** — your project goes back to the pre-patch state. Phase 7 explicitly closes that escape hatch (the `.bak` files are gone), at which point `git revert <commit>` is the rollback path.
+
+### FAQ — patch system
+
+**Q: I ran a patch script and got "already applied — no-op." What happened?**
+The patch detected via hash that all target files are already in their post-patch state. This is normal if you re-run a script accidentally. No changes were made.
+
+**Q: I got "MIXED STATE — cannot proceed safely" in preflight. What do I do?**
+The script found that *some* of the patch's target files match the expected post-patch state but others don't. The abort message lists which is which. Most common cause: a previous apply was interrupted; run `--rollback` then re-apply. Less common: you've manually edited one of the files; review the edit and decide whether to keep it (don't re-run the patch) or `--rollback` to revert.
+
+**Q: Verify failed with [FAIL]. Now what?**
+Read the `.patch_<label>_verify_fail.log` file in your project root — it has the full output of the failing test. Most often this is a real regression and `--rollback` is correct. If you're sure the failure is benign (rare), `--skip-verify` exists for emergency hot-fixes, but you're then on your own.
+
+**Q: Verify reported [WARN] for one test. Should I worry?**
+WARN means the test exited cleanly (exit code 0) but the patch script couldn't find its expected output pattern. Most often this is an output format change in the test itself, not a regression. Read the `.patch_<label>_verify_warn.log` to confirm. If the test really did pass, just commit and move on.
+
+**Q: I committed but forgot to `--finalize`. Is that bad?**
+No, just leaves `.bak` files lying around. You can run `--finalize` whenever, even days later — it just confirms the commit is in git history then cleans up. If you'd rather skip it, manually delete `*.bak` files when you feel like it (they're already gitignored, so they don't show up in git status).
+
+**Q: I ran `--finalize`, then changed my mind. How do I undo?**
+After finalize, the `.bak` files are gone. The patch script's `--rollback` will refuse and tell you to use `git revert <commit-hash>` instead. Git history is your safety net post-finalize.
+
+**Q: Why are old apply scripts moved to `.patches_archive/` instead of deleted?**
+Audit trail. They're typically 50-80KB each — negligible disk cost. If you ever want to inspect what a past patch did (`--show <file>` still works on archived scripts), or run a forensic `--rollback` from before a `--finalize`, the archive has them.
+
+**Q: I downloaded a patch script but I'm not sure if I should run it. What do I do?**
+`python apply_<version>.py --dry-run` shows the full plan — what files it'll touch, what tests it'll run, what verifications it expects to pass — without changing anything. Then `python apply_<version>.py --show <filename>` lets you read the exact content of any embedded file before applying.
+
+### Patch artifacts you might see
+
+| File pattern | What it is | Cleaned by |
+|---|---|---|
+| `apply_v*.py` | A patch script | `--finalize` (moves to `.patches_archive/`) |
+| `*.pre_v*_*.bak` | Backup of a file modified by a patch | `--finalize` (deletes after commit confirmed) |
+| `.patch_*_verify_warn.log` | Test ran clean but pattern miss; check before committing | Auto-cleaned in phase 5 if no warnings remain |
+| `.patch_*_verify_fail.log` | Test failed; investigate before doing anything else | Stays until `--rollback` succeeds and resolves the issue |
+| `.patches_archive/` | Folder of archived past patch scripts | Gitignored; clean manually if it grows uncomfortably large |
+
+### Notes on Steps 1-3 (legacy)
+
+The first three patches in v6.0.0 (Steps 1, 2, 3) were applied before the new patch infrastructure existed. They left some `.bak` files and apply scripts in your project root. These are harmless — the `.gitignore` rules keep them out of git status — but you can hand-delete them whenever you feel like:
+
+```
+del apply_v6_0_0_step1.py apply_v6_0_0_step1_hotfix1.py apply_v6_0_0_step2.py apply_v6_0_0_step3.py
+del *.bak tests\*.bak
+```
+
+Step 4 forward uses the new infrastructure described above.
+
+---
+
 ## 📚 Glossary (terms I'll forget)
 
 | Term | What it means |

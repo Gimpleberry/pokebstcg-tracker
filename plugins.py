@@ -264,17 +264,27 @@ class WalmartQueue_Plugin(Plugin):
 
 class BestBuyInvites_Plugin(Plugin):
     name = "bestbuy_invites"
-    version = "1.0"
-    description = "Best Buy invite button monitor — auto-requests invites and alerts on selection"
+    version = "1.1"
+    description = "Best Buy invite button monitor (v6.0.0 phased boot, no boot stall)"
 
-    def start(self, config, products, schedule):
+    def init(self, config, products):
         try:
             from bestbuy_invites import BestBuyInviteMonitor
             self._monitor = BestBuyInviteMonitor(config, products)
-            self._monitor.start(schedule)
-            log.info("  [bestbuy_invites] Started — monitoring invite buttons every 10 min")
+            log.info("  [bestbuy_invites] Initialized")
         except Exception as e:
-            log.warning(f"  [bestbuy_invites] Failed to start: {e}")
+            log.warning(f"  [bestbuy_invites] Failed to init: {e}")
+            self._monitor = None
+
+    def register(self, scheduler):
+        if self._monitor is None:
+            log.warning("  [bestbuy_invites] Not initialized; skipping register")
+            return
+        try:
+            self._monitor.register(scheduler)
+            log.info("  [bestbuy_invites] Registered (kickoff @ T+30s, then every 10 min)")
+        except Exception as e:
+            log.warning(f"  [bestbuy_invites] Failed to register: {e}")
 
     def stop(self):
         log.info("  [bestbuy_invites] Stopped")

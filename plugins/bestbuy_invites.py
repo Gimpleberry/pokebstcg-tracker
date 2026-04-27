@@ -127,32 +127,48 @@ class BestBuyInviteMonitor:
 
     # ── Plugin lifecycle ─────────────────────────────────────────────────────
 
-    def start(self, schedule) -> None:
-        """Register scheduled jobs."""
-        # Check every 10 minutes during business hours (invite buttons go live
-        # around release day announcements, usually morning ET)
-        schedule.every(10).minutes.do(self._check_all_products)
+    def register(self, scheduler) -> None:
+        """Register jobs with the scheduler (v6.0.0 phased boot).
 
-        # Run an immediate check on startup
-        self._check_all_products()
-        log.info("[bestbuy_invites] Scheduled - checking every 10 minutes")
+        Replaces the legacy start(schedule) signature. The first check used
+        to run synchronously inside start(), blocking the plugin loader for
+        ~60s. Now it's queued as a kickoff job that fires at T+30s after
+        boot_ready(), in a daemon thread, so the dashboard comes up first.
+        """
+        scheduler.register_job(
+            name="bestbuy_invites.check_all_products",
+            fn=self._check_all_products,
+            cadence="every 10 minutes",
+            kickoff=True,
+            kickoff_delay=30,
+            owner="bestbuy_invites",
+        )
+        log.info("[bestbuy_invites] Registered - kickoff @ T+30s, then every 10 min")
 
     # ── Core check ───────────────────────────────────────────────────────────
 
     def _check_all_products(self) -> None:
-        """Check all tracked Best Buy products for invite status changes."""
+        """Check all tracked Best Buy products. Runs in a daemon thread (v6.0.0)
+        to avoid sync_playwright conflict with tracker.py's asyncio event loop.
+        Same pattern as amazon_monitor and costco_tracker."""
+        import threading
+
         if not self.bb_products:
             return
 
-        log.debug(f"[bestbuy_invites] Checking {len(self.bb_products)} products...")
+        def _run():
+            log.debug(f"[bestbuy_invites] Checking {len(self.bb_products)} products...")
+            for product in self.bb_products:
+                try:
+                    state = self._get_invite_state(product)
+                    self._handle_state_change(product, state)
+                    time.sleep(3)  # Polite delay between products
+                except Exception as e:
+                    log.warning(f"[bestbuy_invites] Error checking {product['name']}: {e}")
 
-        for product in self.bb_products:
-            try:
-                state = self._get_invite_state(product)
-                self._handle_state_change(product, state)
-                time.sleep(3)  # Polite delay between products
-            except Exception as e:
-                log.warning(f"[bestbuy_invites] Error checking {product['name']}: {e}")
+        t = threading.Thread(target=_run, daemon=True, name="bestbuy_invites_check")
+        t.start()
+        t.join(timeout=300)  # Max 5 minutes for full check cycle
 
     def _get_invite_state(self, product: dict) -> str:
         """
