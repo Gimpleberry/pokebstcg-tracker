@@ -176,7 +176,8 @@ def _get_upcoming_drops(today: date) -> list[dict]:
                     "days_away": diff,
                     "label":    "TODAY" if diff == 0 else
                                 f"TOMORROW ({drop_date.strftime('%a')})" if diff == 1 else
-                                f"In {diff} days ({drop_date.strftime('%a %b %-d')})",
+                                # Portable date format (v6.0.0 step 4.8.6) - see fix #1 comment
+                                f"In {diff} days ({drop_date.strftime('%a %b')} {drop_date.day})",
                 })
         except ValueError:
             continue
@@ -204,7 +205,8 @@ def build_reminder(today: date) -> dict:
         return {
             "title":    f"LAUNCH DAY: {drop['name'][:45]}",
             "body":     (
-                f"LAUNCH DAY - {today.strftime('%A %B %-d')}\n"
+                # Portable date format (v6.0.0 step 4.8.6) - see fix #1 comment
+                f"LAUNCH DAY - {today.strftime('%A %B')} {today.day}\n"
                 f"\n"
                 f"{drop['name']}\n"
                 f"\n"
@@ -277,7 +279,11 @@ def send_reminder(config: dict) -> None:
             "priority":   reminder["priority"],
         }
         save_history(HISTORY_FILE, history)
-        log.info(f"[restock_reminder] Sent successfully for {today.strftime('%A %B %-d')}")
+        # Portable date formatting (v6.0.0 step 4.8.6): the POSIX-only
+        # day-without-zero-pad strftime directive crashes on Windows with
+        # ValueError. Build the string manually using today.day, which
+        # works on both Windows and POSIX systems.
+        log.info(f"[restock_reminder] Sent successfully for {today.strftime('%A %B')} {today.day}")
     else:
         log.warning("[restock_reminder] Send failed - will retry next schedule cycle")
 
