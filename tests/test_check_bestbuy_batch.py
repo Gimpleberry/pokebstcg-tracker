@@ -1,33 +1,26 @@
 #!/usr/bin/env python3
 """
-tests/test_check_bestbuy_batch.py - Verify Step 4.7 batch refactor structure
+tests/test_check_bestbuy_batch.py - Verify Step 4.7+4.8 BB batch architecture
 
-Six structural tests confirming the BB batch refactor is wired correctly.
-These don't actually call Playwright (would require a live browser), they
-verify the CODE structure ensures correct behavior at runtime.
+NINE structural tests confirming the BB batch refactor + reliability
+enhancements are wired correctly. These don't actually call Playwright
+(would require a live browser); they verify the CODE structure ensures
+correct behavior at runtime.
 
-  1.  inner_function_exists
-        _check_bestbuy_one(page, product) function defined in tracker.py.
+Step 4.7 tests:
+  1.  inner_function_exists                    — _check_bestbuy_one(page, product)
+  2.  batch_function_exists                    — check_bestbuy_batch(products)
+  3.  batch_uses_daemon_thread                 — daemon=True threading
+  4.  batch_launches_one_playwright_session    — exactly one sync_playwright()
+  5.  run_checks_routes_bb_through_batch       — run_checks collects BB → batch
+  6.  bestbuy_not_in_checker_map_or_routes_to_stub — CHECKER_MAP correctness
 
-  2.  batch_function_exists
-        check_bestbuy_batch(products) function defined in tracker.py.
+Step 4.8 tests (NEW):
+  7.  batch_includes_prewarm_navigation        — homepage hit before product 1
+  8.  batch_includes_per_product_retry         — retry-once on transient errors
+  9.  batch_unroutes_before_close              — page.unroute called before close
 
-  3.  batch_uses_daemon_thread
-        check_bestbuy_batch creates a daemon thread (asyncio fix preserved).
-
-  4.  batch_launches_one_playwright_session
-        Inside the daemon thread, exactly one sync_playwright() context
-        is opened — not one per product.
-
-  5.  run_checks_routes_bb_through_batch
-        run_checks() collects bestbuy products and passes them to
-        check_bestbuy_batch as a list, instead of per-product calls.
-
-  6.  bestbuy_not_in_checker_map
-        CHECKER_MAP no longer contains 'bestbuy' (or maps to a stub),
-        ensuring no accidental per-product fallback.
-
-Exit code 0 = all 6 pass.
+Exit code 0 = all 9 pass.
 
 Run from project root:
     python tests/test_check_bestbuy_batch.py
@@ -58,7 +51,6 @@ def _extract_function(src: str, name: str) -> str | None:
     if not m:
         return None
     start = m.start()
-    # Find next top-level def
     next_def = re.search(r"^def \w+\b", src[start + 1:], re.MULTILINE)
     if next_def:
         return src[start:start + 1 + next_def.start()]
@@ -66,17 +58,13 @@ def _extract_function(src: str, name: str) -> str | None:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# TESTS
+# STEP 4.7 TESTS (preserved from original)
 # ─────────────────────────────────────────────────────────────────────────────
 
 def t_inner_function_exists():
     src = _read(TRACKER_PY)
     fn = _extract_function(src, "_check_bestbuy_one")
-    assert fn is not None, (
-        "tracker.py should define _check_bestbuy_one(page, product) — the "
-        "per-product scraper used by check_bestbuy_batch"
-    )
-    # Verify signature includes both `page` and `product` parameters
+    assert fn is not None, "tracker.py should define _check_bestbuy_one(page, product)"
     first_line = fn.split("\n", 1)[0]
     assert "page" in first_line and "product" in first_line, (
         f"_check_bestbuy_one signature should accept (page, product). Got: {first_line!r}"
@@ -86,10 +74,7 @@ def t_inner_function_exists():
 def t_batch_function_exists():
     src = _read(TRACKER_PY)
     fn = _extract_function(src, "check_bestbuy_batch")
-    assert fn is not None, (
-        "tracker.py should define check_bestbuy_batch(products) — the batch "
-        "wrapper that runs all BB products through one Playwright session"
-    )
+    assert fn is not None, "tracker.py should define check_bestbuy_batch(products)"
     first_line = fn.split("\n", 1)[0]
     assert "products" in first_line, (
         f"check_bestbuy_batch signature should accept (products). Got: {first_line!r}"
@@ -100,26 +85,19 @@ def t_batch_uses_daemon_thread():
     src = _read(TRACKER_PY)
     fn = _extract_function(src, "check_bestbuy_batch")
     assert fn is not None, "check_bestbuy_batch missing"
-    # Must use threading.Thread with daemon=True (asyncio fix)
-    assert "threading.Thread" in fn, (
-        "check_bestbuy_batch must use threading.Thread (daemon-thread pattern from Step 4.5)"
-    )
-    assert "daemon=True" in fn, (
-        "check_bestbuy_batch must set daemon=True on the thread (so it doesn't block shutdown)"
-    )
+    assert "threading.Thread" in fn, "check_bestbuy_batch must use threading.Thread"
+    assert "daemon=True" in fn, "check_bestbuy_batch must set daemon=True"
 
 
 def t_batch_launches_one_playwright_session():
     src = _read(TRACKER_PY)
     fn = _extract_function(src, "check_bestbuy_batch")
     assert fn is not None, "check_bestbuy_batch missing"
-    # Count sync_playwright calls — should be exactly 1 inside the batch function
     pw_starts = fn.count("sync_playwright()")
     assert pw_starts == 1, (
-        f"check_bestbuy_batch should open exactly ONE sync_playwright() context "
-        f"(this is the whole point of batching). Found {pw_starts}."
+        f"check_bestbuy_batch should open exactly ONE sync_playwright() context. "
+        f"Found {pw_starts}."
     )
-    # And should iterate products (loop is the give-away)
     assert "for " in fn and "products" in fn, (
         "check_bestbuy_batch must loop over products inside the Playwright context"
     )
@@ -128,12 +106,10 @@ def t_batch_launches_one_playwright_session():
 def t_run_checks_routes_bb_through_batch():
     src = _read(TRACKER_PY)
     fn = _extract_function(src, "run_checks")
-    assert fn is not None, "run_checks function missing — major regression"
-    # Must call check_bestbuy_batch
+    assert fn is not None, "run_checks function missing"
     assert "check_bestbuy_batch" in fn, (
         "run_checks must call check_bestbuy_batch (not per-product check_bestbuy)"
     )
-    # Must collect BB products into a list before the batch call
     assert "bestbuy" in fn.lower(), (
         "run_checks must filter for bestbuy retailer to route to batch"
     )
@@ -141,21 +117,72 @@ def t_run_checks_routes_bb_through_batch():
 
 def t_bestbuy_not_in_checker_map_or_routes_to_stub():
     src = _read(TRACKER_PY)
-    # Find CHECKER_MAP definition
     m = re.search(r"CHECKER_MAP\s*=\s*\{([^}]*)\}", src, re.DOTALL)
     assert m, "CHECKER_MAP definition missing"
     map_body = m.group(1)
-    # Either bestbuy isn't there at all, OR it's mapped to a non-batch-routing
-    # function (e.g., a stub). The runtime path for BB MUST go through batch.
-    # Acceptable: 'bestbuy' absent, OR 'bestbuy' mapped to a stub raising error.
     if '"bestbuy"' in map_body or "'bestbuy'" in map_body:
-        # If still there, must be a stub (not the old check_bestbuy)
         assert "check_bestbuy_batch" not in map_body, (
-            "CHECKER_MAP['bestbuy'] should not point to the batch function "
-            "(batch is called from run_checks directly, not via CHECKER_MAP)"
+            "CHECKER_MAP['bestbuy'] should not point to the batch function"
         )
-        # Could be a stub; that's fine. We just want to be sure we're not
-        # accidentally invoking the old per-product path.
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# STEP 4.8 TESTS (new — reliability enhancements)
+# ─────────────────────────────────────────────────────────────────────────────
+
+def t_batch_includes_prewarm_navigation():
+    src = _read(TRACKER_PY)
+    fn = _extract_function(src, "check_bestbuy_batch")
+    assert fn is not None, "check_bestbuy_batch missing"
+    # Cold-start prewarm should navigate to BB homepage before products
+    assert "bestbuy.com/" in fn or "bestbuy.com\"" in fn, (
+        "check_bestbuy_batch must navigate to bestbuy.com homepage to prewarm "
+        "the session (Step 4.8 cold-start fix)"
+    )
+    # And the prewarm should happen BEFORE the per-product loop
+    homepage_pos = fn.find("bestbuy.com")
+    loop_pos = fn.find("for i, product in enumerate(products)")
+    if loop_pos == -1:
+        loop_pos = fn.find("for product in products")
+    assert homepage_pos != -1 and loop_pos != -1 and homepage_pos < loop_pos, (
+        f"prewarm navigation must happen BEFORE the product loop "
+        f"(homepage at char {homepage_pos}, loop at char {loop_pos})"
+    )
+
+
+def t_batch_includes_per_product_retry():
+    src = _read(TRACKER_PY)
+    fn = _extract_function(src, "check_bestbuy_batch")
+    assert fn is not None, "check_bestbuy_batch missing"
+    # Retry pattern: should call _check_bestbuy_one twice in proximity
+    # (once initially, once on retry). Look for retry-related logic.
+    assert "retry" in fn.lower(), (
+        "check_bestbuy_batch must include retry logic (Step 4.8 transient error fix)"
+    )
+    # Should call _check_bestbuy_one at least twice (initial + retry path)
+    one_calls = fn.count("_check_bestbuy_one(")
+    assert one_calls >= 2, (
+        f"check_bestbuy_batch should call _check_bestbuy_one at least 2 times "
+        f"(initial + retry). Found {one_calls}."
+    )
+
+
+def t_batch_unroutes_before_close():
+    src = _read(TRACKER_PY)
+    fn = _extract_function(src, "check_bestbuy_batch")
+    assert fn is not None, "check_bestbuy_batch missing"
+    # Must call page.unroute before page.close to prevent asyncio cancellation noise
+    assert "page.unroute" in fn, (
+        "check_bestbuy_batch must call page.unroute before page.close to prevent "
+        "asyncio CancelledError noise from route handlers (Step 4.8 cleanup fix)"
+    )
+    # Verify ordering: unroute appears before close in the function body
+    unroute_pos = fn.find("page.unroute")
+    close_pos = fn.find("page.close()")
+    assert unroute_pos < close_pos, (
+        f"page.unroute must be called BEFORE page.close. "
+        f"unroute at char {unroute_pos}, close at char {close_pos}"
+    )
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -163,16 +190,21 @@ def t_bestbuy_not_in_checker_map_or_routes_to_stub():
 # ─────────────────────────────────────────────────────────────────────────────
 def main():
     print("=" * 70)
-    print(" v6.0.0 step 4.7 - Best Buy batch refactor tests")
+    print(" v6.0.0 step 4.7+4.8 - Best Buy batch architecture tests")
     print("=" * 70)
 
     tests = [
+        # Step 4.7
         ("inner_function_exists",                       t_inner_function_exists),
         ("batch_function_exists",                       t_batch_function_exists),
         ("batch_uses_daemon_thread",                    t_batch_uses_daemon_thread),
         ("batch_launches_one_playwright_session",       t_batch_launches_one_playwright_session),
         ("run_checks_routes_bb_through_batch",          t_run_checks_routes_bb_through_batch),
         ("bestbuy_not_in_checker_map_or_routes_to_stub", t_bestbuy_not_in_checker_map_or_routes_to_stub),
+        # Step 4.8 (new)
+        ("batch_includes_prewarm_navigation",           t_batch_includes_prewarm_navigation),
+        ("batch_includes_per_product_retry",            t_batch_includes_per_product_retry),
+        ("batch_unroutes_before_close",                 t_batch_unroutes_before_close),
     ]
 
     passed = failed = 0

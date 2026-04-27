@@ -781,14 +781,17 @@ def _check_bestbuy_one(page, product: dict) -> tuple:
 def check_bestbuy_batch(products: list) -> list:
     """
     Check all Best Buy products in a single daemon thread sharing one
-    Playwright session (v6.0.0 step 4.7).
+    Playwright session (v6.0.0 step 4.7, enhanced step 4.8).
 
-    Why batched: every fresh Playwright session incurs ~5-15s of cold-start
-    cost (Chromium launch + Akamai handshake). Pre-Step-4.5 we shared a
-    persistent session across products, getting ~1-3s per product after
-    warm-up. Step 4.5 dropped that optimization to fix an asyncio-loop
-    crash; this restores it via threading: ONE daemon thread, ONE
-    Playwright launch, ALL products checked through it sequentially.
+    Step 4.8 enhancements over 4.7:
+      - Cold-start prewarm: navigate to bestbuy.com homepage once before
+        product 1, so Chromium + Akamai handshake + HTTP/2 pool are
+        already warm. Eliminates the ~18s timeout on the first product.
+      - Per-product retry: on transient errors (HTTP/2 protocol error,
+        chrome-error pages, sporadic timeout), wait 2s and retry once
+        on the same warm page.
+      - page.unroute cleanup: tear down route handlers cleanly before
+        page.close() to prevent asyncio cancellation noise on shutdown.
 
     Returns a list of ProductStatus in the same order as input products.
 
@@ -863,13 +866,49 @@ def check_bestbuy_batch(products: list) -> list:
                 )
 
                 try:
+                    # ── Cold-start prewarm (v6.0.0 step 4.8) ──────────
+                    # Navigate to BB homepage once before product 1 so
+                    # Chromium + Akamai cookies + HTTP/2 pool are warm.
+                    # Use 30s timeout for this single cold navigation.
+                    # Failure here is non-fatal — products will still
+                    # try to load (and may succeed if the homepage
+                    # navigation got partway through).
+                    try:
+                        log.debug("[bestbuy_batch] prewarming session via homepage...")
+                        page.goto(
+                            "https://www.bestbuy.com/",
+                            wait_until="domcontentloaded",
+                            timeout=30000,
+                        )
+                        page.wait_for_timeout(1500)  # Let JS settle
+                        log.debug("[bestbuy_batch] prewarm complete")
+                    except Exception as e:
+                        log.debug(f"[bestbuy_batch] prewarm failed (continuing): {e}")
+
+                    # ── Per-product check loop with retry ─────────────
                     for i, product in enumerate(products):
                         log.info(f"  [bestbuy_batch] {i+1}/{len(products)} {product['name']}")
                         in_stock, price, err = _check_bestbuy_one(page, product)
+
+                        # Retry once on transient errors (v6.0.0 step 4.8).
+                        # Common transient: HTTP/2 protocol error, chrome-
+                        # error page, sporadic 18s timeout. Warm session
+                        # is preserved, just give it 2s to recover.
                         if err is not None:
-                            log.warning(
-                                f"  [bestbuy_batch] error on {product['name']}: {err}"
+                            log.debug(
+                                f"  [bestbuy_batch] retry {product['name']} "
+                                f"after error: {err}"
                             )
+                            time.sleep(2)
+                            in_stock, price, err = _check_bestbuy_one(page, product)
+                            if err is not None:
+                                log.warning(
+                                    f"  [bestbuy_batch] error on {product['name']} "
+                                    f"(after retry): {err}"
+                                )
+                            else:
+                                log.debug(f"  [bestbuy_batch] retry succeeded for {product['name']}")
+
                         results[i] = ProductStatus(
                             name=product["name"],
                             retailer="Best Buy",
@@ -879,15 +918,23 @@ def check_bestbuy_batch(products: list) -> list:
                             checked_at=datetime.now().isoformat(),
                         )
                 finally:
+                    # Tear down route handlers cleanly to prevent asyncio
+                    # cancellation noise (v6.0.0 step 4.8). page.unroute
+                    # waits for in-flight handlers to complete before
+                    # closing — eliminates "Exception in callback" spam.
+                    try:
+                        page.unroute("**/*")
+                    except Exception:
+                        pass
                     page.close()
                     context.close()
 
         except Exception as e:
             batch_error[0] = e
 
-    # Total batch wall-clock budget: 6 products * 25s + ~10s startup = ~160s safe ceiling.
-    # In practice batches complete in 25-40s with warm session.
-    BATCH_TIMEOUT_SEC = 180
+    # Total batch wall-clock budget: 6 products * 25s + ~10s startup +
+    # prewarm 30s + retries = ~190s safe ceiling.
+    BATCH_TIMEOUT_SEC = 240
 
     t = threading.Thread(target=_run, daemon=True, name="bestbuy_batch")
     t.start()
@@ -905,7 +952,6 @@ def check_bestbuy_batch(products: list) -> list:
                 "Best Buy circuit breaker OPEN - "
                 "backing off 30 minutes after 3 consecutive failures"
             )
-        # Return failure status for all products
         return [
             ProductStatus(
                 name=p["name"], retailer="Best Buy",
@@ -933,8 +979,7 @@ def check_bestbuy_batch(products: list) -> list:
             for p in products
         ]
 
-    # Success — but check if any individual products didn't get a result
-    # (shouldn't happen, but defensive). Reset circuit breaker on success.
+    # Success — reset circuit breaker and log summary
     cb["failures"] = 0
     in_stock_count = sum(1 for r in results if r and r.in_stock)
     log.info(
@@ -1077,9 +1122,12 @@ def send_sms(product: ProductStatus):
 def notify(product: ProductStatus):
     """Dispatch all enabled notifications."""
     log.info(f"RESTOCK ALERT: {product.name} @ {product.retailer} - {product.price}")
-    if CONFIG["notify_push"]:
+    # Hardened CONFIG access (v6.0.0 step 4.8) — all three notification
+    # channels now use .get() with default False to prevent KeyError if
+    # any key is missing from config.json.
+    if CONFIG.get("notify_push", False):
         _notify_push(product)
-    if CONFIG["notify_email"]:
+    if CONFIG.get("notify_email", False):
         send_email(product)
     if CONFIG.get("notify_sms", False):
         send_sms(product)
