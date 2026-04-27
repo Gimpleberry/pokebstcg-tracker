@@ -4,6 +4,19 @@ TCG Restock Tracker
 Monitors Target, Walmart, and Best Buy for TCG bundles, boxes, and assortments.
 Sends alerts via email, SMS (Twilio), or push notification (ntfy.sh).
 """
+# ─────────────────────────────────────────────
+# Python version check (v6.0.0 step 4.6)
+# Fail fast with a helpful error if launched on the wrong Python.
+# Bare `python` may resolve to a different install than `py -3.14`.
+# See README.md "🐍 Python Setup" section.
+# ─────────────────────────────────────────────
+import sys
+if sys.version_info < (3, 14):
+    sys.exit(
+        f"ERROR: tracker.py requires Python 3.14+ "
+        f"(you have {sys.version_info.major}.{sys.version_info.minor}).\n"
+        f"On Windows, run: py -3.14 tracker.py  (or use tracker.bat)"
+    )
 
 import requests
 import json

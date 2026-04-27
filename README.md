@@ -340,6 +340,57 @@ Step 4 forward uses the new infrastructure described above.
 
 ---
 
+## 🐍 Python Setup (v6.0.0+)
+
+This project requires **Python 3.14 or newer**. Earlier Python installs may be missing required packages or language features.
+
+### Recommended: use `tracker.bat`
+
+```
+tracker.bat
+```
+
+This wrapper always uses Python 3.14 via the `py` launcher, regardless of your `PATH` ordering. If you have multiple Python versions installed, this is the safest way to run the tracker.
+
+You can also pass arguments through:
+```
+tracker.bat debug
+```
+
+### If running `python` directly
+
+On Windows with multiple Python installs, prefer the `py` launcher to pin a specific version:
+
+```
+py -3.14 tracker.py
+```
+
+Apply scripts (patches) need the same:
+
+```
+py -3.14 apply_v6_0_0_stepN.py
+```
+
+### Wrong-Python symptoms
+
+If you see any of these, you're likely running with the wrong Python:
+
+- `ModuleNotFoundError: No module named 'requests'` (or `schedule`, etc.) — bare-install Python doesn't have the project's packages
+- `ERROR: tracker.py requires Python 3.14+` — the version-check guard at the top of `tracker.py` caught it (this is the friendly error; everything else is a symptom of bypassing it)
+- Apply scripts report unrelated regression test failures — the verify step is using the wrong interpreter
+
+To investigate which Python `cmd.exe` is using:
+
+```
+where python
+python --version
+py -3.14 --version
+```
+
+If `python` doesn't resolve to 3.14, switch to `tracker.bat` or `py -3.14` for everything related to this project.
+
+---
+
 ## 📚 Glossary (terms I'll forget)
 
 | Term | What it means |
