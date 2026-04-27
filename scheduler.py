@@ -285,10 +285,22 @@ class Scheduler:
 
     def _wrap_with_status(self, name: str, fn: Callable) -> Callable:
         """
-        Wrap fn so we can record last_run and last_status. The wrapper is
-        transparent: it calls fn() with no args, returns its result, and
-        re-raises any exception so existing error handling in plugins is
-        preserved.
+        Wrap fn so we can record last_run and last_status, and isolate
+        exceptions from the rest of the tracker (v6.0.0 step 4.8.7).
+
+        The wrapper:
+          - Records last_run timestamp before calling fn()
+          - On success: records last_status="ok", returns fn()'s result
+          - On exception: records last_status="error: <type>: <msg>",
+            logs the full traceback via log.exception(), then SWALLOWS
+            the exception (returns None) so it doesn't propagate to
+            schedule.run_pending() and crash the entire tracker.
+
+        The swallow is intentional. A buggy plugin must not take down
+        the whole process - it gets isolated, logged, and retried on
+        the next cadence cycle. Plugins that need to react to their own
+        failures should handle exceptions inside fn() before this
+        outer wrapper sees them.
         """
         def wrapped():
             self._jobs_meta[name]["last_run"] = datetime.now()
@@ -300,8 +312,16 @@ class Scheduler:
                 self._jobs_meta[name]["last_status"] = (
                     f"error: {type(e).__name__}: {e}"
                 )
-                log.exception(f"[scheduler] job {name!r} raised")
-                raise
+                # Exception isolation (v6.0.0 step 4.8.7): record failure,
+                # log full traceback, then SWALLOW so it doesn't propagate
+                # to schedule.run_pending() and crash the tracker. A single
+                # buggy plugin must not take everything down. The job will
+                # retry on its next cadence cycle.
+                log.exception(
+                    f"[scheduler] job {name!r} raised - isolated, "
+                    f"tracker continues"
+                )
+                return None
         wrapped.__name__ = f"sched_{name}"
         wrapped.__qualname__ = wrapped.__name__
         return wrapped

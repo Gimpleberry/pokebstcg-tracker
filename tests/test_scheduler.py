@@ -2,7 +2,7 @@
 """
 tests/test_scheduler.py - Verify scheduler.py (v6.0.0)
 
-Runs 9 checks in isolation. No real time.sleep, no real subprocess.
+Runs 10 checks in isolation. No real time.sleep, no real subprocess.
 The boot-stall regression test lives separately in tests/test_boot_stall.py.
 
   1.  register_recurring_creates_job
@@ -35,9 +35,16 @@ The boot-stall regression test lives separately in tests/test_boot_stall.py.
   9.  jobs_metadata_complete
         scheduler.jobs() returns name, owner, cadence, kickoff, kickoff_delay,
         next_run, last_run, last_status for every registered job. Status
-        updates after the wrapped function runs.
+        updates after the wrapped function runs. Exception in fn is recorded
+        in last_status and SWALLOWED (does not propagate to caller).
 
-Exit code 0 = all 9 pass. Non-zero = at least one failed.
+  10. exception_isolation_protects_other_jobs   (v6.0.0 step 4.8.7)
+        A buggy job in the middle of a run_pending() cycle must NOT prevent
+        subsequent jobs from running. Verified by registering good/bad/good
+        jobs and asserting all three wrapped functions invoke without raising,
+        and the two good ones actually executed their fn() bodies.
+
+Exit code 0 = all 10 pass. Non-zero = at least one failed.
 
 Run from project root:
     python tests/test_scheduler.py
@@ -359,14 +366,83 @@ def t_jobs_metadata_complete():
 
     s.register_job(name="t9.boom", fn=boom, cadence="every 5 minutes")
     boom_wrapped = s._jobs_meta["t9.boom"]["_wrapped_fn"]
-    try:
-        boom_wrapped()
-    except RuntimeError:
-        pass    # expected
+    # v6.0.0 step 4.8.7: exception isolation — wrapped fn now SWALLOWS
+    # exceptions so a buggy plugin can't crash the tracker via
+    # schedule.run_pending(). last_status still records the error for
+    # diagnostics, and log.exception() still logs the full traceback.
+    result = boom_wrapped()
+    assert result is None, (
+        f"wrapped fn should return None when fn raises, got: {result!r}"
+    )
     boom_meta = [j for j in s.jobs() if j["name"] == "t9.boom"][0]
     assert boom_meta["last_status"].startswith("error: RuntimeError"), (
         f"unexpected status after failure: {boom_meta['last_status']!r}"
     )
+    assert "something blew up" in boom_meta["last_status"], (
+        f"last_status should include error message: {boom_meta['last_status']!r}"
+    )
+
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Test 10 — v6.0.0 step 4.8.7: exception isolation across run_pending() cycle
+# ─────────────────────────────────────────────────────────────────────────────
+def t_exception_isolation_protects_other_jobs():
+    """A buggy job must not prevent subsequent jobs from running.
+
+    This is the architectural regression test for the 08:30 strftime crash:
+    one plugin's ValueError used to bubble up through schedule.run_pending()
+    and kill the entire tracker. After step 4.8.7, the wrapped fn swallows
+    exceptions so other jobs in the same cycle still execute.
+    """
+    s = _fresh_scheduler()
+
+    runs: list[str] = []
+
+    def good_a():
+        runs.append("a")
+
+    def boom():
+        raise RuntimeError("simulated plugin bug")
+
+    def good_b():
+        runs.append("b")
+
+    s.register_job(name="iso.good_a", fn=good_a, cadence="every 5 minutes")
+    s.register_job(name="iso.boom",   fn=boom,   cadence="every 5 minutes")
+    s.register_job(name="iso.good_b", fn=good_b, cadence="every 5 minutes")
+
+    # Simulate schedule.run_pending() firing all three sequentially.
+    # CRITICAL: the buggy job's exception MUST NOT bubble out of wrapped().
+    # If it did, this whole loop would abort partway through.
+    for name in ["iso.good_a", "iso.boom", "iso.good_b"]:
+        wrapped = s._jobs_meta[name]["_wrapped_fn"]
+        result = wrapped()    # must not raise
+        # All wrapped fns return None on either success-with-no-return or error
+        assert result is None, f"{name}: unexpected return: {result!r}"
+
+    # Both good jobs ran despite the boom in the middle
+    assert runs == ["a", "b"], (
+        f"expected good_a and good_b to both run, got: {runs}"
+    )
+
+    # Boom's status correctly captures the error
+    boom_meta = [j for j in s.jobs() if j["name"] == "iso.boom"][0]
+    assert boom_meta["last_status"].startswith("error: RuntimeError"), (
+        f"boom status should reflect error, got: {boom_meta['last_status']!r}"
+    )
+    assert "simulated plugin bug" in boom_meta["last_status"], (
+        f"boom status should include error msg, got: {boom_meta['last_status']!r}"
+    )
+    assert boom_meta["last_run"] is not None, "boom last_run should be set"
+
+    # Good jobs status is "ok"
+    for n in ["iso.good_a", "iso.good_b"]:
+        meta = [j for j in s.jobs() if j["name"] == n][0]
+        assert meta["last_status"] == "ok", (
+            f"{n} should be ok, got: {meta['last_status']!r}"
+        )
+        assert meta["last_run"] is not None, f"{n} last_run should be set"
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -388,6 +464,7 @@ def main():
         ("cadence_parser_weekly_day_time",          t_cadence_parser_weekly_day_time),
         ("cadence_parser_invalid_raises",           t_cadence_parser_invalid_raises),
         ("jobs_metadata_complete",                  t_jobs_metadata_complete),
+        ("exception_isolation_protects_other_jobs",  t_exception_isolation_protects_other_jobs),
     ]
 
     passed = failed = 0
