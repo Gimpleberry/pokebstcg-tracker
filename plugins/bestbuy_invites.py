@@ -237,6 +237,14 @@ class BestBuyInviteMonitor:
                 state = self._parse_button_state(content, page)
 
                 log.debug(f"[bestbuy_invites] {product['name']}: state={state}")
+                # Tear down route handlers cleanly before close to prevent
+                # asyncio CancelledError noise from in-flight requests
+                # being cancelled mid-flight (v6.0.0 step 4.8.5).
+                # page.unroute waits for pending handlers to drain.
+                try:
+                    page.unroute("**/*")
+                except Exception:
+                    pass
                 page.close()
                 context.close()
 
