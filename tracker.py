@@ -695,56 +695,149 @@ def _scrape_walmart_fallback(url: str):
         return False, "N/A"
 
 
-def check_bestbuy(product: dict) -> ProductStatus:
+def _check_bestbuy_one(page, product: dict) -> tuple:
     """
-    Best Buy now blocks plain HTTP requests (timeouts, 403s).
-    Playwright runs in a daemon thread (v6.0.0 step 4.5) to avoid
-    sync_playwright conflict with tracker.py's asyncio event loop.
-    Each thread spawns its own Playwright session — the previous
-    persistent-session optimization was dropped because Playwright
-    objects are not safe to share across threads.
+    Scrape ONE Best Buy product using a pre-existing Playwright page.
 
-    Performance trade-off: each Best Buy product check now incurs
-    ~2-3s session startup overhead (vs ~0s when sessions were
-    shared). For ~6 BB products per cycle, that's ~15s extra per
-    full check cycle, in exchange for eliminating the asyncio
-    error and the spurious circuit-breaker trips it caused.
+    Returns a tuple (in_stock: bool, price: str, error: Optional[Exception]).
+    Raises nothing — all errors caught and returned for the batch wrapper
+    to handle uniformly.
 
-    Circuit breaker: if Best Buy fails 3 consecutive times it backs
-    off for 30 minutes before trying again, preventing the check
-    cycle from stalling on dead connections.
+    The page's persistent context is reused across products, preserving
+    Akamai cookies and avoiding cold-start handshakes per product.
     """
-    in_stock, price = False, "N/A"
+    from playwright.sync_api import TimeoutError as PWTimeout
+
     url = product.get("url", "")
+    try:
+        page.goto(url, wait_until="domcontentloaded", timeout=18000)
+        try:
+            page.wait_for_selector(
+                ".add-to-cart-button, [data-button-state], "
+                ".fulfillment-add-to-cart-button",
+                timeout=7000,
+            )
+        except PWTimeout:
+            pass
+
+        content = page.content()
+
+        # Read rendered button state
+        btn_el = page.query_selector(
+            ".add-to-cart-button, [data-button-state]"
+        )
+        btn_state = ""
+        btn_text  = ""
+        if btn_el:
+            btn_state = btn_el.get_attribute("data-button-state") or ""
+            btn_text  = btn_el.inner_text().strip().upper()
+
+        # Scan rendered JSON fragments
+        states = re.findall(r'data-button-state=["\']([^"\']+)["\']', content)
+        states += re.findall(r'"buttonState"\s*:\s*"([A-Z_]+)"', content)
+
+        avail_states  = {"ADD_TO_CART"}
+        unavail_states = {
+            "SOLD_OUT", "COMING_SOON", "PRE_ORDER",
+            "CHECK_STORES", "UNAVAILABLE", "NOT_AVAILABLE",
+        }
+
+        in_stock = False
+        if btn_state in avail_states:
+            in_stock = True
+        elif btn_state in unavail_states:
+            in_stock = False
+        elif "ADD TO CART" in btn_text:
+            in_stock = True
+        elif set(states) & avail_states:
+            in_stock = True
+        elif set(states) & unavail_states:
+            in_stock = False
+
+        # Price
+        price = "N/A"
+        price_match = re.search(r'"currentPrice"\s*:\s*([\d.]+)', content)
+        if price_match:
+            price = f"${float(price_match.group(1)):.2f}"
+        else:
+            price_el = page.query_selector(
+                ".priceView-customer-price span, "
+                ".priceView-hero-price span"
+            )
+            if price_el:
+                price = price_el.inner_text().strip()
+
+        log.debug(
+            f"Best Buy {product['name']}: "
+            f"btn_state={btn_state} btn_text={btn_text} "
+            f"in_stock={in_stock} price={price}"
+        )
+        return (in_stock, price, None)
+
+    except Exception as e:
+        return (False, "N/A", e)
+
+
+def check_bestbuy_batch(products: list) -> list:
+    """
+    Check all Best Buy products in a single daemon thread sharing one
+    Playwright session (v6.0.0 step 4.7).
+
+    Why batched: every fresh Playwright session incurs ~5-15s of cold-start
+    cost (Chromium launch + Akamai handshake). Pre-Step-4.5 we shared a
+    persistent session across products, getting ~1-3s per product after
+    warm-up. Step 4.5 dropped that optimization to fix an asyncio-loop
+    crash; this restores it via threading: ONE daemon thread, ONE
+    Playwright launch, ALL products checked through it sequentially.
+
+    Returns a list of ProductStatus in the same order as input products.
+
+    Per-product errors are isolated — one failing product does not abort
+    the batch; remaining products are still checked. Whole-batch failure
+    (e.g., browser launch error) marks all products as failed and trips
+    the circuit breaker.
+
+    Circuit breaker: shared across the batch. 3 consecutive batch
+    failures triggers a 30-minute backoff. State stored on
+    check_bestbuy_batch._circuit (function attribute, persists across calls).
+    """
+    import threading
+
+    if not products:
+        return []
 
     # ── Circuit breaker ──────────────────────────────────────────
-    cb = getattr(check_bestbuy, "_circuit", {"failures": 0, "open_until": 0})
-    check_bestbuy._circuit = cb
+    cb = getattr(check_bestbuy_batch, "_circuit",
+                 {"failures": 0, "open_until": 0})
+    check_bestbuy_batch._circuit = cb
 
     if cb["failures"] >= 3 and time.time() < cb["open_until"]:
         mins_left = int((cb["open_until"] - time.time()) / 60)
         log.debug(
-            f"Best Buy circuit open - skipping {product['name']} "
-            f"({mins_left} min remaining)"
+            f"Best Buy circuit open - skipping batch of {len(products)} "
+            f"product(s) ({mins_left} min remaining)"
         )
-        return ProductStatus(
-            name=product["name"], retailer="Best Buy",
-            url=url, in_stock=False, price="N/A",
-            checked_at=datetime.now().isoformat(),
-        )
+        return [
+            ProductStatus(
+                name=p["name"], retailer="Best Buy",
+                url=p.get("url", ""), in_stock=False, price="N/A",
+                checked_at=datetime.now().isoformat(),
+            )
+            for p in products
+        ]
 
-    # ── Run Playwright in a daemon thread (v6.0.0 step 4.5) ──────
-    # sync_playwright cannot run inside tracker.py's asyncio event
-    # loop; this isolates the Playwright work to its own thread,
-    # matching the pattern used by amazon_monitor and costco_tracker.
-    import threading
-    result = {"in_stock": False, "price": "N/A", "error": None}
+    log.info(f"[bestbuy_batch] Starting batch check of {len(products)} product(s)...")
+
+    # ── Run all BB products in ONE daemon thread, ONE Playwright session ──
+    results: list = [None] * len(products)
+    batch_error: list = [None]  # Mutable holder for batch-level error
 
     def _run():
         try:
-            from playwright.sync_api import sync_playwright, TimeoutError as PWTimeout
+            from playwright.sync_api import sync_playwright
         except ImportError:
             log.warning("Playwright not installed - Best Buy checks disabled")
+            batch_error[0] = ImportError("playwright not installed")
             return
 
         try:
@@ -770,88 +863,41 @@ def check_bestbuy(product: dict) -> ProductStatus:
                 )
 
                 try:
-                    page.goto(url, wait_until="domcontentloaded", timeout=18000)
-                    try:
-                        page.wait_for_selector(
-                            ".add-to-cart-button, [data-button-state], "
-                            ".fulfillment-add-to-cart-button",
-                            timeout=7000,
+                    for i, product in enumerate(products):
+                        log.info(f"  [bestbuy_batch] {i+1}/{len(products)} {product['name']}")
+                        in_stock, price, err = _check_bestbuy_one(page, product)
+                        if err is not None:
+                            log.warning(
+                                f"  [bestbuy_batch] error on {product['name']}: {err}"
+                            )
+                        results[i] = ProductStatus(
+                            name=product["name"],
+                            retailer="Best Buy",
+                            url=product.get("url", ""),
+                            in_stock=in_stock,
+                            price=price,
+                            checked_at=datetime.now().isoformat(),
                         )
-                    except PWTimeout:
-                        pass
-
-                    content = page.content()
-
-                    # Read rendered button state
-                    btn_el = page.query_selector(
-                        ".add-to-cart-button, [data-button-state]"
-                    )
-                    btn_state   = ""
-                    btn_text    = ""
-                    if btn_el:
-                        btn_state = btn_el.get_attribute("data-button-state") or ""
-                        btn_text  = btn_el.inner_text().strip().upper()
-
-                    # Scan rendered JSON fragments
-                    states = re.findall(r'data-button-state=["\']([^"\']+)["\']', content)
-                    states += re.findall(r'"buttonState"\s*:\s*"([A-Z_]+)"', content)
-
-                    avail_states  = {"ADD_TO_CART"}
-                    unavail_states = {
-                        "SOLD_OUT", "COMING_SOON", "PRE_ORDER",
-                        "CHECK_STORES", "UNAVAILABLE", "NOT_AVAILABLE",
-                    }
-
-                    local_in_stock = False
-                    if btn_state in avail_states:
-                        local_in_stock = True
-                    elif btn_state in unavail_states:
-                        local_in_stock = False
-                    elif "ADD TO CART" in btn_text:
-                        local_in_stock = True
-                    elif set(states) & avail_states:
-                        local_in_stock = True
-                    elif set(states) & unavail_states:
-                        local_in_stock = False
-
-                    # Price
-                    local_price = "N/A"
-                    price_match = re.search(
-                        r'"currentPrice"\s*:\s*([\d.]+)', content
-                    )
-                    if price_match:
-                        local_price = f"${float(price_match.group(1)):.2f}"
-                    else:
-                        price_el = page.query_selector(
-                            ".priceView-customer-price span, "
-                            ".priceView-hero-price span"
-                        )
-                        if price_el:
-                            local_price = price_el.inner_text().strip()
-
-                    log.debug(
-                        f"Best Buy {product['name']}: "
-                        f"btn_state={btn_state} btn_text={btn_text} "
-                        f"in_stock={local_in_stock} price={local_price}"
-                    )
-
-                    result["in_stock"] = local_in_stock
-                    result["price"]    = local_price
-
                 finally:
                     page.close()
                     context.close()
 
         except Exception as e:
-            result["error"] = e
+            batch_error[0] = e
 
-    t = threading.Thread(target=_run, daemon=True, name="bestbuy_check")
+    # Total batch wall-clock budget: 6 products * 25s + ~10s startup = ~160s safe ceiling.
+    # In practice batches complete in 25-40s with warm session.
+    BATCH_TIMEOUT_SEC = 180
+
+    t = threading.Thread(target=_run, daemon=True, name="bestbuy_batch")
     t.start()
-    t.join(timeout=60)  # 60s max per product
+    t.join(timeout=BATCH_TIMEOUT_SEC)
 
     if t.is_alive():
-        # Thread still running — timed out
-        log.warning(f"Best Buy check timed out for {product['name']} (>60s)")
+        log.warning(
+            f"Best Buy batch timed out (>{BATCH_TIMEOUT_SEC}s) - "
+            f"marking all {len(products)} product(s) as failed"
+        )
         cb["failures"] += 1
         if cb["failures"] >= 3:
             cb["open_until"] = time.time() + (30 * 60)
@@ -859,28 +905,75 @@ def check_bestbuy(product: dict) -> ProductStatus:
                 "Best Buy circuit breaker OPEN - "
                 "backing off 30 minutes after 3 consecutive failures"
             )
-    elif result["error"] is not None:
-        # Thread completed but with an error
-        log.warning(f"Best Buy Playwright error for {product['name']}: {result['error']}")
+        # Return failure status for all products
+        return [
+            ProductStatus(
+                name=p["name"], retailer="Best Buy",
+                url=p.get("url", ""), in_stock=False, price="N/A",
+                checked_at=datetime.now().isoformat(),
+            )
+            for p in products
+        ]
+
+    if batch_error[0] is not None:
+        log.warning(f"Best Buy batch error: {batch_error[0]}")
         cb["failures"] += 1
         if cb["failures"] >= 3:
-            cb["open_until"] = time.time() + (30 * 60)  # 30-minute backoff
+            cb["open_until"] = time.time() + (30 * 60)
             log.warning(
                 "Best Buy circuit breaker OPEN - "
                 "backing off 30 minutes after 3 consecutive failures"
             )
-    else:
-        # Success
-        in_stock = result["in_stock"]
-        price    = result["price"]
-        cb["failures"] = 0  # Reset on success
+        return [
+            ProductStatus(
+                name=p["name"], retailer="Best Buy",
+                url=p.get("url", ""), in_stock=False, price="N/A",
+                checked_at=datetime.now().isoformat(),
+            )
+            for p in products
+        ]
 
-    return ProductStatus(
-        name=product["name"],
-        retailer="Best Buy",
-        url=url,
-        in_stock=in_stock,
-        price=price,
+    # Success — but check if any individual products didn't get a result
+    # (shouldn't happen, but defensive). Reset circuit breaker on success.
+    cb["failures"] = 0
+    in_stock_count = sum(1 for r in results if r and r.in_stock)
+    log.info(
+        f"[bestbuy_batch] Batch complete: {in_stock_count}/{len(products)} in stock"
+    )
+
+    # Defensive: replace any None results (shouldn't occur) with failure status
+    final_results = []
+    for i, r in enumerate(results):
+        if r is None:
+            log.warning(f"  [bestbuy_batch] missing result for {products[i]['name']}")
+            final_results.append(ProductStatus(
+                name=products[i]["name"], retailer="Best Buy",
+                url=products[i].get("url", ""), in_stock=False, price="N/A",
+                checked_at=datetime.now().isoformat(),
+            ))
+        else:
+            final_results.append(r)
+    return final_results
+
+
+# Stub kept in CHECKER_MAP for back-compat — the real BB path is the batch
+# function called directly from run_checks(). This stub catches any code
+# that accidentally calls the per-product path and routes it through batch.
+def check_bestbuy(product: dict) -> ProductStatus:
+    """
+    DEPRECATED in v6.0.0 step 4.7 — use check_bestbuy_batch() instead.
+
+    Kept as a thin shim for back-compat: any direct caller is routed
+    through the batch function with a single-element list.
+    """
+    log.debug(
+        f"[bestbuy] direct check_bestbuy() call for {product['name']} - "
+        f"routing through batch (1-element)"
+    )
+    results = check_bestbuy_batch([product])
+    return results[0] if results else ProductStatus(
+        name=product["name"], retailer="Best Buy",
+        url=product.get("url", ""), in_stock=False, price="N/A",
         checked_at=datetime.now().isoformat(),
     )
 
@@ -988,7 +1081,7 @@ def notify(product: ProductStatus):
         _notify_push(product)
     if CONFIG["notify_email"]:
         send_email(product)
-    if CONFIG["notify_sms"]:
+    if CONFIG.get("notify_sms", False):
         send_sms(product)
 
 
@@ -1106,9 +1199,17 @@ def run_checks():
     log.info(f"Running TCG stock check - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     history = load_history()
     results = []
+    bestbuy_products = []  # Collected for batch processing (v6.0.0 step 4.7)
 
     for product in PRODUCTS:
         retailer = product["retailer"].lower()
+
+        # Best Buy products are batched at the end of the cycle (v6.0.0 step 4.7)
+        # for warm-session perf — see check_bestbuy_batch() docstring.
+        if retailer == "bestbuy":
+            bestbuy_products.append(product)
+            continue
+
         checker = CHECKER_MAP.get(retailer)
         if not checker:
             log.warning(f"No checker for retailer: {retailer}")
@@ -1145,11 +1246,48 @@ def run_checks():
         )
         time.sleep(CONFIG["delay_between_requests"])
 
+    # ── Best Buy batch (v6.0.0 step 4.7) ───────────────────────────
+    # Run all BB products through ONE Playwright session for warm-session
+    # perf. Each batch reuses Akamai cookies + browser process across all
+    # products instead of paying cold-start cost per product.
+    if bestbuy_products:
+        log.info(
+            f"Checking {len(bestbuy_products)} Best Buy product(s) in batch..."
+        )
+        bb_results = check_bestbuy_batch(bestbuy_products)
+        for product, status in zip(bestbuy_products, bb_results):
+            prev = history.get(product["url"], {})
+            was_in_stock = prev.get("in_stock", None)
+            status.was_in_stock = was_in_stock
+
+            is_new_stock = (status.in_stock and was_in_stock is False) or \
+                           (status.in_stock and was_in_stock is None)
+            if is_new_stock:
+                notify(status)
+                try:
+                    import plugins as _ps
+                    _ps.notify_stock_change(product, status)
+                except Exception:
+                    pass
+
+            history[product["url"]] = {
+                "in_stock": status.in_stock,
+                "price": status.price,
+                "last_checked": status.checked_at,
+                "name": status.name,
+                "retailer": status.retailer,
+            }
+            results.append(status)
+            log.info(
+                f"  -> {'✅ IN STOCK' if status.in_stock else '❌ Out of stock'} | {status.price}"
+            )
+
     save_history(history)
 
     save_json("status_snapshot.json", [asdict(r) for r in results])  # -> data/status_snapshot.json
 
     log.info(f"Check complete. {sum(r.in_stock for r in results)}/{len(results)} items in stock.")
+
 
 
 def main():

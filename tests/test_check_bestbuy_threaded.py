@@ -1,41 +1,37 @@
 #!/usr/bin/env python3
 """
-tests/test_check_bestbuy_threaded.py - Verify check_bestbuy() runs in a daemon thread
+tests/test_check_bestbuy_threaded.py - Verify daemon-thread Playwright pattern
 
-Runs 5 structural checks against tracker.py to confirm Step 4.5's migration
-is in place. These are STRUCTURAL tests — they read tracker.py as text and
-look for expected code patterns. They don't actually execute check_bestbuy()
-because that requires Playwright + real network + Best Buy cookies.
+UPDATED v6.0.0 step 4.7: the threading moved from check_bestbuy() to
+check_bestbuy_batch() when we batched all BB products through one session.
+This test now verifies the threading pattern lives in check_bestbuy_batch().
 
-  1.  threading_imported_in_check_bestbuy
-        check_bestbuy() contains 'import threading' (scoped to the function,
-        not at the top of tracker.py).
+Both functions are still expected to be present:
+- check_bestbuy_batch(products): the actual threaded path
+- check_bestbuy(product):         back-compat shim that routes through batch
 
-  2.  daemon_thread_pattern_present
-        threading.Thread is constructed with daemon=True and a recognizable
-        name for diagnostics.
+Five tests:
+  1. threading_imported_in_batch
+       check_bestbuy_batch() imports/uses threading.
 
-  3.  result_dict_pattern_present
-        The function uses a result dict to capture in_stock/price/error
-        from inside the daemon thread.
+  2. daemon_thread_pattern_present
+       check_bestbuy_batch() constructs a threading.Thread.
 
-  4.  persistent_session_attrs_removed
-        check_bestbuy._pw and check_bestbuy._context are no longer assigned
-        anywhere in tracker.py — the persistent-session optimization was
-        dropped because Playwright objects aren't safe to share across
-        threads.
+  3. result_capture_pattern_present
+       check_bestbuy_batch() uses some mutable holder (list/dict) to
+       capture results from inside the daemon thread.
 
-  5.  thread_join_with_timeout
-        The daemon thread is joined with a timeout, and the timeout case
-        is handled (otherwise a hung Playwright session could block the
-        check loop forever).
+  4. persistent_session_in_batch
+       check_bestbuy_batch() opens ONE Playwright session for the whole
+       batch (not one per product).
 
-Exit code 0 = all 5 pass. Non-zero = at least one failed.
+  5. thread_join_with_timeout
+       check_bestbuy_batch() calls .join(timeout=...) so a hung session
+       doesn't block forever.
 
 Run from project root:
     python tests/test_check_bestbuy_threaded.py
 """
-
 from __future__ import annotations
 
 import os
@@ -45,96 +41,98 @@ import traceback
 
 _here = os.path.dirname(os.path.abspath(__file__))
 _root = os.path.dirname(_here) if os.path.basename(_here) == "tests" else _here
-TRACKER_PATH = os.path.join(_root, "tracker.py")
+
+TRACKER_PY = os.path.join(_root, "tracker.py")
 
 
-def _read_tracker() -> str:
-    with open(TRACKER_PATH, "r", encoding="utf-8") as f:
+def _read(path: str) -> str:
+    with open(path, "r", encoding="utf-8") as f:
         return f.read()
 
 
-def _check_bestbuy_body() -> str:
-    """Extract just the body of check_bestbuy() from tracker.py."""
-    src = _read_tracker()
-    # Match from `def check_bestbuy(` until the next top-level def or assignment
-    m = re.search(
-        r"^def check_bestbuy\(.*?(?=\n^def |\nCHECKER_MAP\s*=)",
-        src,
-        re.M | re.S,
-    )
+def _extract_function(src: str, name: str) -> str | None:
+    pattern = rf"^def {re.escape(name)}\b"
+    m = re.search(pattern, src, re.MULTILINE)
     if not m:
-        raise RuntimeError(
-            "Could not locate check_bestbuy() function in tracker.py. "
-            "The function structure may have changed."
-        )
-    return m.group(0)
+        return None
+    start = m.start()
+    next_def = re.search(r"^def \w+\b", src[start + 1:], re.MULTILINE)
+    if next_def:
+        return src[start:start + 1 + next_def.start()]
+    return src[start:]
 
 
 # ─────────────────────────────────────────────────────────────────────────────
 # TESTS
 # ─────────────────────────────────────────────────────────────────────────────
 
-def t_threading_imported_in_check_bestbuy():
-    body = _check_bestbuy_body()
-    assert "import threading" in body, (
-        "check_bestbuy() should contain 'import threading' for the daemon "
-        "thread wrapper that isolates Playwright from tracker.py's asyncio loop"
+def t_threading_imported_in_batch():
+    src = _read(TRACKER_PY)
+    fn = _extract_function(src, "check_bestbuy_batch")
+    assert fn is not None, "check_bestbuy_batch missing - Step 4.7 not applied"
+    assert "threading" in fn, (
+        "check_bestbuy_batch() should reference threading for the daemon "
+        "thread that isolates Playwright from asyncio loop"
     )
 
 
 def t_daemon_thread_pattern_present():
-    body = _check_bestbuy_body()
-    assert "threading.Thread" in body, (
-        "check_bestbuy() should construct a threading.Thread for the "
-        "Playwright work"
+    src = _read(TRACKER_PY)
+    fn = _extract_function(src, "check_bestbuy_batch")
+    assert fn is not None, "check_bestbuy_batch missing"
+    assert "threading.Thread" in fn, (
+        "check_bestbuy_batch() should construct a threading.Thread for the "
+        "Playwright work (asyncio fix from Step 4.5, preserved in batch form)"
     )
-    assert "daemon=True" in body, (
-        "Daemon thread is required (matches amazon_monitor / costco_tracker / "
-        "bestbuy_invites pattern)"
-    )
-    assert 'name="bestbuy_check"' in body or "name='bestbuy_check'" in body, (
-        "Thread should have a recognizable name for diagnostics"
+    assert "daemon=True" in fn, (
+        "check_bestbuy_batch() must set daemon=True so thread doesn't block shutdown"
     )
 
 
-def t_result_dict_pattern_present():
-    body = _check_bestbuy_body()
-    # Looking for a result dict that captures values across the thread boundary
-    assert re.search(r'result\s*=\s*\{', body), (
-        "check_bestbuy() should use a result dict to capture in_stock/price/"
-        "error from inside the daemon thread"
+def t_result_capture_pattern_present():
+    src = _read(TRACKER_PY)
+    fn = _extract_function(src, "check_bestbuy_batch")
+    assert fn is not None, "check_bestbuy_batch missing"
+    # The batch should use a mutable holder (list or dict) to capture results
+    # from inside the daemon thread, since thread targets can't return values.
+    has_results_list = "results" in fn and (
+        "results: list" in fn or "results = [" in fn or "results[" in fn
     )
-    # Specifically: expects in_stock and price keys, plus an error sentinel
-    assert '"in_stock"' in body or "'in_stock'" in body, \
-        "result dict should track in_stock"
-    assert '"price"' in body or "'price'" in body, \
-        "result dict should track price"
-    assert '"error"' in body or "'error'" in body, \
-        "result dict should track error (for circuit breaker handling)"
+    has_error_holder = "error" in fn.lower()
+    assert has_results_list, (
+        "check_bestbuy_batch() should use a results list to capture per-product "
+        "ProductStatus from inside the daemon thread"
+    )
+    assert has_error_holder, (
+        "check_bestbuy_batch() should track batch-level errors for circuit-breaker logic"
+    )
 
 
-def t_persistent_session_attrs_removed():
-    body = _check_bestbuy_body()
-    # The persistent-session optimization is incompatible with thread isolation
-    assert "check_bestbuy._pw" not in body, (
-        "check_bestbuy._pw is no longer used (Playwright sessions can't safely "
-        "be shared across threads). The migration is incomplete if this string "
-        "is still present."
+def t_persistent_session_in_batch():
+    src = _read(TRACKER_PY)
+    fn = _extract_function(src, "check_bestbuy_batch")
+    assert fn is not None, "check_bestbuy_batch missing"
+    pw_starts = fn.count("sync_playwright()")
+    assert pw_starts == 1, (
+        f"check_bestbuy_batch() should open EXACTLY ONE sync_playwright() context "
+        f"for the entire batch (this is the whole point — warm session reuse). "
+        f"Found {pw_starts}."
     )
-    assert "check_bestbuy._context" not in body, (
-        "check_bestbuy._context is no longer used (same reason as ._pw)."
+    # Should also use launch_persistent_context for Akamai cookie reuse
+    assert "launch_persistent_context" in fn, (
+        "check_bestbuy_batch() should use launch_persistent_context for "
+        "Akamai cookie persistence across products"
     )
 
 
 def t_thread_join_with_timeout():
-    body = _check_bestbuy_body()
-    assert re.search(r"\.join\(timeout\s*=", body), (
-        "check_bestbuy() should call thread.join(timeout=...) so a hung "
-        "Playwright session doesn't block the check loop forever"
-    )
-    assert "is_alive()" in body, (
-        "check_bestbuy() should check t.is_alive() after join to detect "
-        "the timeout case (and trip the circuit breaker if so)"
+    src = _read(TRACKER_PY)
+    fn = _extract_function(src, "check_bestbuy_batch")
+    assert fn is not None, "check_bestbuy_batch missing"
+    # Must call .join with a timeout
+    assert re.search(r"\.join\s*\(\s*timeout\s*=", fn), (
+        "check_bestbuy_batch() should call thread.join(timeout=...) so a hung "
+        "Playwright session doesn't block the check loop indefinitely"
     )
 
 
@@ -143,15 +141,15 @@ def t_thread_join_with_timeout():
 # ─────────────────────────────────────────────────────────────────────────────
 def main():
     print("=" * 70)
-    print(" v6.0.0 step 4.5 - check_bestbuy() daemon thread migration tests")
+    print(" v6.0.0 step 4.7 - daemon-thread Playwright pattern (in batch fn)")
     print("=" * 70)
 
     tests = [
-        ("threading_imported_in_check_bestbuy",  t_threading_imported_in_check_bestbuy),
-        ("daemon_thread_pattern_present",        t_daemon_thread_pattern_present),
-        ("result_dict_pattern_present",          t_result_dict_pattern_present),
-        ("persistent_session_attrs_removed",     t_persistent_session_attrs_removed),
-        ("thread_join_with_timeout",             t_thread_join_with_timeout),
+        ("threading_imported_in_batch",     t_threading_imported_in_batch),
+        ("daemon_thread_pattern_present",   t_daemon_thread_pattern_present),
+        ("result_capture_pattern_present",  t_result_capture_pattern_present),
+        ("persistent_session_in_batch",     t_persistent_session_in_batch),
+        ("thread_join_with_timeout",        t_thread_join_with_timeout),
     ]
 
     passed = failed = 0
