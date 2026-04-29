@@ -357,6 +357,8 @@ logging.basicConfig(
 )
 log = logging.getLogger(__name__)
 
+from shared import launch_chromium_with_fallback  # v6.1.2 step 2: ICU bug fix
+from shared import BROWSER_PROFILES  # v6.1.4 step 2b: per-plugin profile dirs
 from shared import (
     HEADERS, HEADERS_JSON, ROOT_DIR, OUTPUT_DIR, DATA_DIR, BROWSER_PROFILE,
     send_ntfy as _shared_send_ntfy,
@@ -449,8 +451,9 @@ def check_target(product: dict) -> ProductStatus:
         if not hasattr(check_target, "_pw") or check_target._pw is None:
             check_target._pw = sync_playwright().start()
             os.makedirs(BROWSER_PROFILE, exist_ok=True)
-            check_target._context = check_target._pw.chromium.launch_persistent_context(
-                BROWSER_PROFILE,
+            check_target._context = launch_chromium_with_fallback(
+                check_target._pw,
+                BROWSER_PROFILES["target"],
                 headless=True,
                 args=[
                     "--disable-blink-features=AutomationControlled",
@@ -462,6 +465,7 @@ def check_target(product: dict) -> ProductStatus:
                     "--blink-settings=imagesEnabled=false",
                 ],
                 user_agent=HEADERS["User-Agent"],
+                log_prefix="check_target",
             )
             log.debug("Playwright: launched persistent browser session")
 
@@ -836,6 +840,39 @@ def check_bestbuy_batch(products: list) -> list:
     batch_error: list = [None]  # Mutable holder for batch-level error
 
     def _run():
+        # v6.1.6: liveness probe - skip if previous cycle's chromium still
+        # has live processes attached to profile dir. Replaced v6.1.5's
+        # SingletonLock approach because Chromium-on-Windows doesn't
+        # create that file; instead it uses a kernel mutex that's not
+        # filesystem-visible. Process-based detection works for all OSes.
+        # Reuses the same WMI scan as tools/kill_chromium_zombies.py.
+        try:
+            tools_dir = os.path.join(
+                os.path.dirname(os.path.abspath(__file__)), "tools"
+            )
+            if tools_dir not in sys.path:
+                sys.path.insert(0, tools_dir)
+            from kill_chromium_zombies import count_processes_using_profile
+            n_alive = count_processes_using_profile(
+                BROWSER_PROFILES["bestbuy_batch"]
+            )
+            if n_alive > 0:
+                log.warning(
+                    f"[bestbuy_batch] {n_alive} chrome.exe still attached "
+                    f"to profile dir - previous cycle still alive, "
+                    f"skipping this cycle silently"
+                )
+                batch_error[0] = RuntimeError(
+                    "profile_locked_by_previous_run"
+                )
+                return
+        except Exception:
+            # Non-fatal - if probe itself fails (import error, WMI query
+            # error, etc.), fall through to normal launch. Chromium will
+            # hit Settings version is not 1 if a real zombie is present,
+            # which is no worse than pre-v6.1.5 behavior.
+            pass
+
         try:
             from playwright.sync_api import sync_playwright
         except ImportError:
@@ -846,8 +883,9 @@ def check_bestbuy_batch(products: list) -> list:
         try:
             with sync_playwright() as p:
                 os.makedirs(BROWSER_PROFILE, exist_ok=True)
-                context = p.chromium.launch_persistent_context(
-                    BROWSER_PROFILE,
+                context = launch_chromium_with_fallback(
+                    p,
+                    BROWSER_PROFILES["bestbuy_batch"],
                     headless=True,
                     args=[
                         "--disable-blink-features=AutomationControlled",
@@ -857,6 +895,7 @@ def check_bestbuy_batch(products: list) -> list:
                         "--blink-settings=imagesEnabled=false",
                     ],
                     user_agent=HEADERS["User-Agent"],
+                    log_prefix="bestbuy_batch",
                 )
 
                 page = context.new_page()
@@ -933,8 +972,10 @@ def check_bestbuy_batch(products: list) -> list:
             batch_error[0] = e
 
     # Total batch wall-clock budget: 6 products * 25s + ~10s startup +
-    # prewarm 30s + retries = ~190s safe ceiling.
-    BATCH_TIMEOUT_SEC = 240
+    # prewarm 30s + retries = ~190s base. v6.1.5 bumped to 360 to
+    # accommodate Akamai-retry overhead + chromium teardown observed
+    # in production after v6.1.4 unblocked the batch path.
+    BATCH_TIMEOUT_SEC = 360  # v6.1.5: was 240
 
     t = threading.Thread(target=_run, daemon=True, name="bestbuy_batch")
     t.start()
@@ -962,6 +1003,19 @@ def check_bestbuy_batch(products: list) -> list:
         ]
 
     if batch_error[0] is not None:
+        # v6.1.5 locked-skip: previous cycle still running. Don't increment
+        # circuit breaker (it's not a failure - it's the previous cycle
+        # still in progress). Return failure-status products so this cycle
+        # still produces output, but spare the CB counter.
+        if str(batch_error[0]) == "profile_locked_by_previous_run":
+            return [
+                ProductStatus(
+                    name=p["name"], retailer="Best Buy",
+                    url=p.get("url", ""), in_stock=False, price="N/A",
+                    checked_at=datetime.now().isoformat(),
+                )
+                for p in products
+            ]
         log.warning(f"Best Buy batch error: {batch_error[0]}")
         cb["failures"] += 1
         if cb["failures"] >= 3:

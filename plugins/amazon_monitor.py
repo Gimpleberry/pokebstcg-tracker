@@ -62,6 +62,8 @@ if _root not in _sys.path:
 if _here not in _sys.path:
     _sys.path.insert(0, _here)
 # ─────────────────────────────────────────────────────────────────────────────
+from shared import launch_chromium_with_fallback  # v6.1.2 step 2: ICU bug fix
+from shared import BROWSER_PROFILES  # v6.1.4 step 2b: per-plugin profile dirs
 from shared import (
     DATA_DIR, BROWSER_PROFILE, HEADERS,
     get_msrp, parse_price, send_ntfy,
@@ -264,8 +266,9 @@ class AmazonMSRPMonitor:
 
             try:
                 with sync_playwright() as p:
-                    context = p.chromium.launch_persistent_context(
-                        BROWSER_PROFILE,
+                    context = launch_chromium_with_fallback(
+                        p,
+                        BROWSER_PROFILES["amazon"],
                         headless=True,
                         args=[
                             "--disable-blink-features=AutomationControlled",
@@ -275,6 +278,7 @@ class AmazonMSRPMonitor:
                             "--blink-settings=imagesEnabled=false",
                         ],
                         user_agent=HEADERS["User-Agent"],
+                        log_prefix="amazon_monitor",
                     )
 
                     page = context.new_page()
@@ -444,7 +448,8 @@ class AmazonMSRPMonitor:
                 from playwright.sync_api import sync_playwright, TimeoutError as PWTimeout
 
                 with sync_playwright() as p:
-                    context = p.chromium.launch_persistent_context(
+                    context = launch_chromium_with_fallback(
+                        p,
                         BROWSER_PROFILE,
                         headless=False,
                         viewport=None,
@@ -454,6 +459,7 @@ class AmazonMSRPMonitor:
                             "--window-size=1400,900",
                         ],
                         user_agent=HEADERS["User-Agent"],
+                        log_prefix="amazon_monitor",
                     )
                     page = context.new_page()
                     page.goto(url, wait_until="domcontentloaded", timeout=25000)

@@ -75,6 +75,7 @@ ENABLED_PLUGINS = [
     "restock_reminder_plugin",   # Daily 8:30 AM restock reminder (#8)
     "price_history_plugin",      # Hourly price logging to SQLite + Excel export (#5)
     "costco_tracker_plugin",     # Costco online + warehouse monitor Cherry Hill/Princeton NJ
+    "walmart_playwright_plugin", # Walmart tracker (v6.1.1) - patchright + Chrome + off-screen
     "invest_store_plugin",
     "market_data_refresh_plugin",
     "api_server_plugin",
@@ -392,6 +393,42 @@ class CostcoTracker_Plugin(Plugin):
             self._tracker.stop()
 
 
+class WalmartPlaywright_Plugin(Plugin):
+    name = "walmart_playwright"
+    version = "1.0"
+    description = "Walmart Playwright tracker (v6.1.1) - patchright + Chrome + headful + off-screen"
+
+    def init(self, config, products):
+        """Phase 1 (v6.1.1): instantiate the tracker only.
+
+        Replaces the urllib-based check_walmart() in tracker.py which was
+        blocked by PerimeterX. See plugins/walmart_playwright.py docstring
+        for the full anti-detection stack rationale.
+        """
+        try:
+            from walmart_playwright import WalmartPlaywrightTracker
+            self._tracker = WalmartPlaywrightTracker(config, products)
+            log.info("  [walmart_playwright] Initialized")
+        except Exception as e:
+            self._tracker = None
+            log.warning(f"  [walmart_playwright] Failed to init: {e}")
+
+    def register(self, scheduler):
+        """Phase 2 (v6.1.1): hand off to the unified Scheduler."""
+        if self._tracker is None:
+            log.warning("  [walmart_playwright] Not initialized; skipping register")
+            return
+        try:
+            self._tracker.register(scheduler)
+            log.info("  [walmart_playwright] Registered (kickoff @ T+210s, then every 30 min)")
+        except Exception as e:
+            log.warning(f"  [walmart_playwright] Failed to register: {e}")
+
+    def stop(self):
+        if hasattr(self, "_tracker") and self._tracker is not None:
+            self._tracker.stop()
+
+
 class InvestStore_Plugin(Plugin):
     name = "invest_store"
     version = "1.0"
@@ -463,6 +500,7 @@ _PLUGIN_CLASSES = {
     "restock_reminder_plugin": RestockReminder_Plugin,
     "price_history_plugin":    PriceHistory_Plugin,
     "costco_tracker_plugin":   CostcoTracker_Plugin,
+    "walmart_playwright_plugin":   WalmartPlaywright_Plugin,
     "invest_store_plugin":         InvestStore_Plugin,
     "market_data_refresh_plugin":  MarketDataRefresh_Plugin,
     "api_server_plugin":           ApiServer_Plugin,

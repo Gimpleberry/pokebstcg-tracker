@@ -48,6 +48,8 @@ if _here not in sys.path:
     sys.path.insert(0, _here)
 # ----------------------------------------------------------------------------
 
+from shared import launch_chromium_with_fallback  # v6.1.2 step 2: ICU bug fix
+from shared import BROWSER_PROFILES  # v6.1.4 step 2b: per-plugin profile dirs
 from shared import (
     DATA_DIR, BROWSER_PROFILE, HEADERS,
     get_msrp, parse_price, send_ntfy,
@@ -228,8 +230,9 @@ class CostcoTracker:
 
             try:
                 with sync_playwright() as p:
-                    context = p.chromium.launch_persistent_context(
-                        BROWSER_PROFILE,
+                    context = launch_chromium_with_fallback(
+                        p,
+                        BROWSER_PROFILES["costco"],
                         headless=True,
                         args=[
                             "--disable-blink-features=AutomationControlled",
@@ -239,6 +242,7 @@ class CostcoTracker:
                             "--blink-settings=imagesEnabled=false",
                         ],
                         user_agent=HEADERS["User-Agent"],
+                        log_prefix="costco_tracker",
                     )
 
                     page = context.new_page()

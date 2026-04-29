@@ -69,6 +69,58 @@ APPDATA_DIR     = _appdata_dir()
 CONFIG_PATH     = os.path.join(APPDATA_DIR, "config.json")
 BROWSER_PROFILE = os.path.join(APPDATA_DIR, "browser_profile")
 
+# ----------------------------------------------------------------------------
+# Per-plugin browser profile directories (v6.1.3 step 1)
+# ----------------------------------------------------------------------------
+# Why: Two concurrent chromium processes cannot share a profile dir on
+# Windows. Crashpad fails with "Settings version is not 1" + exitCode=21.
+# v6.1.2 step 2 introduced this contention by routing all plugins through
+# the same BROWSER_PROFILE; v6.1.3 step 2 will refactor each headless-scrape
+# plugin to use its own dedicated profile.
+#
+# Headful flows (cart_preloader, open_browser, walmart_playwright,
+# amazon/bestbuy cart/invite-request) still use BROWSER_PROFILE because
+# they need the shared user-login cookies in the warmed profile.
+
+BROWSER_PROFILES = {
+    # Aliases - these MUST point to BROWSER_PROFILE (the warmed profile).
+    "default":          BROWSER_PROFILE,
+    "walmart":          BROWSER_PROFILE,  # PerimeterX-trusted; do not change
+    # Isolated profiles for headless-scrape plugins.
+    "target":           os.path.join(APPDATA_DIR, "browser_profile_target"),
+    "amazon":           os.path.join(APPDATA_DIR, "browser_profile_amazon"),
+    "bestbuy_batch":    os.path.join(APPDATA_DIR, "browser_profile_bestbuy_batch"),
+    "bestbuy_invites":  os.path.join(APPDATA_DIR, "browser_profile_bestbuy_invites"),
+    "costco":           os.path.join(APPDATA_DIR, "browser_profile_costco"),
+}
+
+
+# ----------------------------------------------------------------------------
+# Per-plugin browser profile directories (v6.1.3 step 1)
+# ----------------------------------------------------------------------------
+# Why: Two concurrent chromium processes cannot share a profile dir on
+# Windows. Crashpad fails with "Settings version is not 1" + exitCode=21.
+# v6.1.2 step 2 introduced this contention by routing all plugins through
+# the same BROWSER_PROFILE; v6.1.3 step 2 will refactor each headless-scrape
+# plugin to use its own dedicated profile.
+#
+# Headful flows (cart_preloader, open_browser, walmart_playwright,
+# amazon/bestbuy cart/invite-request) still use BROWSER_PROFILE because
+# they need the shared user-login cookies in the warmed profile.
+
+BROWSER_PROFILES = {
+    # Aliases - these MUST point to BROWSER_PROFILE (the warmed profile).
+    "default":          BROWSER_PROFILE,
+    "walmart":          BROWSER_PROFILE,  # PerimeterX-trusted; do not change
+    # Isolated profiles for headless-scrape plugins.
+    "target":           os.path.join(APPDATA_DIR, "browser_profile_target"),
+    "amazon":           os.path.join(APPDATA_DIR, "browser_profile_amazon"),
+    "bestbuy_batch":    os.path.join(APPDATA_DIR, "browser_profile_bestbuy_batch"),
+    "bestbuy_invites":  os.path.join(APPDATA_DIR, "browser_profile_bestbuy_invites"),
+    "costco":           os.path.join(APPDATA_DIR, "browser_profile_costco"),
+}
+
+
 # Ensure data/ exists on first import
 os.makedirs(DATA_DIR, exist_ok=True)
 log.debug(f"[shared] ROOT_DIR={ROOT_DIR} | DATA_DIR={DATA_DIR} | APPDATA_DIR={APPDATA_DIR}")
@@ -375,7 +427,8 @@ def open_browser(url: str, banner_title: str = "", banner_msg: str = "") -> None
             os.makedirs(BROWSER_PROFILE, exist_ok=True)
 
             with sync_playwright() as p:
-                context = p.chromium.launch_persistent_context(
+                context = launch_chromium_with_fallback(
+                    p,
                     BROWSER_PROFILE,
                     headless=False,
                     viewport=None,
@@ -385,6 +438,7 @@ def open_browser(url: str, banner_title: str = "", banner_msg: str = "") -> None
                         "--window-size=1400,900",
                     ],
                     user_agent=HEADERS["User-Agent"],
+                    log_prefix="browser",
                 )
                 page = context.new_page()
 
@@ -450,6 +504,126 @@ def open_browser(url: str, banner_title: str = "", banner_msg: str = "") -> None
 
 
 # ── File I/O Helpers ──────────────────────────────────────────────────────────
+
+# ============================================================================
+# Chromium launch helper (v6.1.2)
+# ============================================================================
+# Centralized helper that adds channel fallback to dodge the chrome-headless-
+# shell ICU bug. Required by ALL code paths that call launch_persistent_context
+# on this machine.
+#
+# Background: chrome-headless-shell.exe (the Chromium-for-Testing binary
+# Playwright bundles by default) crashes at launch with an ICU data error
+# on Keith's Windows install. Until v6.1.2, six runtime paths defaulted to
+# this broken binary by calling launch_persistent_context() without a
+# channel= argument. They were silently failing for some time.
+#
+# The fix: explicitly request a real Chromium-family browser. Real Chrome
+# has the best fingerprint and avoids the bug. Edge ships preinstalled on
+# Windows, so it's a bulletproof fallback. Bundled "chromium" (not the
+# headless shell) is the last resort.
+#
+# Usage (vanilla playwright, headless):
+#     from playwright.sync_api import sync_playwright
+#     from shared import launch_chromium_with_fallback, BROWSER_PROFILE
+#
+#     with sync_playwright() as p:
+#         ctx = launch_chromium_with_fallback(p, BROWSER_PROFILE, headless=True)
+#         try:
+#             page = ctx.new_page()
+#             ...
+#         finally:
+#             ctx.close()
+#
+# Usage (long-lived persistent session, e.g. tracker.py:check_target):
+#     from playwright.sync_api import sync_playwright
+#     pw = sync_playwright().start()
+#     ctx = launch_chromium_with_fallback(pw, BROWSER_PROFILE, headless=True)
+#     # ctx reused across many calls; closed at shutdown
+
+
+CHANNEL_CHAIN = ("chrome", "msedge", "chromium")
+
+
+def launch_chromium_with_fallback(
+    playwright_instance,
+    user_data_dir,
+    headless=True,
+    args=None,
+    channel_chain=CHANNEL_CHAIN,
+    log_prefix="shared",
+    **extra_launch_kwargs,
+):
+    """Launch Chromium with a channel fallback chain. Caller manages
+    sync_playwright() lifetime.
+
+    Tries each channel in channel_chain order until one succeeds. The
+    default channel (chrome-headless-shell) is NEVER attempted - we know
+    it's broken on this machine.
+
+    Args:
+        playwright_instance: result of sync_playwright().start() OR the
+            'p' from 'with sync_playwright() as p:'. Works with vanilla
+            playwright OR patchright - they share the API surface.
+        user_data_dir: persistent profile directory. Created if missing.
+        headless: launch headless (default True).
+        args: optional list of additional Chromium flags.
+        channel_chain: tuple of channel names to try in order. Default
+            ("chrome", "msedge", "chromium").
+        log_prefix: prefix for log messages so callers can tag their own
+            (e.g. log_prefix="amazon_monitor" gives '[amazon_monitor]
+            launched chromium via channel=chrome').
+        **extra_launch_kwargs: forwarded to launch_persistent_context
+            (viewport, user_agent, slow_mo, etc).
+
+    Returns:
+        Launched BrowserContext.
+
+    Raises:
+        RuntimeError: All channels in chain failed to launch. Last error
+            is included in the message for debugging.
+    """
+    os.makedirs(user_data_dir, exist_ok=True)
+
+    last_err = None
+    for channel in channel_chain:
+        try:
+            kwargs = dict(extra_launch_kwargs)
+            kwargs["channel"] = channel
+            kwargs["headless"] = headless
+            if args is not None:
+                kwargs["args"] = args
+            ctx = playwright_instance.chromium.launch_persistent_context(
+                user_data_dir,
+                **kwargs,
+            )
+            log.debug(f"[{log_prefix}] launched chromium via channel={channel}")
+            return ctx
+        except Exception as e:
+            last_err = e
+            err_str = str(e)
+            if "Executable doesn't exist" in err_str or "Failed to find" in err_str:
+                log.debug(
+                    f"[{log_prefix}] channel={channel} not installed, trying next"
+                )
+                continue
+            if "ICU" in err_str or "icu_util" in err_str:
+                log.debug(
+                    f"[{log_prefix}] channel={channel} hit ICU bug, trying next"
+                )
+                continue
+            log.debug(
+                f"[{log_prefix}] channel={channel} launch error "
+                f"({type(e).__name__}), trying next: {err_str[:150]}"
+            )
+            continue
+
+    raise RuntimeError(
+        f"[{log_prefix}] All chromium channels in chain failed: "
+        f"{channel_chain}. Last error: "
+        f"{type(last_err).__name__ if last_err else 'NoError'}: {last_err}"
+    )
+
 
 def load_json(filename: str, default=None):
     """Load a JSON file from DATA_DIR. Returns default if missing or corrupt."""

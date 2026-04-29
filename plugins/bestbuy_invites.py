@@ -60,6 +60,8 @@ if _root not in _sys.path:
 if _here not in _sys.path:
     _sys.path.insert(0, _here)
 # ─────────────────────────────────────────────────────────────────────────────
+from shared import launch_chromium_with_fallback  # v6.1.2 step 2: ICU bug fix
+from shared import BROWSER_PROFILES  # v6.1.4 step 2b: per-plugin profile dirs
 from shared import (
     DATA_DIR, BROWSER_PROFILE, send_ntfy,
     open_browser, load_history, save_history,
@@ -194,8 +196,9 @@ class BestBuyInviteMonitor:
 
         try:
             with sync_playwright() as p:
-                context = p.chromium.launch_persistent_context(
-                    BROWSER_PROFILE,
+                context = launch_chromium_with_fallback(
+                    p,
+                    BROWSER_PROFILES["bestbuy_invites"],
                     headless=True,
                     args=[
                         "--disable-blink-features=AutomationControlled",
@@ -209,6 +212,7 @@ class BestBuyInviteMonitor:
                         "AppleWebKit/537.36 (KHTML, like Gecko) "
                         "Chrome/124.0.0.0 Safari/537.36"
                     ),
+                    log_prefix="bestbuy_invites",
                 )
 
                 page = context.new_page()
@@ -402,7 +406,8 @@ class BestBuyInviteMonitor:
                 name = product.get("name", "")
 
                 with sync_playwright() as p:
-                    context = p.chromium.launch_persistent_context(
+                    context = launch_chromium_with_fallback(
+                        p,
                         BROWSER_PROFILE,
                         headless=False,  # Visible - you can watch and verify
                         viewport=None,
@@ -416,6 +421,7 @@ class BestBuyInviteMonitor:
                             "AppleWebKit/537.36 (KHTML, like Gecko) "
                             "Chrome/124.0.0.0 Safari/537.36"
                         ),
+                        log_prefix="bestbuy_invites",
                     )
                     page = context.new_page()
                     page.goto(url, wait_until="domcontentloaded", timeout=20000)
