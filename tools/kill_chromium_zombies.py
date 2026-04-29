@@ -270,6 +270,100 @@ def kill_pid(pid, verbose=False):
 
 
 # ============================================================================
+# SWEEP (v6.1.7 - public function for runtime cleanup from tracker.py)
+# ============================================================================
+
+def sweep_zombies_all_profiles(
+    cycle_count=0,
+    threshold=3,
+    bestbuy_batch_key="bestbuy_batch",
+):
+    """Sweep all isolated profiles, kill orphan chromium, log structured.
+
+    v6.1.7 Option A: called periodically from tracker.py's
+    check_bestbuy_batch._run() to clear zombies that v6.1.6's probe
+    was just detecting. Without this, bestbuy_batch goes dormant
+    after cycle 1.
+
+    Reuses existing helpers (get_isolated_profile_paths, find_zombies,
+    kill_pid) - no duplication.
+
+    Visibility safeguards (v6.1.7 visibility design):
+      Layer 1 - per-kill INFO log
+      Layer 2 - sweep summary INFO log (always emitted)
+      Layer 3 - threshold WARNING when non-bestbuy_batch profile
+                accumulates threshold+ zombies in one sweep
+
+    Args:
+      cycle_count: caller-provided context for log readability
+      threshold: zombie count on a non-bestbuy_batch profile that
+                 triggers a WARNING (default 3)
+      bestbuy_batch_key: profile key that is EXPECTED to accumulate
+                         zombies (the known v6.1.6 issue) and thus
+                         NOT subject to the threshold WARNING
+
+    Returns:
+      dict[profile_key, int_killed] - one entry per scanned profile,
+      INCLUDING profiles with 0 kills, so caller can see which are clean.
+    """
+    import logging
+    logger = logging.getLogger("tracker")
+
+    profile_paths = get_isolated_profile_paths()
+    if not profile_paths:
+        logger.debug("[zombie_sweep] no isolated profile paths - skip")
+        return {}
+
+    zombies = find_zombies(profile_paths, verbose=False)
+
+    # Bucket zombie PIDs by profile key
+    pids_by_key = {key: [] for key, _ in profile_paths}
+    for pid, key, _preview in zombies:
+        if key in pids_by_key:
+            pids_by_key[key].append(pid)
+
+    # Layer 1: kill each, log per-kill
+    killed_by_key = {key: 0 for key in pids_by_key}
+    for key, pids in pids_by_key.items():
+        for pid in pids:
+            if kill_pid(pid, verbose=False):
+                killed_by_key[key] += 1
+                logger.info(
+                    f"[zombie_sweep] killed pid={pid} profile={key}"
+                )
+            else:
+                logger.warning(
+                    f"[zombie_sweep] failed to kill pid={pid} profile={key}"
+                )
+
+    # Layer 2: summary line (always emitted, even if all clean)
+    clean = sum(1 for v in killed_by_key.values() if v == 0)
+    dirty = sum(1 for v in killed_by_key.values() if v > 0)
+    totals_str = ", ".join(
+        f"{k}={v}" for k, v in sorted(killed_by_key.items())
+    )
+    logger.info(
+        f"[zombie_sweep] cycle={cycle_count} totals: {totals_str} "
+        f"({clean} clean, {dirty} dirty)"
+    )
+
+    # Layer 3: threshold WARNING for non-bestbuy_batch profiles only.
+    # bestbuy_batch is EXPECTED to accumulate zombies (the known
+    # v6.1.6 issue we are sweeping); accumulation in OTHER profiles
+    # signals a new hang somewhere and warrants attention.
+    for key, count in killed_by_key.items():
+        if key == bestbuy_batch_key:
+            continue
+        if count >= threshold:
+            logger.warning(
+                f"[zombie_sweep] WARNING: {key} accumulated {count} "
+                f"zombies in single sweep - possible new hang"
+            )
+
+    return killed_by_key
+
+
+# ============================================================================
 # MAIN
 # ============================================================================
 

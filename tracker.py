@@ -840,6 +840,30 @@ def check_bestbuy_batch(products: list) -> list:
     batch_error: list = [None]  # Mutable holder for batch-level error
 
     def _run():
+        # v6.1.7 Option A: periodic zombie cleanup. Every 5 cycles,
+        # sweep all isolated browser profiles for orphan chromium
+        # processes from previous timed-out cycles. Without this,
+        # bestbuy_batch goes dormant after cycle 1 because the v6.1.6
+        # liveness probe (below) keeps detecting the same zombies and
+        # skipping forever. Cleanup runs BEFORE the probe so the probe
+        # sees a clean state when cleanup just ran.
+        # Cycle counter follows the same function-attribute pattern as
+        # check_bestbuy_batch._circuit (lazy-init on first call).
+        n_cycle = getattr(check_bestbuy_batch, "_cleanup_cycle_count", 0) + 1
+        check_bestbuy_batch._cleanup_cycle_count = n_cycle
+        if n_cycle % 5 == 0:
+            try:
+                tools_dir = os.path.join(
+                    os.path.dirname(os.path.abspath(__file__)), "tools"
+                )
+                if tools_dir not in sys.path:
+                    sys.path.insert(0, tools_dir)
+                from kill_chromium_zombies import sweep_zombies_all_profiles
+                sweep_zombies_all_profiles(cycle_count=n_cycle)
+            except Exception as e:
+                # Non-fatal - cleanup failure must not block tracker
+                log.debug(f"[zombie_sweep] cleanup error: {e}")
+
         # v6.1.6: liveness probe - skip if previous cycle's chromium still
         # has live processes attached to profile dir. Replaced v6.1.5's
         # SingletonLock approach because Chromium-on-Windows doesn't
