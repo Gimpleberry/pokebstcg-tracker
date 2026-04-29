@@ -11,18 +11,24 @@ questions** that need answering before implementation.
 
 ## Phases (chronological order, each finishes before the next starts)
 
-1. **v6.0 — Unified scheduler** (already locked in as next session)
-   - **Boot-time observation to address:** plugins like `bestbuy_invites`, `amazon_monitor`,
-     and `costco_tracker` run an immediate Playwright check inside their `start()` method,
-     which blocks the plugin loader for ~3.5 minutes total. During that window, later
-     plugins (including `api_server`) haven't initialized yet, so the dashboard briefly
-     shows offline mode. The unified scheduler should move "immediate startup check"
-     out of the plugin load phase and into a post-boot job that the scheduler runs
-     after `tracker.py` is fully ready. Net effect: instant dashboard availability,
-     same monitoring behavior.
-2. **High-priority backlog cleanup** — bestbuy_invites async fix, Walmart product
-   list refresh, Costco login retry, BitLocker, password manager. Pre-existing
-   technical debt; clear before cosmetic work.
+1. **v6.1.x chain completion** (active — next session)
+   - **1a. v6.1.7 Option A — periodic zombie cleanup.** Run
+     `kill_chromium_zombies` every N cycles instead of only at tracker.bat
+     startup. Quick tactical win: converts bestbuy_batch from "dormant after
+     cycle 1" to "productive every ~30 min." Doesn't fix root cause.
+   - **1b. v6.1.7 Option B — fix page.unroute() hang in `check_bestbuy_batch`.**
+     Root cause of zombie creation. Three candidate approaches: skip cleanup
+     on error, wrap unroute in its own timeout, or refactor to subprocess.
+     Tomorrow-fresh-eyes architectural work; ship after Option A is soaking.
+   - **1c. v6.1.1 step 3 — Walmart cutover.** Remove `walmart` from
+     `CHECKER_MAP` in `tracker.py`, replace `check_walmart()` body with
+     deprecated shim, delete `_scrape_walmart_fallback()` (dead code post-
+     cutover). Walmart traffic now lives in `walmart_playwright` plugin.
+     Soak gate: 24h+ of clean walmart_playwright history before cutover.
+2. **Remaining technical debt cleanup** — Costco login retry, BitLocker,
+   password manager. Two prior items resolved: bestbuy_invites async/sync
+   mismatch (fixed in v6.0.0 step 4_5 via daemon-thread wrapping), Walmart
+   product list / API header refresh (superseded by walmart_playwright).
 3. **UI Audit Phase** — page-by-page visual + IA cleanup across the dashboard
    (see "UI Audit Phase" section below for scope and approach).
 4. **Feature increments** — net-new analytical features that aren't pure UI
@@ -153,14 +159,9 @@ ORDER BY set_code, purchase_date;
 These are bugs and ops tasks, not new feature ideas. Listed here so all
 forward-looking work lives in one place. **Phase 2** above clears these.
 
-- **bestbuy_invites async/sync mismatch** — Playwright sync API used inside
-  tracker.py's asyncio loop. Plugin errors on every Best Buy product check;
-  circuit breaker correctly trips after 3 failures. Refactor needed: convert
-  bestbuy_invites to async Playwright API.
-- **Walmart product list / API header refresh** — ~6 stale product IDs hitting
-  404/412. Pre-existing, not introduced by any migration. Sweep needed: refresh
-  Walmart product list, update API headers.
-- **Costco login retry** — deferred from v5.8 migration.
+- **Costco login retry** — deferred from v5.8 migration. Plugin currently
+  works because session cookie is long-lived, but no retry path if it
+  expires mid-session.
 - **BitLocker / device encryption** — machine-level setup task. Drive readable
   if stolen until done.
 - **Password manager** — Bitwarden recommended. Browser-saved passwords only
@@ -168,6 +169,17 @@ forward-looking work lives in one place. **Phase 2** above clears these.
 
 Do NOT confuse these with the design items above. These are bugs and ops; the
 items above are net-new feature work.
+
+### Resolved (kept here briefly for audit trail)
+
+- ~~**bestbuy_invites async/sync mismatch**~~ — Resolved in v6.0.0 step 4_5
+  via daemon-thread wrapping pattern. The pattern is now used by all heavy
+  Playwright plugins (bestbuy_invites, amazon_monitor, costco_tracker,
+  walmart_playwright).
+- ~~**Walmart product list / API header refresh**~~ — Superseded by
+  v6.1.1 step 2 (`walmart_playwright` plugin via patchright + stealth).
+  Legacy `check_walmart` still in `CHECKER_MAP` for fail-safe coverage
+  until v6.1.1 step 3 cutover.
 
 ---
 
