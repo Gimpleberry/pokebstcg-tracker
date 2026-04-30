@@ -1217,6 +1217,11 @@ def run_checks():
             bestbuy_products.append(product)
             continue
 
+        # Walmart products are handled by the walmart_playwright plugin
+        # on its own 30-min schedule (v6.1.1 step 3 cutover, step 4 silencing).
+        if retailer == "walmart":
+            continue
+
         checker = CHECKER_MAP.get(retailer)
         if not checker:
             log.warning(f"No checker for retailer: {retailer}")
