@@ -573,130 +573,11 @@ def _scrape_target_fallback(url: str):
         return False, "N/A"
 
 
-def check_walmart(product: dict) -> ProductStatus:
-    """
-    Uses Walmart's product API.
-    Tries primary item_id plus any alt_item_ids defined in the product.
-    Strictly requires IN_STOCK and Walmart-sold (not marketplace).
-    """
-    item_id = product.get("item_id", "")
-    # Support alternate item IDs for products like Prismatic Evolutions ETB
-    # that Walmart relists under multiple IDs
-    alt_ids = product.get("alt_item_ids", [])
-    all_ids = [item_id] + alt_ids
-
-    in_stock, price = False, "N/A"
-
-    for try_id in all_ids:
-        if not try_id:
-            continue
-        try:
-            r = requests.get(
-                f"https://www.walmart.com/product/v2/pdpData?itemId={try_id}",
-                headers={**HEADERS, "Accept": "application/json"},
-                timeout=CONFIG["request_timeout"],
-            )
-            r.raise_for_status()
-            data = r.json()
-            item_data = data.get("item", {})
-            buying    = item_data.get("buyingOptions", {})
-            availability = buying.get("availabilityStatus", "").upper()
-            offer_type   = buying.get("offerType", "").upper()
-
-            # ── Seller validation ──────────────────────────────────────────
-            # Only alert on Walmart-direct listings. Reject:
-            #   - EXTERNAL_SELLER (3rd party marketplace)
-            #   - conditionGroupCode in URL (used/refurb/marketplace condition)
-            #   - offerType not from Walmart
-            is_external = offer_type == "EXTERNAL_SELLER"
-            is_marketplace_url = "conditionGroupCode" in product.get("url", "")
-
-            # walmartItemFulfillment is the clearest Walmart-direct signal
-            is_walmart_direct = buying.get("walmartItemFulfillment", False)
-
-            # If key is absent entirely, accept only if not flagged as external
-            if "walmartItemFulfillment" not in str(buying):
-                is_walmart_direct = not is_external and not is_marketplace_url
-
-            item_in_stock = (
-                availability == "IN_STOCK"
-                and is_walmart_direct
-                and not is_external
-                and not is_marketplace_url
-            )
-
-            # ── Price extraction ───────────────────────────────────────────
-            price_info = item_data.get("priceInfo", {})
-            item_price = (
-                price_info.get("currentPrice", {}).get("priceString")
-                or price_info.get("wasPrice", {}).get("priceString")
-                or price_info.get("unitPrice", {}).get("priceString")
-            )
-            if not item_price:
-                raw_price = data.get("product", {}).get("priceInfo", {}).get("currentPrice", {}).get("price")
-                if raw_price:
-                    item_price = f"${float(raw_price):.2f}"
-
-            # ── Price sanity check ─────────────────────────────────────────
-            # If price is more than 3.5x MSRP it's a marketplace scalper price
-            # Suppress in-stock flag to avoid false MSRP alerts
-            if item_price and item_in_stock:
-                from shared import get_msrp, parse_price
-                msrp = get_msrp(product["name"], "walmart")
-                listed = parse_price(item_price)
-                if msrp and listed and listed > msrp * 3.5:
-                    log.debug(
-                        f"Walmart {product['name']}: price ${listed:.2f} is "
-                        f"{listed/msrp:.1f}x MSRP - suppressing as marketplace price"
-                    )
-                    item_in_stock = False
-
-            log.debug(
-                f"Walmart {product['name']} (id={try_id}): "
-                f"availability={availability} offer={offer_type} "
-                f"walmart_direct={is_walmart_direct} in_stock={item_in_stock} price={item_price}"
-            )
-
-            if item_price and item_price != "N/A":
-                price = item_price
-
-            if item_in_stock:
-                in_stock = True
-                break
-
-        except Exception as e:
-            log.warning(f"Walmart API error for {product['name']} (id={try_id}): {e}")
-            if try_id == all_ids[-1]:
-                in_stock, fb_price = _scrape_walmart_fallback(product["url"])
-                if fb_price != "N/A":
-                    price = fb_price
-
-        if not in_stock and try_id != all_ids[-1]:
-            time.sleep(CONFIG["delay_between_requests"])
-
-    return ProductStatus(
-        name=product["name"],
-        retailer="Walmart",
-        url=product["url"],
-        in_stock=in_stock,
-        price=price,
-        checked_at=datetime.now().isoformat(),
-    )
-
-
-def _scrape_walmart_fallback(url: str):
-    """Fallback: check for Add to cart and absence of out-of-stock signals."""
-    try:
-        r = requests.get(url, headers=HEADERS, timeout=CONFIG["request_timeout"])
-        has_add = "Add to cart" in r.text
-        has_oos = bool(re.search(r"out of stock|sold out|currently unavailable", r.text, re.I))
-        in_stock = has_add and not has_oos
-        price_match = re.search(r'\$[\d,]+\.\d{2}', r.text)
-        price = price_match.group(0) if price_match else "N/A"
-        return in_stock, price
-    except Exception as e:
-        log.warning(f"Walmart scrape fallback error: {e}")
-        return False, "N/A"
+# v6.1.1 step 3: Walmart cutover
+# The legacy urllib-based check_walmart() and _scrape_walmart_fallback()
+# functions were removed here. Walmart coverage is now provided
+# entirely by plugins/walmart_playwright.py via patchright + stealth.
+# See git log around 2026-04-29 for the cutover commit.
 
 
 def _check_bestbuy_one(page, product: dict) -> tuple:
@@ -1314,9 +1195,9 @@ def check_pokemoncenter(product: dict) -> ProductStatus:
 
 CHECKER_MAP = {
     "target": check_target,
-    "walmart": check_walmart,
     "bestbuy": check_bestbuy,
     "pokemoncenter": check_pokemoncenter,
+    # walmart removed v6.1.1 step 3 - now handled by walmart_playwright plugin
 }
 
 
