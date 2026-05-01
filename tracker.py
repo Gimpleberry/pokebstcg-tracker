@@ -323,88 +323,16 @@ PRODUCTS = [
     },
 
     # ══════════════════════════════════════════
-    # v6.1.8 ADDITIONS - TARGET (25 new entries)
-    # 3 confirmed /p/ URLs, 22 /s/ search URLs (sku: "" until confirmed)
+    # v6.1.8 ADDITIONS - TARGET (v6.1.11 trim: 12 verified /p/ URLs)
+    # /s/ search URLs removed - they do not expose product price JSON
     # ══════════════════════════════════════════
 
-    # --- TARGET - Phantasmal Flames Extras ---
-    {
-        "name": "Pokemon Phantasmal Flames Mega Charizard UPC",
-        "retailer": "target",
-        "url": "https://www.target.com/s/pokemon+phantasmal+flames+mega+charizard+ultra+premium+collection",
-        "sku": "",
-    },
-    {
-        "name": "Pokemon Phantasmal Flames Mini Tins",
-        "retailer": "target",
-        "url": "https://www.target.com/s/pokemon+phantasmal+flames+mini+tins",
-        "sku": "",
-    },
-    {
-        "name": "Pokemon Phantasmal Flames Booster Bundle",
-        "retailer": "target",
-        "url": "https://www.target.com/s/pokemon+phantasmal+flames+booster+bundle",
-        "sku": "",
-    },
-    {
-        "name": "Pokemon Phantasmal Flames 3-Pack Blister",
-        "retailer": "target",
-        "url": "https://www.target.com/s/pokemon+phantasmal+flames+blister",
-        "sku": "",
-    },
-
-    # --- TARGET - Mega Evolution Extras ---
+    # --- TARGET - Mega Evolution ---
     {
         "name": "Pokemon Mega Evolution Gardevoir ETB",
         "retailer": "target",
         "url": "https://www.target.com/p/pok-233-mon-trading-card-game-mega-evolution-elite-trainer-box-gardevoir/-/A-94681784",
         "sku": "94681784",
-    },
-    {
-        "name": "Pokemon Mega Evolution Lucario ETB",
-        "retailer": "target",
-        "url": "https://www.target.com/s/pokemon+mega+evolution+lucario+elite+trainer+box",
-        "sku": "",
-    },
-    {
-        "name": "Pokemon Mega Evolution Booster Box 36pk",
-        "retailer": "target",
-        "url": "https://www.target.com/s/pokemon+mega+evolution+booster+box",
-        "sku": "",
-    },
-    {
-        "name": "Pokemon Mega Evolution Sleeved Booster",
-        "retailer": "target",
-        "url": "https://www.target.com/s/pokemon+mega+evolution+sleeved+booster",
-        "sku": "",
-    },
-    {
-        "name": "Pokemon Mega Evolution Mini Tin Display 10pk",
-        "retailer": "target",
-        "url": "https://www.target.com/s/pokemon+mega+evolution+mini+tin+display",
-        "sku": "",
-    },
-
-    # --- TARGET - Prismatic Evolutions Extras ---
-    {
-        "name": "Pokemon Prismatic Evolutions SPC",
-        "retailer": "target",
-        "url": "https://www.target.com/s/pokemon+prismatic+evolutions+special+collection",
-        "sku": "",
-    },
-    {
-        "name": "Pokemon Prismatic Evolutions Figure Collection",
-        "retailer": "target",
-        "url": "https://www.target.com/s/pokemon+prismatic+evolutions+figure+collection",
-        "sku": "",
-    },
-
-    # --- TARGET - Paldean Fates ---
-    {
-        "name": "Pokemon Paldean Fates Great Tusk Iron Threads Premium",
-        "retailer": "target",
-        "url": "https://www.target.com/s/pokemon+paldean+fates+great+tusk+iron+threads+premium+collection",
-        "sku": "",
     },
 
     # --- TARGET - Black Bolt ---
@@ -417,20 +345,20 @@ PRODUCTS = [
     {
         "name": "Pokemon SV10.5 Black Bolt Booster Bundle",
         "retailer": "target",
-        "url": "https://www.target.com/s/pokemon+black+bolt+booster+bundle",
-        "sku": "",
+        "url": "https://www.target.com/p/-/A-94681770",
+        "sku": "94681770",
     },
     {
         "name": "Pokemon SV10.5 Black Bolt Binder Collection",
         "retailer": "target",
-        "url": "https://www.target.com/s/pokemon+black+bolt+binder+collection",
-        "sku": "",
+        "url": "https://www.target.com/p/-/A-94636856",
+        "sku": "94636856",
     },
     {
-        "name": "Pokemon SV10.5 Black Bolt Sticker Collection",
+        "name": "Pokemon SV10.5 Black Bolt Tech Sticker 3-Pack",
         "retailer": "target",
-        "url": "https://www.target.com/s/pokemon+black+bolt+sticker+collection",
-        "sku": "",
+        "url": "https://www.target.com/p/-/A-94681767",
+        "sku": "94681767",
     },
 
     # --- TARGET - White Flare ---
@@ -443,56 +371,42 @@ PRODUCTS = [
     {
         "name": "Pokemon SV10.5 White Flare Booster Bundle",
         "retailer": "target",
-        "url": "https://www.target.com/s/pokemon+white+flare+booster+bundle",
-        "sku": "",
+        "url": "https://www.target.com/p/-/A-94681785",
+        "sku": "94681785",
     },
     {
         "name": "Pokemon SV10.5 White Flare Binder Collection",
         "retailer": "target",
-        "url": "https://www.target.com/s/pokemon+white+flare+binder+collection",
-        "sku": "",
+        "url": "https://www.target.com/p/-/A-94636851",
+        "sku": "94636851",
     },
     {
-        "name": "Pokemon SV10.5 White Flare Sticker Collection",
+        "name": "Pokemon SV10.5 White Flare Tech Sticker 3-Pack",
         "retailer": "target",
-        "url": "https://www.target.com/s/pokemon+white+flare+sticker+collection",
-        "sku": "",
-    },
-
-    # --- TARGET - Destined Rivals Extras ---
-    {
-        "name": "Pokemon SV10 Destined Rivals ETB",
-        "retailer": "target",
-        "url": "https://www.target.com/s/pokemon+destined+rivals+elite+trainer+box",
-        "sku": "",
-    },
-    {
-        "name": "Pokemon SV10 Destined Rivals Booster Box 36pk",
-        "retailer": "target",
-        "url": "https://www.target.com/s/pokemon+destined+rivals+booster+box",
-        "sku": "",
+        "url": "https://www.target.com/p/-/A-94681780",
+        "sku": "94681780",
     },
 
-    # --- TARGET - Pokemon 151 ---
+    # --- TARGET - Victini ---
     {
-        "name": "Pokemon 151 Booster Bundle 2-Pack",
+        "name": "Pokemon Victini Illustration Collection",
         "retailer": "target",
-        "url": "https://www.target.com/s/pokemon+151+booster+bundle+2+pack",
-        "sku": "",
+        "url": "https://www.target.com/p/-/A-94636866",
+        "sku": "94636866",
     },
 
     # --- TARGET - Unova ---
     {
         "name": "Pokemon Unova Poster Collection",
         "retailer": "target",
-        "url": "https://www.target.com/s/pokemon+unova+poster+collection",
-        "sku": "",
+        "url": "https://www.target.com/p/-/A-94636854",
+        "sku": "94636854",
     },
     {
-        "name": "Pokemon Unova Mini Tin Random",
+        "name": "Pokemon Unova Mini Tins",
         "retailer": "target",
-        "url": "https://www.target.com/s/pokemon+unova+mini+tin",
-        "sku": "",
+        "url": "https://www.target.com/p/-/A-94636858",
+        "sku": "94636858",
     },
 
     # ══════════════════════════════════════════
