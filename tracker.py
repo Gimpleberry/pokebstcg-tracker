@@ -321,6 +321,351 @@ PRODUCTS = [
         "retailer": "pokemoncenter",
         "url": "https://www.pokemoncenter.com/product/10-10125-102/pokemon-tcg-scarlet-and-violet-journey-together-enhanced-booster-display-box-36-packs-and-1-promo-card",
     },
+
+    # ══════════════════════════════════════════
+    # v6.1.8 ADDITIONS - TARGET (25 new entries)
+    # 3 confirmed /p/ URLs, 22 /s/ search URLs (sku: "" until confirmed)
+    # ══════════════════════════════════════════
+
+    # --- TARGET - Phantasmal Flames Extras ---
+    {
+        "name": "Pokemon Phantasmal Flames Mega Charizard UPC",
+        "retailer": "target",
+        "url": "https://www.target.com/s/pokemon+phantasmal+flames+mega+charizard+ultra+premium+collection",
+        "sku": "",
+    },
+    {
+        "name": "Pokemon Phantasmal Flames Mini Tins",
+        "retailer": "target",
+        "url": "https://www.target.com/s/pokemon+phantasmal+flames+mini+tins",
+        "sku": "",
+    },
+    {
+        "name": "Pokemon Phantasmal Flames Booster Bundle",
+        "retailer": "target",
+        "url": "https://www.target.com/s/pokemon+phantasmal+flames+booster+bundle",
+        "sku": "",
+    },
+    {
+        "name": "Pokemon Phantasmal Flames 3-Pack Blister",
+        "retailer": "target",
+        "url": "https://www.target.com/s/pokemon+phantasmal+flames+blister",
+        "sku": "",
+    },
+
+    # --- TARGET - Mega Evolution Extras ---
+    {
+        "name": "Pokemon Mega Evolution Gardevoir ETB",
+        "retailer": "target",
+        "url": "https://www.target.com/p/pok-233-mon-trading-card-game-mega-evolution-elite-trainer-box-gardevoir/-/A-94681784",
+        "sku": "94681784",
+    },
+    {
+        "name": "Pokemon Mega Evolution Lucario ETB",
+        "retailer": "target",
+        "url": "https://www.target.com/s/pokemon+mega+evolution+lucario+elite+trainer+box",
+        "sku": "",
+    },
+    {
+        "name": "Pokemon Mega Evolution Booster Box 36pk",
+        "retailer": "target",
+        "url": "https://www.target.com/s/pokemon+mega+evolution+booster+box",
+        "sku": "",
+    },
+    {
+        "name": "Pokemon Mega Evolution Sleeved Booster",
+        "retailer": "target",
+        "url": "https://www.target.com/s/pokemon+mega+evolution+sleeved+booster",
+        "sku": "",
+    },
+    {
+        "name": "Pokemon Mega Evolution Mini Tin Display 10pk",
+        "retailer": "target",
+        "url": "https://www.target.com/s/pokemon+mega+evolution+mini+tin+display",
+        "sku": "",
+    },
+
+    # --- TARGET - Prismatic Evolutions Extras ---
+    {
+        "name": "Pokemon Prismatic Evolutions SPC",
+        "retailer": "target",
+        "url": "https://www.target.com/s/pokemon+prismatic+evolutions+special+collection",
+        "sku": "",
+    },
+    {
+        "name": "Pokemon Prismatic Evolutions Figure Collection",
+        "retailer": "target",
+        "url": "https://www.target.com/s/pokemon+prismatic+evolutions+figure+collection",
+        "sku": "",
+    },
+
+    # --- TARGET - Paldean Fates ---
+    {
+        "name": "Pokemon Paldean Fates Great Tusk Iron Threads Premium",
+        "retailer": "target",
+        "url": "https://www.target.com/s/pokemon+paldean+fates+great+tusk+iron+threads+premium+collection",
+        "sku": "",
+    },
+
+    # --- TARGET - Black Bolt ---
+    {
+        "name": "Pokemon SV10.5 Black Bolt ETB",
+        "retailer": "target",
+        "url": "https://www.target.com/p/pok-233-mon-scarlet-violet-s10-5-elite-trainer-box-2-trading-cards/-/A-94636862",
+        "sku": "94636862",
+    },
+    {
+        "name": "Pokemon SV10.5 Black Bolt Booster Bundle",
+        "retailer": "target",
+        "url": "https://www.target.com/s/pokemon+black+bolt+booster+bundle",
+        "sku": "",
+    },
+    {
+        "name": "Pokemon SV10.5 Black Bolt Binder Collection",
+        "retailer": "target",
+        "url": "https://www.target.com/s/pokemon+black+bolt+binder+collection",
+        "sku": "",
+    },
+    {
+        "name": "Pokemon SV10.5 Black Bolt Sticker Collection",
+        "retailer": "target",
+        "url": "https://www.target.com/s/pokemon+black+bolt+sticker+collection",
+        "sku": "",
+    },
+
+    # --- TARGET - White Flare ---
+    {
+        "name": "Pokemon SV10.5 White Flare ETB",
+        "retailer": "target",
+        "url": "https://www.target.com/p/pok-233-mon-trading-card-game-scarlet-38-violet-8212-white-flare-elite-trainer-box/-/A-94636860",
+        "sku": "94636860",
+    },
+    {
+        "name": "Pokemon SV10.5 White Flare Booster Bundle",
+        "retailer": "target",
+        "url": "https://www.target.com/s/pokemon+white+flare+booster+bundle",
+        "sku": "",
+    },
+    {
+        "name": "Pokemon SV10.5 White Flare Binder Collection",
+        "retailer": "target",
+        "url": "https://www.target.com/s/pokemon+white+flare+binder+collection",
+        "sku": "",
+    },
+    {
+        "name": "Pokemon SV10.5 White Flare Sticker Collection",
+        "retailer": "target",
+        "url": "https://www.target.com/s/pokemon+white+flare+sticker+collection",
+        "sku": "",
+    },
+
+    # --- TARGET - Destined Rivals Extras ---
+    {
+        "name": "Pokemon SV10 Destined Rivals ETB",
+        "retailer": "target",
+        "url": "https://www.target.com/s/pokemon+destined+rivals+elite+trainer+box",
+        "sku": "",
+    },
+    {
+        "name": "Pokemon SV10 Destined Rivals Booster Box 36pk",
+        "retailer": "target",
+        "url": "https://www.target.com/s/pokemon+destined+rivals+booster+box",
+        "sku": "",
+    },
+
+    # --- TARGET - Pokemon 151 ---
+    {
+        "name": "Pokemon 151 Booster Bundle 2-Pack",
+        "retailer": "target",
+        "url": "https://www.target.com/s/pokemon+151+booster+bundle+2+pack",
+        "sku": "",
+    },
+
+    # --- TARGET - Unova ---
+    {
+        "name": "Pokemon Unova Poster Collection",
+        "retailer": "target",
+        "url": "https://www.target.com/s/pokemon+unova+poster+collection",
+        "sku": "",
+    },
+    {
+        "name": "Pokemon Unova Mini Tin Random",
+        "retailer": "target",
+        "url": "https://www.target.com/s/pokemon+unova+mini+tin",
+        "sku": "",
+    },
+
+    # ══════════════════════════════════════════
+    # v6.1.8 ADDITIONS - WALMART (25 new entries)
+    # ══════════════════════════════════════════
+
+    # --- WALMART - Phantasmal Flames Extras ---
+    {
+        "name": "Pokemon Phantasmal Flames Mega Charizard UPC",
+        "retailer": "walmart",
+        "url": "https://www.walmart.com/ip/17823811037",
+        "item_id": "17823811037",
+    },
+    {
+        "name": "Pokemon Phantasmal Flames ETB",
+        "retailer": "walmart",
+        "url": "https://www.walmart.com/ip/17780209250",
+        "item_id": "17780209250",
+    },
+    {
+        "name": "Pokemon Phantasmal Flames Mini Tins",
+        "retailer": "walmart",
+        "url": "https://www.walmart.com/ip/17527462929",
+        "item_id": "17527462929",
+    },
+    {
+        "name": "Pokemon Phantasmal Flames Booster Bundle",
+        "retailer": "walmart",
+        "url": "https://www.walmart.com/ip/17785924366",
+        "item_id": "17785924366",
+    },
+    {
+        "name": "Pokemon Phantasmal Flames 3-Pack Blister",
+        "retailer": "walmart",
+        "url": "https://www.walmart.com/ip/17818262325",
+        "item_id": "17818262325",
+    },
+
+    # --- WALMART - Mega Evolution Extras ---
+    {
+        "name": "Pokemon Mega Evolution Gardevoir ETB",
+        "retailer": "walmart",
+        "url": "https://www.walmart.com/ip/17525309434",
+        "item_id": "17525309434",
+    },
+    {
+        "name": "Pokemon Mega Evolution Lucario ETB",
+        "retailer": "walmart",
+        "url": "https://www.walmart.com/ip/17576818418",
+        "item_id": "17576818418",
+    },
+    {
+        "name": "Pokemon Mega Evolution Booster Bundle",
+        "retailer": "walmart",
+        "url": "https://www.walmart.com/ip/17344505131",
+        "item_id": "17344505131",
+    },
+    {
+        "name": "Pokemon Mega Evolution Booster Box 36pk",
+        "retailer": "walmart",
+        "url": "https://www.walmart.com/ip/17344605256",
+        "item_id": "17344605256",
+    },
+    {
+        "name": "Pokemon Mega Evolution Sleeved Booster",
+        "retailer": "walmart",
+        "url": "https://www.walmart.com/ip/17344605257",
+        "item_id": "17344605257",
+    },
+    {
+        "name": "Pokemon Mega Evolution Mini Tin Display 10pk",
+        "retailer": "walmart",
+        "url": "https://www.walmart.com/ip/17530753410",
+        "item_id": "17530753410",
+    },
+
+    # --- WALMART - Prismatic Evolutions Extras ---
+    {
+        "name": "Pokemon Prismatic Evolutions SPC",
+        "retailer": "walmart",
+        "url": "https://www.walmart.com/ip/15494520186",
+        "item_id": "15494520186",
+    },
+    {
+        "name": "Pokemon Prismatic Evolutions Booster Bundle",
+        "retailer": "walmart",
+        "url": "https://www.walmart.com/ip/14803962651",
+        "item_id": "14803962651",
+    },
+    {
+        "name": "Pokemon Prismatic Evolutions Figure Collection",
+        "retailer": "walmart",
+        "url": "https://www.walmart.com/ip/17497369978",
+        "item_id": "17497369978",
+    },
+
+    # --- WALMART - Paldean Fates ---
+    {
+        "name": "Pokemon Paldean Fates Great Tusk Iron Threads Premium",
+        "retailer": "walmart",
+        "url": "https://www.walmart.com/ip/17738119614",
+        "item_id": "17738119614",
+    },
+
+    # --- WALMART - Black Bolt Extras ---
+    {
+        "name": "Pokemon SV10.5 Black Bolt Booster Bundle",
+        "retailer": "walmart",
+        "url": "https://www.walmart.com/ip/16484003729",
+        "item_id": "16484003729",
+    },
+    {
+        "name": "Pokemon SV10.5 Black Bolt Binder Collection",
+        "retailer": "walmart",
+        "url": "https://www.walmart.com/ip/16454374284",
+        "item_id": "16454374284",
+    },
+    {
+        "name": "Pokemon SV10.5 Black Bolt Sticker Collection",
+        "retailer": "walmart",
+        "url": "https://www.walmart.com/ip/16448166601",
+        "item_id": "16448166601",
+    },
+
+    # --- WALMART - White Flare Extras ---
+    {
+        "name": "Pokemon SV10.5 White Flare Booster Bundle",
+        "retailer": "walmart",
+        "url": "https://www.walmart.com/ip/16516160047",
+        "item_id": "16516160047",
+    },
+    {
+        "name": "Pokemon SV10.5 White Flare Binder Collection",
+        "retailer": "walmart",
+        "url": "https://www.walmart.com/ip/16516160046",
+        "item_id": "16516160046",
+    },
+    {
+        "name": "Pokemon SV10.5 White Flare Sticker Collection",
+        "retailer": "walmart",
+        "url": "https://www.walmart.com/ip/16448166186",
+        "item_id": "16448166186",
+    },
+
+    # --- WALMART - Destined Rivals Extras ---
+    {
+        "name": "Pokemon SV10 Destined Rivals Booster Box 36pk",
+        "retailer": "walmart",
+        "url": "https://www.walmart.com/ip/15762118882",
+        "item_id": "15762118882",
+    },
+
+    # --- WALMART - Pokemon 151 ---
+    {
+        "name": "Pokemon 151 Booster Bundle 2-Pack",
+        "retailer": "walmart",
+        "url": "https://www.walmart.com/ip/15375908353",
+        "item_id": "15375908353",
+    },
+
+    # --- WALMART - Unova ---
+    {
+        "name": "Pokemon Unova Poster Collection",
+        "retailer": "walmart",
+        "url": "https://www.walmart.com/ip/16517213276",
+        "item_id": "16517213276",
+    },
+    {
+        "name": "Pokemon Unova Mini Tin Random",
+        "retailer": "walmart",
+        "url": "https://www.walmart.com/ip/16800072727",
+        "item_id": "16800072727",
+    },
 ]
 
 # ─────────────────────────────────────────────
@@ -552,6 +897,338 @@ def check_target(product: dict) -> ProductStatus:
         price=price,
         checked_at=datetime.now().isoformat(),
     )
+
+
+def _check_target_one(page, product: dict) -> tuple:
+    """
+    Single Target product check on an already-open warm page.
+    
+    Returns (in_stock, price, err) tuple. Caller manages page lifecycle.
+    Mirrors _check_bestbuy_one structure (v6.0.0 step 4.7+4.8).
+    """
+    in_stock, price = False, "N/A"
+    url = product["url"]
+
+    try:
+        from playwright.sync_api import TimeoutError as PWTimeout
+
+        page.goto(url, wait_until="domcontentloaded", timeout=20000)
+        try:
+            page.wait_for_selector(
+                "[data-test='fulfillment-cell'], [data-test='add-to-cart-button'], "
+                "[data-test='orderPickup']",
+                timeout=4000  # v6.1.10: reduced from 8000ms - regex parser
+                              # works on page.content() regardless of selector
+            )
+        except PWTimeout:
+            pass  # Unavailable items hide the fulfillment section
+
+        rendered = page.content()
+
+        # Check rendered Add to Cart button state
+        atc_btn = page.query_selector("[data-test='add-to-cart-button']:not([disabled])")
+        unavail_btn = page.query_selector("[data-test='add-to-cart-button'][disabled]")
+
+        if atc_btn and not unavail_btn:
+            in_stock = True
+        elif unavail_btn:
+            in_stock = False
+
+        # Scan rendered JSON for availability_status
+        avail_statuses = re.findall(r'"availability_status"\s*:\s*"([A-Z_]+)"', rendered)
+        if avail_statuses:
+            unavail_set = {"UNAVAILABLE", "OUT_OF_STOCK", "SOLD_OUT"}
+            avail_set = {"IN_STOCK", "LIMITED_STOCK", "AVAILABLE_TO_PROMISE"}
+            status_set = set(avail_statuses)
+            if status_set & unavail_set:
+                in_stock = False
+            elif status_set & avail_set and not (status_set & unavail_set):
+                in_stock = True
+
+        # Check button label text
+        if re.search(r'"buttonLabel"\s*:\s*"Unavailable"', rendered):
+            in_stock = False
+
+        # Price
+        price_match = re.search(r'"formatted_current_price"\s*:\s*"([^"]+)"', rendered)
+        if price_match:
+            price = price_match.group(1)
+        else:
+            price_el = page.query_selector("[data-test='product-price']")
+            if price_el:
+                price = price_el.inner_text().strip()
+
+        log.debug(
+            f"Target {product['name']}: "
+            f"in_stock={in_stock} price={price}"
+        )
+        return (in_stock, price, None)
+
+    except Exception as e:
+        return (False, "N/A", e)
+
+
+def check_target_batch(products: list) -> list:
+    """
+    Check all Target products in a single daemon thread sharing one
+    Playwright session (v6.1.9 - mirrors check_bestbuy_batch v6.0.0
+    step 4.7+4.8 architecture, with v6.1.7 Option A+B hardening).
+
+    Includes:
+      - v6.1.6: process-based liveness probe (skip if previous still running)
+      - v6.1.7 Option A: periodic zombie cleanup every 5 cycles
+      - v6.0.0 step 4.8: cold-start prewarm via target.com homepage
+      - v6.0.0 step 4.8: per-product retry on transient errors
+      - v6.1.7 Option B: error-gated unroute() to prevent zombie leak
+      - 360s wall-clock timeout via daemon thread
+      - Circuit breaker: 3 failures = 30 min backoff
+
+    Returns a list of ProductStatus in the same order as input products.
+
+    Per-product errors are isolated. Whole-batch failure marks all
+    products as failed and trips the circuit breaker.
+    """
+    import threading
+
+    if not products:
+        return []
+
+    # Circuit breaker
+    cb = getattr(check_target_batch, "_circuit",
+                 {"failures": 0, "open_until": 0})
+    check_target_batch._circuit = cb
+
+    if cb["failures"] >= 3 and time.time() < cb["open_until"]:
+        mins_left = int((cb["open_until"] - time.time()) / 60)
+        log.debug(
+            f"Target circuit open - skipping batch of {len(products)} "
+            f"product(s) ({mins_left} min remaining)"
+        )
+        return [
+            ProductStatus(
+                name=p["name"], retailer="Target",
+                url=p.get("url", ""), in_stock=False, price="N/A",
+                checked_at=datetime.now().isoformat(),
+            )
+            for p in products
+        ]
+
+    log.info(f"[target_batch] Starting batch check of {len(products)} product(s)...")
+
+    results: list = [None] * len(products)
+    batch_error: list = [None]
+
+    def _run():
+        # v6.1.7 Option A: periodic zombie cleanup every 5 cycles
+        n_cycle = getattr(check_target_batch, "_cleanup_cycle_count", 0) + 1
+        check_target_batch._cleanup_cycle_count = n_cycle
+        if n_cycle % 5 == 0:
+            try:
+                tools_dir = os.path.join(
+                    os.path.dirname(os.path.abspath(__file__)), "tools"
+                )
+                if tools_dir not in sys.path:
+                    sys.path.insert(0, tools_dir)
+                from kill_chromium_zombies import sweep_zombies_all_profiles
+                sweep_zombies_all_profiles(cycle_count=n_cycle)
+            except Exception as e:
+                log.debug(f"[zombie_sweep] cleanup error: {e}")
+
+        # v6.1.6: liveness probe - skip if previous cycle still running
+        try:
+            tools_dir = os.path.join(
+                os.path.dirname(os.path.abspath(__file__)), "tools"
+            )
+            if tools_dir not in sys.path:
+                sys.path.insert(0, tools_dir)
+            from kill_chromium_zombies import count_processes_using_profile
+            n_alive = count_processes_using_profile(
+                BROWSER_PROFILES["target"]
+            )
+            if n_alive > 0:
+                log.warning(
+                    f"[target_batch] {n_alive} chrome.exe still attached "
+                    f"to profile dir - previous cycle still alive, "
+                    f"skipping this cycle silently"
+                )
+                batch_error[0] = RuntimeError(
+                    "profile_locked_by_previous_run"
+                )
+                return
+        except Exception:
+            pass
+
+        try:
+            from playwright.sync_api import sync_playwright
+        except ImportError:
+            log.warning("Playwright not installed - Target checks disabled")
+            batch_error[0] = ImportError("playwright not installed")
+            return
+
+        try:
+            with sync_playwright() as p:
+                os.makedirs(BROWSER_PROFILE, exist_ok=True)
+                context = launch_chromium_with_fallback(
+                    p,
+                    BROWSER_PROFILES["target"],
+                    headless=True,
+                    args=[
+                        "--disable-blink-features=AutomationControlled",
+                        "--no-sandbox",
+                        "--disable-dev-shm-usage",
+                        "--disable-gpu",
+                        "--disable-images",
+                        "--disable-extensions",
+                        "--blink-settings=imagesEnabled=false",
+                    ],
+                    user_agent=HEADERS["User-Agent"],
+                    log_prefix="target_batch",
+                )
+
+                page = context.new_page()
+                page.route("**/*", lambda r: r.abort()
+                    if r.request.resource_type in ("image", "media", "font", "stylesheet")
+                    else r.continue_()
+                )
+
+                try:
+                    # v6.1.7 Option B: track per-cycle error state to gate
+                    # unroute() cleanup. Error cycles leave route handlers
+                    # in-flight; calling unroute() then hangs indefinitely.
+                    had_errors = False
+
+                    # Cold-start prewarm (mirrors v6.0.0 step 4.8)
+                    try:
+                        log.debug("[target_batch] prewarming session via homepage...")
+                        page.goto(
+                            "https://www.target.com/",
+                            wait_until="domcontentloaded",
+                            timeout=30000,
+                        )
+                        page.wait_for_timeout(1500)
+                        log.debug("[target_batch] prewarm complete")
+                    except Exception as e:
+                        log.debug(f"[target_batch] prewarm failed (continuing): {e}")
+
+                    # Per-product check loop with retry
+                    for i, product in enumerate(products):
+                        log.info(f"  [target_batch] {i+1}/{len(products)} {product['name']}")
+                        in_stock, price, err = _check_target_one(page, product)
+
+                        # Retry once on transient errors
+                        if err is not None:
+                            had_errors = True
+                            log.debug(
+                                f"  [target_batch] retry {product['name']} "
+                                f"after error: {err}"
+                            )
+                            time.sleep(2)
+                            in_stock, price, err = _check_target_one(page, product)
+                            if err is not None:
+                                log.warning(
+                                    f"  [target_batch] error on {product['name']} "
+                                    f"(after retry): {err}"
+                                )
+                            else:
+                                log.debug(f"  [target_batch] retry succeeded for {product['name']}")
+
+                        results[i] = ProductStatus(
+                            name=product["name"],
+                            retailer="Target",
+                            url=product.get("url", ""),
+                            in_stock=in_stock,
+                            price=price,
+                            checked_at=datetime.now().isoformat(),
+                        )
+                finally:
+                    # v6.1.7 Option B: gate unroute on had_errors. Skip on
+                    # error cycles to prevent the page.unroute() hang.
+                    try:
+                        if not had_errors:
+                            page.unroute("**/*")
+                    except Exception:
+                        pass
+                    page.close()
+                    context.close()
+
+        except Exception as e:
+            batch_error[0] = e
+
+    BATCH_TIMEOUT_SEC = 360
+
+    t = threading.Thread(target=_run, daemon=True, name="target_batch")
+    t.start()
+    t.join(timeout=BATCH_TIMEOUT_SEC)
+
+    if t.is_alive():
+        log.warning(
+            f"Target batch timed out (>{BATCH_TIMEOUT_SEC}s) - "
+            f"marking all {len(products)} product(s) as failed"
+        )
+        cb["failures"] += 1
+        if cb["failures"] >= 3:
+            cb["open_until"] = time.time() + (30 * 60)
+            log.warning(
+                "Target circuit breaker OPEN - "
+                "backing off 30 minutes after 3 consecutive failures"
+            )
+        return [
+            ProductStatus(
+                name=p["name"], retailer="Target",
+                url=p.get("url", ""), in_stock=False, price="N/A",
+                checked_at=datetime.now().isoformat(),
+            )
+            for p in products
+        ]
+
+    if batch_error[0] is not None:
+        # locked-skip: previous cycle still running. Don't increment CB.
+        if str(batch_error[0]) == "profile_locked_by_previous_run":
+            return [
+                ProductStatus(
+                    name=p["name"], retailer="Target",
+                    url=p.get("url", ""), in_stock=False, price="N/A",
+                    checked_at=datetime.now().isoformat(),
+                )
+                for p in products
+            ]
+        log.warning(f"Target batch error: {batch_error[0]}")
+        cb["failures"] += 1
+        if cb["failures"] >= 3:
+            cb["open_until"] = time.time() + (30 * 60)
+            log.warning(
+                "Target circuit breaker OPEN - "
+                "backing off 30 minutes after 3 consecutive failures"
+            )
+        return [
+            ProductStatus(
+                name=p["name"], retailer="Target",
+                url=p.get("url", ""), in_stock=False, price="N/A",
+                checked_at=datetime.now().isoformat(),
+            )
+            for p in products
+        ]
+
+    # Success - reset circuit breaker
+    cb["failures"] = 0
+    in_stock_count = sum(1 for r in results if r and r.in_stock)
+    log.info(
+        f"[target_batch] Batch complete: {in_stock_count}/{len(products)} in stock"
+    )
+
+    # Defensive: replace any None results
+    final_results = []
+    for i, r in enumerate(results):
+        if r is None:
+            log.warning(f"  [target_batch] missing result for {products[i]['name']}")
+            final_results.append(ProductStatus(
+                name=products[i]["name"], retailer="Target",
+                url=products[i].get("url", ""), in_stock=False, price="N/A",
+                checked_at=datetime.now().isoformat(),
+            ))
+        else:
+            final_results.append(r)
+    return final_results
 
 
 def _scrape_target_fallback(url: str):
@@ -810,6 +1487,11 @@ def check_bestbuy_batch(products: list) -> list:
                 )
 
                 try:
+                    # v6.1.7 Option B: track per-cycle error state to gate
+                    # unroute() cleanup. Error cycles leave route handlers
+                    # in-flight; calling unroute() then hangs indefinitely.
+                    had_errors = False
+
                     # ── Cold-start prewarm (v6.0.0 step 4.8) ──────────
                     # Navigate to BB homepage once before product 1 so
                     # Chromium + Akamai cookies + HTTP/2 pool are warm.
@@ -839,6 +1521,7 @@ def check_bestbuy_batch(products: list) -> list:
                         # error page, sporadic 18s timeout. Warm session
                         # is preserved, just give it 2s to recover.
                         if err is not None:
+                            had_errors = True
                             log.debug(
                                 f"  [bestbuy_batch] retry {product['name']} "
                                 f"after error: {err}"
@@ -862,12 +1545,16 @@ def check_bestbuy_batch(products: list) -> list:
                             checked_at=datetime.now().isoformat(),
                         )
                 finally:
-                    # Tear down route handlers cleanly to prevent asyncio
-                    # cancellation noise (v6.0.0 step 4.8). page.unroute
-                    # waits for in-flight handlers to complete before
-                    # closing — eliminates "Exception in callback" spam.
+                    # v6.1.7 Option B: gate unroute on had_errors. On clean
+                    # cycles, unroute drains route handlers and suppresses
+                    # asyncio cancellation noise (v6.0.0 step 4.8 benefit).
+                    # On error cycles, route handlers may be in-flight; calling
+                    # unroute() then hangs, the 360s daemon-thread timeout
+                    # fires, and ~11 chromium zombies leak. Skip unroute on
+                    # error cycles so page.close() runs immediately.
                     try:
-                        page.unroute("**/*")
+                        if not had_errors:
+                            page.unroute("**/*")
                     except Exception:
                         pass
                     page.close()
@@ -1207,6 +1894,7 @@ def run_checks():
     history = load_history()
     results = []
     bestbuy_products = []  # Collected for batch processing (v6.0.0 step 4.7)
+    target_products = []   # Collected for batch processing (v6.1.9 target_batch)
 
     for product in PRODUCTS:
         retailer = product["retailer"].lower()
@@ -1215,6 +1903,13 @@ def run_checks():
         # for warm-session perf — see check_bestbuy_batch() docstring.
         if retailer == "bestbuy":
             bestbuy_products.append(product)
+            continue
+
+        # v6.1.9: Target products are batched at the end of the cycle for
+        # warm-session perf — see check_target_batch() docstring.
+        # Cuts Target detection lag from ~4 min to ~1 min.
+        if retailer == "target":
+            target_products.append(product)
             continue
 
         # Walmart products are handled by the walmart_playwright plugin
@@ -1268,6 +1963,42 @@ def run_checks():
         )
         bb_results = check_bestbuy_batch(bestbuy_products)
         for product, status in zip(bestbuy_products, bb_results):
+            prev = history.get(product["url"], {})
+            was_in_stock = prev.get("in_stock", None)
+            status.was_in_stock = was_in_stock
+
+            is_new_stock = (status.in_stock and was_in_stock is False) or \
+                           (status.in_stock and was_in_stock is None)
+            if is_new_stock:
+                notify(status)
+                try:
+                    import plugins as _ps
+                    _ps.notify_stock_change(product, status)
+                except Exception:
+                    pass
+
+            history[product["url"]] = {
+                "in_stock": status.in_stock,
+                "price": status.price,
+                "last_checked": status.checked_at,
+                "name": status.name,
+                "retailer": status.retailer,
+            }
+            results.append(status)
+            log.info(
+                f"  -> {'✅ IN STOCK' if status.in_stock else '❌ Out of stock'} | {status.price}"
+            )
+
+    # ── Target batch (v6.1.9) ──────────────────────────────────────
+    # Run all Target products through ONE Playwright session for warm-
+    # session perf. Mirrors the bestbuy_batch architecture - single page
+    # reused across all products, no inter-product sleep.
+    if target_products:
+        log.info(
+            f"Checking {len(target_products)} Target product(s) in batch..."
+        )
+        tg_results = check_target_batch(target_products)
+        for product, status in zip(target_products, tg_results):
             prev = history.get(product["url"], {})
             was_in_stock = prev.get("in_stock", None)
             status.was_in_stock = was_in_stock
