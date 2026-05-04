@@ -11,26 +11,50 @@ questions** that need answering before implementation.
 
 ## Phases (chronological order, each finishes before the next starts)
 
-1. **v6.1.x chain completion** (active — next session)
-   - **1a. v6.1.7 Option A — periodic zombie cleanup.** Run
-     `kill_chromium_zombies` every N cycles instead of only at tracker.bat
-     startup. Quick tactical win: converts bestbuy_batch from "dormant after
-     cycle 1" to "productive every ~30 min." Doesn't fix root cause.
-   - **1b. v6.1.7 Option B — fix page.unroute() hang in `check_bestbuy_batch`.**
-     Root cause of zombie creation. Three candidate approaches: skip cleanup
-     on error, wrap unroute in its own timeout, or refactor to subprocess.
-     Tomorrow-fresh-eyes architectural work; ship after Option A is soaking.
-   - **1c. v6.1.1 step 3 — Walmart cutover.** Remove `walmart` from
+1. **v6.1.x chain completion** (active)
+   - **1a. v6.1.12 — Pokemon Center batching.** Architectural transplant of
+     the bestbuy_batch / target_batch pattern to Pokemon Center. PC currently
+     runs sequentially: 10 products × ~3.1s = ~32s per cycle. Batched (single
+     warm Playwright session, single page reused, cold-start prewarm via
+     pokemoncenter.com, per-product retry, 4000ms selector timeout) should
+     drop to ~10-12s. Target cycle impact: ~3.5 → ~3.0 min. Reference template
+     is `apply_v6_1_9_target_batch.py` — same architecture, different domain.
+     Top priority candidate for next session.
+   - **1b. v6.1.1 step 3 — Walmart cutover.** Remove `walmart` from
      `CHECKER_MAP` in `tracker.py`, replace `check_walmart()` body with
      deprecated shim, delete `_scrape_walmart_fallback()` (dead code post-
      cutover). Walmart traffic now lives in `walmart_playwright` plugin.
      Soak gate: 24h+ of clean walmart_playwright history before cutover.
+     Once this ships, the v6.1.x chain is "complete" and the dashboard
+     help.html v6.1 changelog block can be added (see UI Audit Phase note).
+   - **1c. v6.1.x — cart_preloader timeout reductions.** ~9s saving on
+     actual checkouts. Now that detection is fast post-v6.1.10, cart-side
+     becomes the new drop-to-cart bottleneck. Impact only realized during
+     real restock alerts, so harder to soak-test, but the savings compound
+     across every alert fire.
+   - **1d. v6.1.x — bestbuy_invites traceback noise filter.** Cosmetic
+     ~700 prefixes/22h in log. Surgical noise filter (suppress specific
+     pattern from output, log only at DEBUG level) cleans it up. Quick win.
+     Lowest priority of Phase 1.
+   - **1e. v6.1.x — audit script parser bug fix.** `audit_v6_1_12_url_coverage.py`
+     in /mnt/user-data/outputs/ has a FIFO drift bug: the line "Checking N
+     <retailer> product(s) in batch..." matches the `name_pattern` regex
+     (because "(s)" looks like a paren-wrapped retailer), causing per-cycle
+     off-by-one drift that compounds. Static URL analysis is correct; log
+     evidence numbers are scrambled. Fix is to anchor `name_pattern` to
+     known retailer tokens (pokemoncenter, walmart, amazon, costco) instead
+     of `\w+`. Not urgent — script ran once, served its purpose, but should
+     be fixed before reuse. Trivial change, ~5-10 lines.
 2. **Remaining technical debt cleanup** — Costco login retry, BitLocker,
-   password manager. Two prior items resolved: bestbuy_invites async/sync
-   mismatch (fixed in v6.0.0 step 4_5 via daemon-thread wrapping), Walmart
-   product list / API header refresh (superseded by walmart_playwright).
+   password manager. Also: 12 of 15 plugins still on legacy lifecycle (none
+   block boot, so practical urgency is gone but consistency value exists);
+   v6.0.2 introspection panel (surfacing scheduler last_run in dashboard);
+   BB HTTP/2 errors on `/site/` URL pattern (Akamai-side, may be unfixable
+   from our end — see Known Limitations below).
 3. **UI Audit Phase** — page-by-page visual + IA cleanup across the dashboard
-   (see "UI Audit Phase" section below for scope and approach).
+   (see "UI Audit Phase" section below for scope and approach). Includes
+   adding the v6.1.x changelog block to dashboard/help.html — currently
+   deferred per the "ship when chain is complete" convention.
 4. **Feature increments** — net-new analytical features that aren't pure UI
    cleanup (currently just "Spending trend by set," see that section below).
 
@@ -38,6 +62,26 @@ The phases matter because doing them out of order causes rework. Cosmetic polish
 on a page that's about to be functionally restructured by a feature increment is
 wasted effort. Functional features built on top of unfixed technical debt inherit
 the debt. **Stay disciplined about the phase order.**
+
+---
+
+## Known Limitations (not actionable)
+
+These are accepted operational realities, not items to fix. Listed here so
+they're not re-litigated as bugs in future sessions.
+
+- **BB HTTP/2 errors on 2/6 products.** The two failing URLs use the
+  `bestbuy.com/site/.../XXXXXXX.p` pattern (older format). Suspected Akamai
+  bot-protection applying stricter rules to that URL pattern specifically —
+  the other 4 BB products on the newer `/product/.../JJG2TLXXXX` pattern
+  work fine. Not a tracker bug. Error noise is already minimal (1 warning
+  per product per cycle after retry, error-gated unroute prevents zombies).
+  No action unless Best Buy changes the underlying URL scheme.
+- **Pokemon Center / Walmart price extraction returns N/A for OOS items.**
+  Confirmed in v6.1.12 audit. Stock state detection works; price extraction
+  doesn't surface a value when the item is unavailable. Not a URL issue
+  (URLs verified valid). Acceptable behavior — alerts fire on stock-state
+  change, and a missing $price on an OOS notification is fine.
 
 ---
 
@@ -85,6 +129,11 @@ get reviewed; add to it freely as items come up between now and the audit):
   (2px colored top border per card) to strong (background tint by metric
   category). Recommended starting point: subtle. Do during the `invest.html`
   page batch.
+- **v6.1.x changelog block on `help.html`** — pending v6.1.x chain completion
+  (i.e., post-Walmart cutover, see Phase 1 item 1b). One cohesive block
+  covering v6.1.7 → v6.1.11 (and any subsequent v6.1.12+) rather than per-patch
+  entries. Tags: Major, Performance, Reliability. Reference content lives in
+  `PROJECT_KNOWLEDGE.txt` "v6.1.7 → v6.1.11 PATCH SUMMARY" section.
 
 **Touches:** Mostly `dashboard/*.html` files and CSS variables in each (or a
 shared CSS file if we extract one during the audit). No backend changes
