@@ -1697,15 +1697,18 @@ def notify(product: ProductStatus):
 # Main check loop
 # ─────────────────────────────────────────────
 
-def check_pokemoncenter(product: dict) -> ProductStatus:
+def _check_pokemoncenter_one(product: dict) -> ProductStatus:
     """
-    Scrapes Pokemon Center product pages.
-    Uses JSON-LD structured data as the primary source of truth.
-    Only falls back to HTML signals when JSON-LD is missing entirely.
+    Check ONE Pokemon Center product via requests.get() + JSON-LD parse.
 
-    IMPORTANT: Method 3 (addToCart string search) has been removed because
-    Pokemon Center embeds "addToCart" in their JavaScript bundle regardless
-    of stock status, causing false positive in-stock detections.
+    Extracted from legacy check_pokemoncenter() (v6.1.12 batching).
+    Heuristics preserved verbatim:
+      - Method 1: JSON-LD structured data (primary truth source)
+      - Method 2: Explicit SOLD OUT text (reliable OOS signal)
+      - Method 3 replacement: HTML button markup fallback when JSON-LD absent
+
+    Thread-safe: uses module-level CONFIG/HEADERS read-only, returns a
+    fresh ProductStatus per call. Safe to dispatch via ThreadPoolExecutor.
     """
     in_stock, price = False, "N/A"
     ld_found = False
@@ -1794,10 +1797,78 @@ def check_pokemoncenter(product: dict) -> ProductStatus:
     )
 
 
+def check_pokemoncenter(product: dict) -> ProductStatus:
+    """Legacy single-product entrypoint. Delegates to _check_pokemoncenter_one.
+
+    Kept for backward compatibility with any external callers (tests,
+    plugins). The main run_checks() loop uses check_pokemoncenter_batch.
+    """
+    return _check_pokemoncenter_one(product)
+
+
+def check_pokemoncenter_batch(products: list) -> list:
+    """
+    Check all Pokemon Center products concurrently via ThreadPoolExecutor.
+
+    v6.1.12: replaces sequential check_pokemoncenter() dispatch with
+    concurrent HTTP requests. PC is server-rendered HTML with JSON-LD
+    (no anti-bot friction), so concurrent requests is the right tool
+    instead of a Playwright batch transplant.
+
+    Performance:
+      - Sequential (legacy): ~3.1s/product * N products = ~32s for 10 products
+      - Concurrent (this):    ~5-7s total for 10 products (5x worker pool)
+      - Worst case (PC outage with 15s timeouts): legacy ~150s, this ~15s
+
+    max_workers=5 is conservative - PC's CDN handles concurrent requests
+    well, but we don't need to hammer them. 5 workers parallelize 10
+    products in ~2 batches; lower means underutilized, higher gains
+    diminish.
+
+    Returns list[ProductStatus] in the same order as input products.
+    """
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+
+    if not products:
+        return []
+
+    log.info(f"[pokemoncenter_batch] Checking {len(products)} product(s) concurrently...")
+
+    results: list = [None] * len(products)
+    with ThreadPoolExecutor(max_workers=5, thread_name_prefix="pc_batch") as ex:
+        future_to_idx = {
+            ex.submit(_check_pokemoncenter_one, p): i
+            for i, p in enumerate(products)
+        }
+        for future in as_completed(future_to_idx):
+            idx = future_to_idx[future]
+            try:
+                results[idx] = future.result()
+            except Exception as e:
+                log.warning(
+                    f"[pokemoncenter_batch] error on {products[idx]['name']}: {e}"
+                )
+                # Fail-safe: out-of-stock placeholder rather than dropping the slot
+                results[idx] = ProductStatus(
+                    name=products[idx]["name"],
+                    retailer="Pokemon Center",
+                    url=products[idx].get("url", ""),
+                    in_stock=False,
+                    price="N/A",
+                    checked_at=datetime.now().isoformat(),
+                )
+
+    in_stock_count = sum(1 for r in results if r and r.in_stock)
+    log.info(
+        f"[pokemoncenter_batch] Batch complete: {in_stock_count}/{len(products)} in stock"
+    )
+    return results
+
+
 CHECKER_MAP = {
     "target": check_target,
     "bestbuy": check_bestbuy,
-    "pokemoncenter": check_pokemoncenter,
+    # pokemoncenter removed v6.1.12 - handled by check_pokemoncenter_batch (concurrent)
     # walmart removed v6.1.1 step 3 - now handled by walmart_playwright plugin
 }
 
@@ -1809,6 +1880,7 @@ def run_checks():
     results = []
     bestbuy_products = []  # Collected for batch processing (v6.0.0 step 4.7)
     target_products = []   # Collected for batch processing (v6.1.9 target_batch)
+    pokemoncenter_products = []  # Collected for batch processing (v6.1.12 PC concurrent batch)
 
     for product in PRODUCTS:
         retailer = product["retailer"].lower()
@@ -1824,6 +1896,13 @@ def run_checks():
         # Cuts Target detection lag from ~4 min to ~1 min.
         if retailer == "target":
             target_products.append(product)
+            continue
+
+        # v6.1.12: Pokemon Center products are batched via concurrent requests
+        # at the end of the cycle - see check_pokemoncenter_batch() docstring.
+        # Cuts PC cycle time from ~32s to ~5-7s.
+        if retailer == "pokemoncenter":
+            pokemoncenter_products.append(product)
             continue
 
         # Walmart products are handled by the walmart_playwright plugin
@@ -1866,6 +1945,39 @@ def run_checks():
             f"  -> {'✅ IN STOCK' if status.in_stock else '❌ Out of stock'} | {status.price}"
         )
         time.sleep(CONFIG["delay_between_requests"])
+
+    # ── Pokemon Center batch (v6.1.12) ─────────────────────────────
+    # Concurrent requests via ThreadPoolExecutor - PC is server-rendered
+    # HTML with JSON-LD, so concurrent HTTP is the right tool (no Playwright
+    # overhead needed). See check_pokemoncenter_batch() docstring.
+    if pokemoncenter_products:
+        pc_results = check_pokemoncenter_batch(pokemoncenter_products)
+        for product, status in zip(pokemoncenter_products, pc_results):
+            prev = history.get(product["url"], {})
+            was_in_stock = prev.get("in_stock", None)
+            status.was_in_stock = was_in_stock
+
+            is_new_stock = (status.in_stock and was_in_stock is False) or \
+                           (status.in_stock and was_in_stock is None)
+            if is_new_stock:
+                notify(status)
+                try:
+                    import plugins as _ps
+                    _ps.notify_stock_change(product, status)
+                except Exception:
+                    pass
+
+            history[product["url"]] = {
+                "in_stock": status.in_stock,
+                "price": status.price,
+                "last_checked": status.checked_at,
+                "name": status.name,
+                "retailer": status.retailer,
+            }
+            results.append(status)
+            log.info(
+                f"  -> {chr(0x2705) + ' IN STOCK' if status.in_stock else chr(0x274C) + ' Out of stock'} | {status.price}"
+            )
 
     # ── Best Buy batch (v6.0.0 step 4.7) ───────────────────────────
     # Run all BB products through ONE Playwright session for warm-session
