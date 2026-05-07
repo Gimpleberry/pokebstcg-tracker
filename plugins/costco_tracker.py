@@ -60,6 +60,46 @@ log = logging.getLogger(__name__)
 
 HISTORY_FILE = "costco_tracker_history.json"
 
+
+# v6.1.15: Resilience configuration. All values tunable here without
+# touching call sites. Costco's session cookie has been long-lived in
+# production (no observed expiry yet), so detection logic is conservative
+# and dedupe-aware to avoid notification spam if signals are noisy.
+COSTCO_RESILIENCE = {
+    # Per-product navigation retries
+    "product_nav_retries":      2,       # 2 retries = 3 total attempts
+    "product_nav_backoff":      [1, 3],  # seconds; len must equal retries
+
+    # Warehouse API retries
+    "warehouse_api_retries":    2,
+    "warehouse_api_backoff":    [2, 5],
+
+    # Outer Playwright session retries (covers ICU bug, cold-start race)
+    "session_retries":          1,
+    "session_backoff":          [5],
+
+    # Auth failure detection
+    "auth_consecutive_threshold":  3,    # N cycles before declaring failure
+    "auth_alert_dedupe_hours":     24,   # don't ntfy more than 1/day
+
+    # Logging: promote debug-swallowed errors to WARNING when retry exhausted
+    "log_warning_on_exhaustion":  True,
+}
+
+# v6.1.15: Auth-failure detection signals. Any of these on a product page
+# raises the auth-suspect counter. Threshold + state tracking lives in
+# self.history under the "_costco_health" key.
+AUTH_FAILURE_URL_FRAGMENTS = (
+    "/LogonForm",
+    "/logonform",
+    "/account/login",
+)
+AUTH_FAILURE_CONTENT_PATTERNS = (
+    "<title>sign in",
+    "<title>log in",
+    'class="sign-in-redirect"',
+)
+
 # -- Warehouse IDs for your two locations ------------------------------------
 # Cherry Hill, NJ -- Costco Warehouse #1142
 # Princeton, NJ   -- Costco Warehouse #0482
@@ -228,7 +268,9 @@ class CostcoTracker:
 
             log.debug(f"[costco] Checking {len(self.active)} products online...")
 
-            try:
+            # v6.1.15: retry envelope for outer session (covers cold-start
+            # ICU bug, browser warmup races, transient launch failures)
+            def _open_session_and_check():
                 with sync_playwright() as p:
                     context = launch_chromium_with_fallback(
                         p,
@@ -261,8 +303,16 @@ class CostcoTracker:
                     page.close()
                     context.close()
 
-            except Exception as e:
-                log.warning(f"[costco] Playwright session error: {e}")
+            # v6.1.15: dispatch the session through retry envelope.
+            # Self-reference is safe: _run is a closure with `self` from outer.
+            ok, _, _ = self._with_retry(
+                _open_session_and_check,
+                retries=COSTCO_RESILIENCE["session_retries"],
+                backoff_s=COSTCO_RESILIENCE["session_backoff"],
+                label="Playwright session",
+            )
+            if not ok:
+                log.warning("[costco] Playwright session unrecoverable this cycle")
 
         t = threading.Thread(target=_run, daemon=True, name="costco_check_all")
         t.start()
@@ -278,17 +328,46 @@ class CostcoTracker:
         prev = self.history.get(key, {})
 
         try:
-            page.goto(url, wait_until="domcontentloaded", timeout=20000)
-            try:
-                page.wait_for_selector(
-                    ".add-to-cart-btn, #add-to-cart-btn, "
-                    "[automation-id='addToCartButton'], .e-com-product-actions",
-                    timeout=7000
-                )
-            except PWTimeout:
-                pass
+            # v6.1.15: retry goto on transient nav failures
+            def _do_nav():
+                page.goto(url, wait_until="domcontentloaded", timeout=20000)
+                try:
+                    page.wait_for_selector(
+                        ".add-to-cart-btn, #add-to-cart-btn, "
+                        "[automation-id='addToCartButton'], .e-com-product-actions",
+                        timeout=7000
+                    )
+                except PWTimeout:
+                    pass
+                return True
+
+            ok, _, _ = self._with_retry(
+                _do_nav,
+                retries=COSTCO_RESILIENCE["product_nav_retries"],
+                backoff_s=COSTCO_RESILIENCE["product_nav_backoff"],
+                label=f"nav {name[:40]}",
+            )
+            if not ok:
+                # navigation exhausted — record the failure and skip alerting
+                self.history[key] = {
+                    **prev,
+                    "last_checked": datetime.now().isoformat(),
+                    "last_nav_failure_at": datetime.now().isoformat(),
+                }
+                save_history(HISTORY_FILE, self.history)
+                return
 
             content = page.content().lower()
+
+            # v6.1.15: auth-failure detection on the rendered page
+            current_url = page.url
+            if self._looks_like_auth_failure(current_url, content):
+                self._record_auth_signal(f"page_redirect:{name[:30]}")
+                # Page IS the login surface — don't process as product
+                return
+            else:
+                # Successful product page render — reset auth counter
+                self._clear_auth_signal()
 
             # Check for queue system first (highest priority)
             is_queue = any(s in content for s in QUEUE_SIGNALS)
@@ -375,16 +454,38 @@ class CostcoTracker:
                     continue
 
                 try:
-                    # Costco warehouse availability endpoint
-                    r = req.get(
-                        f"https://www.costco.com/AjaxWarehouseInventoryCmd"
-                        f"?warehouseId={warehouse_id}&productId={item_id}",
-                        headers=HEADERS,
-                        timeout=10,
+                    # v6.1.15: retry envelope for warehouse API
+                    def _do_warehouse_req():
+                        return req.get(
+                            f"https://www.costco.com/AjaxWarehouseInventoryCmd"
+                            f"?warehouseId={warehouse_id}&productId={item_id}",
+                            headers=HEADERS,
+                            timeout=10,
+                        )
+
+                    ok, r, _ = self._with_retry(
+                        _do_warehouse_req,
+                        retries=COSTCO_RESILIENCE["warehouse_api_retries"],
+                        backoff_s=COSTCO_RESILIENCE["warehouse_api_backoff"],
+                        label=f"warehouse API {warehouse_id}/{item_id}",
                     )
+                    if not ok or r is None:
+                        continue
+
+                    # v6.1.15: 401/403 → auth signal (Costco gating warehouse API)
+                    if r.status_code in (401, 403):
+                        log.warning(
+                            f"[costco] Warehouse API {r.status_code} "
+                            f"(auth-suspect) for {product['name']} at {location}"
+                        )
+                        self._record_auth_signal(
+                            f"warehouse_api_{r.status_code}"
+                        )
+                        continue
 
                     if r.status_code != 200:
-                        log.debug(
+                        # v6.1.15: promoted from log.debug to log.warning
+                        log.warning(
                             f"[costco] Warehouse API {r.status_code} for "
                             f"{product['name']} at {location}"
                         )
@@ -505,6 +606,152 @@ class CostcoTracker:
             url=url,
             priority="high",
             tags="department_store,tada",
+        )
+
+    # -- v6.1.15: Resilience helpers ------------------------------------------
+
+    def _with_retry(
+        self,
+        fn,
+        retries: int,
+        backoff_s: list,
+        label: str,
+        retryable_exc: tuple = (Exception,),
+    ):
+        """
+        Call fn() with retries on transient failure.
+
+        Args:
+            fn: zero-arg callable returning the success value
+            retries: number of retry attempts (e.g., 2 = 3 total tries)
+            backoff_s: list of pre-call sleep durations; len must equal retries
+            label: short descriptor for log messages
+            retryable_exc: exception types that trigger retry (default: all)
+
+        Returns:
+            (success, result, last_exc) tuple
+
+        On exhaustion logs at WARNING level (was log.debug pre-v6.1.15).
+        """
+        assert len(backoff_s) == retries, (
+            f"_with_retry({label}): backoff_s len mismatch"
+        )
+
+        attempt = 0
+        last_exc = None
+        while attempt <= retries:
+            try:
+                result = fn()
+                if attempt > 0:
+                    log.info(f"[costco] {label}: succeeded on retry #{attempt}")
+                return True, result, None
+            except retryable_exc as e:
+                last_exc = e
+                if attempt < retries:
+                    sleep_s = backoff_s[attempt]
+                    log.debug(
+                        f"[costco] {label}: attempt {attempt + 1} failed "
+                        f"({type(e).__name__}: {e}); retrying in {sleep_s}s"
+                    )
+                    time.sleep(sleep_s)
+                attempt += 1
+
+        if COSTCO_RESILIENCE["log_warning_on_exhaustion"]:
+            log.warning(
+                f"[costco] {label}: exhausted {retries + 1} attempt(s); "
+                f"last error: {type(last_exc).__name__}: {last_exc}"
+            )
+        return False, None, last_exc
+
+    def _looks_like_auth_failure(self, page_url, page_content) -> bool:
+        """
+        Returns True if the page exhibits any auth-failure signal.
+        Conservative: needs ANY hit, not all — Costco may use only one
+        of these patterns depending on which surface gets gated.
+
+        Inputs may be None or empty; both return False.
+        """
+        url_lower = (page_url or "").lower()
+        content_lower = (page_content or "")[:5000].lower()  # cap scan size
+
+        for frag in AUTH_FAILURE_URL_FRAGMENTS:
+            if frag.lower() in url_lower:
+                return True
+        for pat in AUTH_FAILURE_CONTENT_PATTERNS:
+            if pat in content_lower:
+                return True
+        return False
+
+    def _record_auth_signal(self, source: str) -> None:
+        """
+        Bump the consecutive-auth-failures counter and ntfy if threshold
+        crossed. Dedupes ntfy alerts within auth_alert_dedupe_hours.
+        """
+        health = self.history.get("_costco_health", {})
+        n = health.get("consecutive_auth_failures", 0) + 1
+        threshold = COSTCO_RESILIENCE["auth_consecutive_threshold"]
+
+        health["consecutive_auth_failures"] = n
+        health["last_auth_signal_at"]        = datetime.now().isoformat()
+        health["last_auth_signal_source"]    = source
+
+        log.warning(
+            f"[costco] auth signal #{n}/{threshold} from {source}"
+        )
+
+        if n >= threshold:
+            # Check dedupe window before alerting
+            last_alert = health.get("last_auth_alert_at")
+            should_alert = True
+            if last_alert:
+                try:
+                    last_dt = datetime.fromisoformat(last_alert)
+                    hours_since = (datetime.now() - last_dt).total_seconds() / 3600
+                    if hours_since < COSTCO_RESILIENCE["auth_alert_dedupe_hours"]:
+                        should_alert = False
+                        log.info(
+                            f"[costco] auth alert suppressed "
+                            f"(last fired {hours_since:.1f}h ago, "
+                            f"dedupe window is "
+                            f"{COSTCO_RESILIENCE['auth_alert_dedupe_hours']}h)"
+                        )
+                except ValueError:
+                    pass  # malformed timestamp — alert anyway
+
+            if should_alert:
+                self._alert_auth_failure(source, n)
+                health["last_auth_alert_at"] = datetime.now().isoformat()
+
+        self.history["_costco_health"] = health
+        save_history(HISTORY_FILE, self.history)
+
+    def _clear_auth_signal(self) -> None:
+        """Reset the consecutive counter on a successful authenticated check."""
+        health = self.history.get("_costco_health", {})
+        if health.get("consecutive_auth_failures", 0) > 0:
+            health["consecutive_auth_failures"] = 0
+            self.history["_costco_health"] = health
+            save_history(HISTORY_FILE, self.history)
+
+    def _alert_auth_failure(self, source: str, count: int) -> None:
+        """
+        Ntfy that the Costco session may have expired and manual re-login is
+        needed. 'high' priority — we're not missing an in-stock alert; this
+        is a maintenance signal that doesn't require immediate action.
+        """
+        send_ntfy(
+            topic=self.ntfy_topic,
+            title="Costco session may need re-auth",
+            body=(
+                f"Costco tracker hit {count} consecutive auth-suspect "
+                f"signals (source: {source}).\n\n"
+                f"If Costco checks have been failing silently, the browser "
+                f"profile session may have expired. Re-auth manually:\n\n"
+                f"  python plugins/cart_preloader.py --setup --retailer costco\n\n"
+                f"This alert dedupes for 24h. If false positive, ignore."
+            ),
+            priority="high",
+            tags="warning,key",
         )
 
     def get_status_summary(self) -> list[dict]:

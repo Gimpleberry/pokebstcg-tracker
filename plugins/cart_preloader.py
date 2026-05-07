@@ -53,6 +53,30 @@ from shared import OUTPUT_DIR, BROWSER_PROFILE, HEADERS, send_ntfy
 
 log = logging.getLogger(__name__)
 
+
+# v6.1.14: Centralized cart-flow timeout configuration. Each value is
+# named so individual reverts are 1-line changes. Values are in
+# milliseconds (Playwright convention).
+#
+#   *_goto_ms       : ceiling for page.goto() calls (consumed only on
+#                     slow loads; happy path returns much sooner)
+#   post_*_ms       : static sleeps consumed on every action; these
+#                     are the main happy-path savings vector
+#   atc_selector_ms : conditional wait_for_selector ceiling (returns
+#                     early on success — kept at original value)
+#
+# Adjust any single value here without touching the call sites.
+CART_TIMEOUTS = {
+    "product_goto_ms":      15000,   # was 25000
+    "checkout_goto_ms":     12000,   # was 20000
+    "login_goto_ms":        15000,   # was 20000
+    "post_product_load_ms":  1000,   # was 3000
+    "post_atc_click_ms":     1500,   # was 2500
+    "post_checkout_nav_ms":  1000,   # was 2500
+    "atc_selector_ms":       5000,   # unchanged
+}
+
+
 # ── Retailer checkout URL patterns ──────────────────────────────────
 CHECKOUT_URLS = {
     "target":       "https://www.target.com/co-cart",
@@ -163,8 +187,8 @@ async def open_and_stage_cart(product: dict, config: dict):
             # ── Step 1: Navigate to product page ──
             log.info(f"  -> Navigating to product page")
             notes.append(f"Opening: {url}")
-            await page.goto(url, wait_until="domcontentloaded", timeout=25000)
-            await page.wait_for_timeout(3000)
+            await page.goto(url, wait_until="domcontentloaded", timeout=CART_TIMEOUTS["product_goto_ms"])
+            await page.wait_for_timeout(CART_TIMEOUTS["post_product_load_ms"])
 
             # ── Step 2: Check for out-of-stock signals ──
             for sel in OOS_SELECTORS.get(retailer, []):
@@ -186,7 +210,7 @@ async def open_and_stage_cart(product: dict, config: dict):
 
                         # Click it
                         await atc_el.click()
-                        await page.wait_for_timeout(2500)
+                        await page.wait_for_timeout(CART_TIMEOUTS["post_atc_click_ms"])
                         atc_clicked = True
                         notes.append("✅ Clicked Add to Cart")
                         log.info("  -> Clicked Add to Cart")
@@ -205,8 +229,8 @@ async def open_and_stage_cart(product: dict, config: dict):
             checkout_url = CHECKOUT_URLS.get(retailer, "")
             if checkout_url:
                 log.info(f"  -> Navigating to checkout: {checkout_url}")
-                await page.goto(checkout_url, wait_until="domcontentloaded", timeout=20000)
-                await page.wait_for_timeout(2500)
+                await page.goto(checkout_url, wait_until="domcontentloaded", timeout=CART_TIMEOUTS["checkout_goto_ms"])
+                await page.wait_for_timeout(CART_TIMEOUTS["post_checkout_nav_ms"])
                 notes.append(f"✅ Navigated to checkout page")
 
                 # Confirm we're on the right page
@@ -408,7 +432,7 @@ if __name__ == "__main__":
                     ),
                 )
                 page = await context.new_page()
-                await page.goto(url, wait_until="domcontentloaded", timeout=20000)
+                await page.goto(url, wait_until="domcontentloaded", timeout=CART_TIMEOUTS["login_goto_ms"])
                 print(f"Browser open at: {url}")
                 print("Log in, then close the browser window when done.")
                 # Wait until browser is closed

@@ -106,6 +106,103 @@ main{padding:40px;max-width:1200px;margin:0 auto}
 
 
 
+<!-- ═══ v6.1.1 — v6.1.15 ════════════════════════════════════════════ -->
+<div class="version-block">
+  <div class="version-header">
+    <div class="version-number">v6.1.1 — v6.1.15</div>
+    <div class="version-date">May 1 — May 4, 2026</div>
+    <span class="version-tag tag-major">Major</span>
+    <span class="version-tag tag-feature">Architecture</span>
+    <span class="version-tag tag-fix">Performance</span>
+    <span class="version-tag tag-security">Reliability</span>
+    <div class="version-line"></div>
+  </div>
+  <div class="change-list">
+
+    <div class="change-item">
+      <div class="change-icon">&#127959;</div>
+      <div class="change-body">
+        <div class="change-title">Walmart Playwright migration — resolves v6.0.0 known-issue 404 cascade</div>
+        <div class="change-desc">As of Apr 26, 2026, every Walmart product check returned 404 from the legacy walmart.com/product/v2/pdpData endpoint. v6.1.1 replaces the requests-based check with a patchright + stealth Playwright plugin on its own 30-minute schedule. Legacy check_walmart removed from CHECKER_MAP and tracker.py. 32 Walmart products now report stock state and price cleanly via PDP scraping rather than a dead API. The v6.0.0 known-issue marker can be retired.</div>
+        <div class="change-file">plugins/walmart_playwright.py (new), tracker.py (CHECKER_MAP)</div>
+      </div>
+    </div>
+
+    <div class="change-item">
+      <div class="change-icon">&#129529;</div>
+      <div class="change-body">
+        <div class="change-title">Best Buy stability — zombie-free cycles, page.unroute hang fixed</div>
+        <div class="change-desc">v6.1.6 added a process-based liveness probe to detect orphaned Chromium processes. v6.1.7 shipped two complementary fixes: Option A periodic zombie cleanup runs every 5 cycles, Option B error-gates page.unroute() inside a try/except so a hung route handler can no longer block page.close() and leak a browser. BB went from 0/6 in stock at v6.0.0 to a stable 4/6 by v6.1.7. Two of the six remain blocked by Akamai HTTP/2 protocol errors on bestbuy.com/site/...p URLs — a server-side gate, retained as an accepted operational reality.</div>
+        <div class="change-file">plugins/bestbuy_batch.py, scheduler.py (zombie sweep)</div>
+      </div>
+    </div>
+
+    <div class="change-item">
+      <div class="change-icon">&#9889;</div>
+      <div class="change-body">
+        <div class="change-title">Target batch architecture + URL cleanup</div>
+        <div class="change-desc">v6.1.9 introduced target_batch as a structural mirror of bestbuy_batch — single Playwright session per cycle, per-product retries, error-gated unroute on cleanup. v6.1.10 cut wait_for_selector ceiling from 8000ms to 4000ms after observing Target PDPs render well within the reduced bound. v6.1.11 trimmed 9 broken /s/ search-page URLs to 12 verified /p/ PDP URLs (the /s/ pattern returns search results without price JSON). Target now runs as 21 products on a single batched session with 100% price-extraction success.</div>
+        <div class="change-file">plugins/target_batch.py (new), tracker.py PRODUCTS list</div>
+      </div>
+    </div>
+
+    <div class="change-item">
+      <div class="change-icon">&#128640;</div>
+      <div class="change-body">
+        <div class="change-title">Pokemon Center concurrent batch — 21x speedup</div>
+        <div class="change-desc">v6.1.12 dispatches the 10 PC products via ThreadPoolExecutor(max_workers=5) instead of sequential requests.get calls. 10 products in 1.5s (was ~32s sequential). Worst-case PC outage with 15s timeouts caps at ~15s instead of ~150s. PC stayed on requests + JSON-LD extraction (rather than a Playwright transplant) because PC is server-rendered HTML with no anti-bot friction — the bottleneck was sequential dispatch, not the I/O stack. Architectural lesson: picking the right tool per retailer beats forcing all retailers into one shape.</div>
+        <div class="change-file">plugins/pokemoncenter_batch.py</div>
+      </div>
+    </div>
+
+    <div class="change-item">
+      <div class="change-icon">&#128203;</div>
+      <div class="change-body">
+        <div class="change-title">Cart preloader timeout centralization — ~4.5s saved per action</div>
+        <div class="change-desc">v6.1.14 introduced a CART_TIMEOUTS dict at the top of cart_preloader.py with named constants for every page.goto and wait_for_timeout call. Conservative cuts on the three static sleeps: post-product-load 3000→1000ms, post-ATC-click 2500→1500ms, post-checkout-nav 2500→1000ms. Goto ceilings cut 25-30% (only consumed on slow loads). User-wait blocks (wait_for_event close) untouched — they intentionally hold the browser tab until you close it. Total: 8000ms → 3500ms of fixed sleep per cart action. Reverting any single value is a one-line edit.</div>
+        <div class="change-file">plugins/cart_preloader.py, tests/test_v6_1_14_cart_preloader_timeouts.py (new)</div>
+      </div>
+    </div>
+
+    <div class="change-item">
+      <div class="change-icon">&#128274;</div>
+      <div class="change-body">
+        <div class="change-title">Costco resilience hardening — retries + auth-failure detection</div>
+        <div class="change-desc">v6.1.15 wraps three Costco call paths in retry envelopes via a shared _with_retry helper: outer Playwright session (1 retry, 5s backoff), per-product navigation (2 retries, 1s/3s backoff), warehouse API (2 retries, 2s/5s backoff). All retry counts and backoffs live in a single COSTCO_RESILIENCE dict. Auth-failure detection added via three independent signals: URL contains /LogonForm, page title contains "Sign In", or warehouse API returns 401/403. Threshold of 3 consecutive signals triggers a high-priority ntfy with the manual re-login command. Dedupes within 24h to prevent spam. Counter resets on any successful product render. Three log promotions from log.debug to log.warning give visibility into failures that were previously silent.</div>
+        <div class="change-file">plugins/costco_tracker.py, tests/test_v6_1_15_costco_resilience.py (new)</div>
+      </div>
+    </div>
+
+    <div class="change-item">
+      <div class="change-icon">&#128300;</div>
+      <div class="change-body">
+        <div class="change-title">Diagnostic tooling fix — audit script FIFO drift eliminated</div>
+        <div class="change-desc">v6.1.13 anchored the retailer-name regex in audit_v6_1_12_url_coverage.py to the six known retailer tokens (pokemoncenter, target, walmart, bestbuy, amazon, costco) instead of the over-permissive \w+ which could capture any single-word parenthetical as a "retailer". Eliminates per-cycle off-by-one drift in the log-evidence column. Pure restrictive change — zero risk of new false positives.</div>
+        <div class="change-file">audit_v6_1_12_url_coverage.py</div>
+      </div>
+    </div>
+
+    <div class="change-item">
+      <div class="change-icon">&#128221;</div>
+      <div class="change-body">
+        <div class="change-title">15 patches via the established sandbox QC workflow</div>
+        <div class="change-desc">Every v6.1.x patch followed the 6-stage sandbox protocol: dry-run, apply, idempotent re-run, rollback (byte-perfect MD5 match), re-apply, finalize. Each patch self-archives to .patches_archive/ on --finalize. Patches that introduce new behavior add structural tests (test_v6_1_14, test_v6_1_15, etc.) that fail on unpatched code as a negative control. New convention this chain: applied_marker tokens for additive patches where FIND is a substring of REPLACE — eliminates false-positive "already applied" detection.</div>
+        <div class="change-file">.patches_archive/ (15 scripts), tests/ (multiple new suites)</div>
+      </div>
+    </div>
+
+    <div class="change-item">
+      <div class="change-icon">&#128202;</div>
+      <div class="change-body">
+        <div class="change-title">Architectural state — 4 of 15 plugins on phased lifecycle</div>
+        <div class="change-desc">walmart_playwright joins bestbuy_invites, amazon_monitor, and costco_tracker on the init() + register() lifecycle. The remaining 11 plugins (news_scraper, msrp_alert, cart_preloader, store_inventory, alt_retailer, walmart_queue, restock_reminder, price_history, invest_store, market_data_refresh, api_server) still use legacy start(config, products, schedule). None of them block boot, so the practical urgency is gone — migration is queued for a future session as architectural consistency rather than a reliability driver.</div>
+        <div class="change-file">plugins.py</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
 <!-- ═══ v6.0.0 ════════════════════════════════════════════════════════ -->
 <div class="version-block">
   <div class="version-header">
