@@ -151,34 +151,72 @@ class Plugin:
 
 class NewsScraper_Plugin(Plugin):
     name = "news_scraper"
-    version = "1.0"
+    version = "1.1"  # v6.1.18: phased lifecycle (init + register)
     description = "Daily news scraping from PokeBeach, CollectorStation, Pokemon.com"
 
-    def start(self, config, products, schedule):
+    def init(self, config, products):
+        """Phase 0 (v6.1.18): cold init — hold a reference to the work fn.
+
+        Legacy start() ran run_news_scrape() inline at boot, blocking
+        plugin load for the duration of one scrape (~5-10s typical).
+        The initial run is now deferred to a kickoff job at T+60s after
+        boot_ready(), so the dashboard comes up first.
+        """
         try:
             from news_scraper import run_news_scrape
-            log.info("  [news_scraper] Running initial scrape...")
-            run_news_scrape()
-            schedule.every().day.at("06:00").do(run_news_scrape)
-            log.info("  [news_scraper] Scheduled daily at 06:00")
+            self._run = run_news_scrape
         except Exception as e:
-            log.warning(f"  [news_scraper] Failed to start: {e}")
+            self._run = None
+            log.warning(f"  [news_scraper] Failed to init: {e}")
+
+    def register(self, scheduler):
+        """Phase 1 (v6.1.18): hand off to the unified Scheduler."""
+        if self._run is None:
+            return
+        try:
+            scheduler.register_job(
+                name="news_scraper.run_news_scrape",
+                fn=self._run,
+                cadence="daily 06:00",
+                kickoff=True,
+                kickoff_delay=60,
+                owner="news_scraper",
+            )
+            log.info("  [news_scraper] Registered (kickoff @ T+60s, then daily 06:00)")
+        except Exception as e:
+            log.warning(f"  [news_scraper] Failed to register: {e}")
 
 
 class MSRPAlert_Plugin(Plugin):
     name = "msrp_alert"
-    version = "1.0"
+    version = "1.1"  # v6.1.19: phased lifecycle (init + register)
     description = "ntfy push alert when any product is detected in stock at or below MSRP"
 
-    def start(self, config, products, schedule):
+    def init(self, config, products):
+        """Phase 0 (v6.1.19): cold init — instantiate check fn + hold config.
+
+        MSRPAlert is event-driven (on_post_check), not scheduled. The
+        init() body is functionally identical to legacy start(), minus
+        the unused `schedule` argument. The work fn fires from
+        on_post_check() below, called by tracker after every run cycle.
+        """
         try:
             from msrp_alert import check_msrp_prices
             self._check = check_msrp_prices
             self._config = config
             log.info("  [msrp_alert] Enabled — fires after every stock check")
         except Exception as e:
-            log.warning(f"  [msrp_alert] Failed to start: {e}")
+            log.warning(f"  [msrp_alert] Failed to init: {e}")
             self._check = None
+
+    def register(self, scheduler):
+        """Phase 1 (v6.1.19): no periodic work to register.
+
+        MSRPAlert reacts to tracker post-check events, not a schedule.
+        The empty register() declares phased-lifecycle membership and
+        prevents fall-through to the legacy start() shim. No-op by design.
+        """
+        pass
 
     def on_post_check(self):
         """Called by tracker after every run_checks() cycle."""
@@ -191,51 +229,117 @@ class MSRPAlert_Plugin(Plugin):
 
 class CartPreloader_Plugin(Plugin):
     name = "cart_preloader"
-    version = "1.0"
+    version = "1.1"  # v6.1.19: phased lifecycle (init + register)
     description = "Auto-opens browser to checkout page when MSRP price is detected"
 
-    def start(self, config, products, schedule):
+    def init(self, config, products):
+        """Phase 0 (v6.1.19): cold init — patch ourselves into the MSRP
+        alert pipeline.
+
+        CartPreloader has no periodic schedule and no event hook of its
+        own. Its boot work is patch_msrp_alert(config), which monkey-
+        patches the msrp_alert module to invoke cart_preloader on detection.
+        Same call as legacy start(), now in init().
+        """
         try:
             from cart_preloader import patch_msrp_alert
             patch_msrp_alert(config)
             log.info("  [cart_preloader] Patched into MSRP alert pipeline")
         except Exception as e:
-            log.warning(f"  [cart_preloader] Failed to start: {e}")
+            log.warning(f"  [cart_preloader] Failed to init: {e}")
+
+    def register(self, scheduler):
+        """Phase 1 (v6.1.19): no periodic work to register.
+
+        CartPreloader's interaction with the tracker is entirely through
+        the runtime patch installed in init(). No scheduler involvement.
+        The empty register() declares phased-lifecycle membership.
+        """
+        pass
 
 
 class StoreInventory_Plugin(Plugin):
     name = "store_inventory"
-    version = "1.0"
+    version = "1.1"  # v6.1.18: phased lifecycle (init + register)
     description = "Daily in-store stock check at Target and Walmart near your zip code"
 
-    def start(self, config, products, schedule):
+    def init(self, config, products):
+        """Phase 0 (v6.1.18): cold init — bind config+products into a closure.
+
+        Legacy start() registered a lambda capturing both args at the
+        schedule call site. Same closure pattern, just owned by self
+        and consumed in register() instead.
+        """
         try:
             from store_inventory import run_store_check
-            schedule.every().day.at("08:00").do(
-                lambda: run_store_check(products, config)
-            )
-            log.info("  [store_inventory] Scheduled daily at 08:00")
+            self._fn = lambda: run_store_check(products, config)
         except Exception as e:
-            log.warning(f"  [store_inventory] Failed to start: {e}")
+            self._fn = None
+            log.warning(f"  [store_inventory] Failed to init: {e}")
+
+    def register(self, scheduler):
+        """Phase 1 (v6.1.18): hand off to the unified Scheduler.
+        No kickoff — legacy code never ran inline at boot, so we preserve
+        that and only run on the daily cadence.
+        """
+        if self._fn is None:
+            return
+        try:
+            scheduler.register_job(
+                name="store_inventory.run_store_check",
+                fn=self._fn,
+                cadence="daily 08:00",
+                owner="store_inventory",
+            )
+            log.info("  [store_inventory] Registered (daily 08:00)")
+        except Exception as e:
+            log.warning(f"  [store_inventory] Failed to register: {e}")
 
 
 class AltRetailer_Plugin(Plugin):
     name = "alt_retailer"
-    version = "1.0"
+    version = "1.1"  # v6.1.18: phased lifecycle (init + register)
     description = "Tue/Fri scan of Five Below, Marshalls, TJ Maxx, Ollie's, ALDI, GameStop"
 
-    def start(self, config, products, schedule):
+    def init(self, config, products):
+        """Phase 0 (v6.1.18): cold init — bind config into a closure.
+
+        Both weekly schedules call the same fn with the same arg, so
+        they share a single bound callable. Each becomes its own
+        register_job() entry in register() below.
+        """
         try:
             from alternative_retailers import run_alt_retailer_check
-            schedule.every().tuesday.at("09:00").do(
-                lambda: run_alt_retailer_check(config)
-            )
-            schedule.every().friday.at("09:00").do(
-                lambda: run_alt_retailer_check(config)
-            )
-            log.info("  [alt_retailer] Scheduled Tue & Fri at 09:00")
+            self._fn = lambda: run_alt_retailer_check(config)
         except Exception as e:
-            log.warning(f"  [alt_retailer] Failed to start: {e}")
+            self._fn = None
+            log.warning(f"  [alt_retailer] Failed to init: {e}")
+
+    def register(self, scheduler):
+        """Phase 1 (v6.1.18): hand off to the unified Scheduler.
+
+        Two distinct register_job() entries (one per weekday) so the
+        introspection panel can show next_run independently for each.
+        Same fn, same owner — just different names + cadences.
+        """
+        if self._fn is None:
+            return
+        try:
+            scheduler.register_job(
+                name="alt_retailer.run_tuesday",
+                fn=self._fn,
+                cadence="weekly tue 09:00",  # v6.1.18.1: short-day required by scheduler regex
+                owner="alt_retailer",
+            )
+            scheduler.register_job(
+                name="alt_retailer.run_friday",
+                fn=self._fn,
+                cadence="weekly fri 09:00",  # v6.1.18.1: short-day required by scheduler regex
+                owner="alt_retailer",
+            )
+            log.info("  [alt_retailer] Registered (weekly Tue & Fri 09:00)")
+        except Exception as e:
+            log.warning(f"  [alt_retailer] Failed to register: {e}")
 
 
 class WalmartQueue_Plugin(Plugin):
