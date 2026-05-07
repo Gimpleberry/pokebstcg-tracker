@@ -50,6 +50,7 @@ import logging
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse, parse_qs
+from datetime import datetime  # v6.1.16: scheduler health timestamp
 
 # Make shared + sibling plugins importable
 _PLUGIN_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -75,6 +76,23 @@ ALLOWED_ORIGINS = frozenset({
 # Reject any single request body larger than 5MB. Protects against memory abuse
 # from a misbehaving client. invest data is tiny - a sane payload is <50KB.
 MAX_BODY_BYTES = 5 * 1024 * 1024
+
+
+# v6.1.16: Scheduler reference for /api/scheduler/health introspection.
+# Set once at boot via set_scheduler() in tracker.py — between
+# load_plugins() (which loads this module as a plugin) and boot_ready()
+# (which dispatches kickoff jobs). Module-level state mirrors how
+# invest_store / market_data_refresh are referenced. None until wired;
+# /api/scheduler/health returns 503 in that state.
+_scheduler = None
+
+
+def set_scheduler(s) -> None:
+    """Wire the Scheduler instance for /api/scheduler/health introspection.
+    Called once at boot from tracker.py. Idempotent — safe to call again
+    with the same or a different instance."""
+    global _scheduler
+    _scheduler = s
 
 
 # ── Request handler ──────────────────────────────────────────────────────────
@@ -218,7 +236,36 @@ class _ApiHandler(BaseHTTPRequestHandler):
                     "/api/invest/list", "/api/invest/get", "/api/invest/kpi",
                     "/api/invest/is_empty", "/api/invest/snapshots",
                     "/api/market/value", "/api/market/cooldown", "/api/market/log",
+                    "/api/scheduler/health",
                 ],
+            }, origin)
+
+        # v6.1.16: scheduler introspection endpoint. Returns scheduler
+        # state for the v6.1.17 dashboard panel. Independent of any
+        # data source — talks only to the Scheduler instance wired
+        # via set_scheduler() at boot. Failure modes are explicit:
+        # 503 when not wired, 500 if jobs() raises, 200 happy path.
+        if path == "/api/scheduler/health":
+            if _scheduler is None:
+                return self._send_json(503, {
+                    "ok": False,
+                    "error": "scheduler not wired",
+                }, origin)
+            try:
+                jobs = _scheduler.jobs()
+            except Exception as e:
+                log.exception("[api] /api/scheduler/health: jobs() raised")
+                return self._send_json(500, {
+                    "ok": False,
+                    "error": "jobs() raised",
+                    "detail": f"{type(e).__name__}: {e}",
+                }, origin)
+            return self._send_json(200, {
+                "ok": True,
+                "ready": _scheduler.is_ready,
+                "generated_at": datetime.now().isoformat(),
+                "job_count": len(jobs),
+                "jobs": jobs,
             }, origin)
 
         if path == "/api/invest/list":

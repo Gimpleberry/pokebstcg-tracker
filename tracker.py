@@ -2075,6 +2075,21 @@ def main():
     from scheduler import Scheduler
     scheduler = Scheduler(schedule)
     loaded = plugin_system.load_plugins(CONFIG, PRODUCTS, scheduler)
+
+    # v6.1.16: wire scheduler reference into api_server for the
+    # /api/scheduler/health introspection endpoint. Must run AFTER
+    # load_plugins() (which loads the api_server module and adjusts
+    # sys.path so bare `import api_server` resolves) and BEFORE
+    # boot_ready() (which dispatches kickoff jobs that may surface
+    # in the introspection panel). If api_server isn't loaded for
+    # any reason, log and continue — the endpoint will return 503.
+    try:
+        import api_server as _api_server_mod
+        _api_server_mod.set_scheduler(scheduler)
+    except ImportError:
+        log.warning("[tracker] api_server module not loaded; "
+                    "/api/scheduler/health will return 503")
+
     scheduler.boot_ready()
 
     # ── Wrap run_checks to broadcast events to plugins ──

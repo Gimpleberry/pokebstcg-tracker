@@ -872,6 +872,129 @@
     .logo-main { font-size: 1.6rem; }
     .nav-bar { padding: 0 20px; }
   }
+
+  /* v6.1.17: Scheduler health panel (data from /api/scheduler/health) */
+  .scheduler-panel {
+    margin-bottom: 32px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .scheduler-panel-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 20px;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s;
+  }
+  .scheduler-panel-header:hover { background: var(--surface2); }
+  .scheduler-panel-icon {
+    font-family: 'DM Mono', monospace;
+    color: var(--text2);
+    display: inline-block;
+    width: 14px;
+    text-align: center;
+  }
+  .scheduler-panel-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.1rem;
+    letter-spacing: 0.06em;
+    color: var(--text2);
+  }
+  .scheduler-panel-summary {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+  }
+  .scheduler-panel-line {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+  .scheduler-panel-body {
+    padding: 0 20px 20px 20px;
+    border-top: 1px solid var(--border);
+  }
+  .scheduler-error-banner {
+    background: rgba(232,80,58,0.12);
+    color: var(--red);
+    border: 1px solid rgba(232,80,58,0.4);
+    border-radius: 3px;
+    padding: 12px 14px;
+    margin: 16px 0;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+  }
+  .scheduler-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 16px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+  }
+  .scheduler-table th {
+    text-align: left;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-size: 0.6rem;
+    font-weight: 500;
+  }
+  .scheduler-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: top;
+  }
+  .scheduler-table tbody tr:last-child td { border-bottom: 0; }
+  .scheduler-table tbody tr:hover { background: var(--surface2); }
+  .scheduler-job-name {
+    color: var(--text);
+    font-weight: 500;
+  }
+  .scheduler-job-owner {
+    display: block;
+    color: var(--muted);
+    font-size: 0.6rem;
+    margin-top: 2px;
+    letter-spacing: 0.04em;
+  }
+  .scheduler-time-rel { color: var(--text); }
+  .scheduler-time-abs {
+    color: var(--muted);
+    font-size: 0.6rem;
+    margin-left: 6px;
+  }
+  .scheduler-time-empty { color: var(--muted); }
+  .scheduler-status-pill {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: 2px;
+    font-size: 0.6rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+  .scheduler-status-pill.ok {
+    background: rgba(61,220,132,0.15);
+    color: var(--green);
+  }
+  .scheduler-status-pill.error {
+    background: rgba(232,80,58,0.15);
+    color: var(--red);
+    cursor: help;
+  }
+  .scheduler-status-pill.never {
+    background: var(--surface2);
+    color: var(--muted);
+  }
 </style>
 </head>
 <body>
@@ -935,6 +1058,31 @@
 </div>
 
 <main>
+  <!-- v6.1.17: Scheduler health panel (collapsible, default closed) -->
+  <div class="scheduler-panel" id="scheduler-panel">
+    <div class="scheduler-panel-header" onclick="toggleSchedulerPanel()">
+      <span class="scheduler-panel-icon" id="scheduler-panel-icon">▸</span>
+      <span class="scheduler-panel-title">Scheduler Health</span>
+      <span class="scheduler-panel-summary" id="scheduler-panel-summary">loading…</span>
+      <span class="scheduler-panel-line"></span>
+    </div>
+    <div class="scheduler-panel-body" id="scheduler-panel-body" style="display:none">
+      <div class="scheduler-error-banner" id="scheduler-error-banner" style="display:none"></div>
+      <table class="scheduler-table" id="scheduler-table">
+        <thead>
+          <tr>
+            <th>Job</th>
+            <th>Cadence</th>
+            <th>Next run</th>
+            <th>Last run</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="scheduler-jobs-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
   <!-- Stats -->
   <div class="stats-bar">
     <div class="stat-card">
@@ -1531,6 +1679,160 @@ async function init() {
 }
 
 init();
+
+// v6.1.17: Scheduler health panel — polls /api/scheduler/health every 60s.
+const SCHEDULER_HEALTH_URL = '/api/scheduler/health';
+const SCHEDULER_REFRESH_MS = 60000;
+
+function parseSchedulerDate(s) {
+  if (!s) return null;
+  // Mixed formats: api emits ISO ("2026-05-05T13:43:04") for generated_at,
+  // and datetime.__str__() ("2026-05-05 13:53:03.725474") for next_run /
+  // last_run. Normalize space-separator to T for cross-browser parsing.
+  const d = new Date(String(s).replace(' ', 'T'));
+  return isNaN(d.getTime()) ? null : d;
+}
+
+function schedulerRelTime(d, now) {
+  if (!d) return null;
+  const diff = d.getTime() - now;
+  const absSec = Math.abs(diff) / 1000;
+  const future = diff > 0;
+  if (absSec < 60) {
+    const s = Math.round(absSec);
+    return future ? `in ${s}s` : `${s}s ago`;
+  }
+  const mins = Math.round(absSec / 60);
+  if (mins < 60) return future ? `in ${mins} min` : `${mins} min ago`;
+  const hrs = Math.round(absSec / 3600);
+  if (hrs < 24) return future ? `in ${hrs}h` : `${hrs}h ago`;
+  const days = Math.round(absSec / 86400);
+  return future ? `in ${days}d` : `${days}d ago`;
+}
+
+function schedulerAbsTime(d) {
+  if (!d) return null;
+  const today = new Date();
+  const sameDay = d.toDateString() === today.toDateString();
+  if (sameDay) {
+    return d.toLocaleTimeString([], {
+      hour: '2-digit', minute: '2-digit', second: '2-digit',
+    });
+  }
+  return `${d.getMonth() + 1}/${d.getDate()} ` +
+    d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+function schedulerEscapeHtml(s) {
+  return String(s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+function schedulerTimeCell(s, now) {
+  const d = parseSchedulerDate(s);
+  if (!d) return '<span class="scheduler-time-empty">—</span>';
+  const rel = schedulerRelTime(d, now);
+  const abs = schedulerAbsTime(d);
+  return `<span class="scheduler-time-rel">${schedulerEscapeHtml(rel)}</span>` +
+    `<span class="scheduler-time-abs">(${schedulerEscapeHtml(abs)})</span>`;
+}
+
+function schedulerStatusPill(status) {
+  if (status === null || status === undefined) {
+    return '<span class="scheduler-status-pill never">never run</span>';
+  }
+  if (status === 'ok') {
+    return '<span class="scheduler-status-pill ok">ok</span>';
+  }
+  // Error: format is "error: TypeName: message"
+  const msg = String(status).replace(/^error:\s*/, '');
+  return '<span class="scheduler-status-pill error" title="' +
+    schedulerEscapeHtml(msg) + '">error</span>';
+}
+
+function toggleSchedulerPanel() {
+  const panel = document.getElementById('scheduler-panel');
+  const body = document.getElementById('scheduler-panel-body');
+  const icon = document.getElementById('scheduler-panel-icon');
+  const isExpanded = panel.classList.toggle('expanded');
+  body.style.display = isExpanded ? 'block' : 'none';
+  icon.textContent = isExpanded ? '▾' : '▸';
+}
+
+function renderSchedulerPanel(data) {
+  const summary = document.getElementById('scheduler-panel-summary');
+  const errorBanner = document.getElementById('scheduler-error-banner');
+  const tbody = document.getElementById('scheduler-jobs-tbody');
+  const table = document.getElementById('scheduler-table');
+
+  errorBanner.style.display = 'none';
+  table.style.display = '';
+
+  const jobCount = data.job_count || 0;
+  const ready = data.ready ? 'ready' : 'booting';
+  const errorCount = (data.jobs || []).filter(j =>
+    j.last_status && String(j.last_status).startsWith('error')
+  ).length;
+  let summaryText = `${jobCount} job${jobCount === 1 ? '' : 's'} · ${ready}`;
+  if (errorCount > 0) {
+    summaryText += ` · ${errorCount} error${errorCount === 1 ? '' : 's'}`;
+  }
+  summary.textContent = summaryText;
+  summary.style.color = errorCount > 0 ? 'var(--red)' : '';
+
+  const now = Date.now();
+  tbody.innerHTML = (data.jobs || []).map(j => `
+    <tr>
+      <td>
+        <span class="scheduler-job-name">${schedulerEscapeHtml(j.name || '')}</span>
+        <span class="scheduler-job-owner">${schedulerEscapeHtml(j.owner || '')}</span>
+      </td>
+      <td>${schedulerEscapeHtml(j.cadence || '—')}</td>
+      <td>${schedulerTimeCell(j.next_run, now)}</td>
+      <td>${schedulerTimeCell(j.last_run, now)}</td>
+      <td>${schedulerStatusPill(j.last_status)}</td>
+    </tr>
+  `).join('');
+}
+
+function renderSchedulerError(reason, status) {
+  const summary = document.getElementById('scheduler-panel-summary');
+  const errorBanner = document.getElementById('scheduler-error-banner');
+  const table = document.getElementById('scheduler-table');
+
+  summary.textContent = `Error: ${reason}`;
+  summary.style.color = 'var(--red)';
+  errorBanner.textContent = reason + (status ? ` (HTTP ${status})` : '');
+  errorBanner.style.display = '';
+  table.style.display = 'none';
+}
+
+async function fetchSchedulerHealth() {
+  try {
+    const res = await fetch(SCHEDULER_HEALTH_URL, { cache: 'no-store' });
+    if (res.status === 503) {
+      const body = await res.json().catch(() => ({}));
+      renderSchedulerError(body.error || 'scheduler not wired', 503);
+      return;
+    }
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      renderSchedulerError(body.error || `HTTP ${res.status}`, res.status);
+      return;
+    }
+    const data = await res.json();
+    renderSchedulerPanel(data);
+  } catch (e) {
+    renderSchedulerError(`fetch failed: ${e.message}`);
+  }
+}
+
+function initSchedulerPanel() {
+  fetchSchedulerHealth();
+  setInterval(fetchSchedulerHealth, SCHEDULER_REFRESH_MS);
+}
+initSchedulerPanel();
 </script>
 </body>
 </html>
