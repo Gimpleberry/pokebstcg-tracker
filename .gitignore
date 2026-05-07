@@ -72,3 +72,15 @@ PROJECT_KNOWLEDGE.txt
 apply_v*.py 
 *.bak       
 .patches_archive/
+
+# Patch backups (cleaned by --finalize but defense-in-depth)
+*.bak_*
+*.bak
+
+# Diagnostic dumps and scratch files from debugging
+_*.txt
+crashes.txt
+sweep_*.txt
+actual_block.txt
+bb_productive.txt
+interval_state.txt
