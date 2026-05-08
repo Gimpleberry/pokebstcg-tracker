@@ -535,17 +535,37 @@ class WalmartPlaywright_Plugin(Plugin):
 
 class InvestStore_Plugin(Plugin):
     name = "invest_store"
-    version = "1.0"
+    version = "1.1"  # v6.1.20: phased lifecycle (init + register)
     description = "SQLite-backed investment portfolio store (replaces localStorage)"
 
-    def start(self, config, products, schedule):
+    def init(self, config, products):
+        """Phase 0 (v6.1.20): cold init. Schema creation happens in
+        InvestStore.__init__ via _init_schema() — idempotent and safe
+        on every boot.
+
+        InvestStore is a passive CRUD store called by api_server.py and
+        plugins/market_data_refresh.py. No scheduled tasks. The init()
+        body is functionally identical to legacy start(), minus the
+        unused self._store.start(schedule) call (which was already a
+        no-op log line).
+        """
         try:
             from invest_store import InvestStore
             self._store = InvestStore(config, products)
-            self._store.start(schedule)
-            log.info("  [invest_store] Started -- invest.db ready at data/invest.db")
+            log.info("  [invest_store] Initialized -- invest.db ready at data/invest.db")
         except Exception as e:
-            log.warning(f"  [invest_store] Failed to start: {e}")
+            self._store = None
+            log.warning(f"  [invest_store] Failed to init: {e}")
+
+    def register(self, scheduler):
+        """Phase 1 (v6.1.20): no periodic work to register.
+
+        InvestStore is a passive CRUD store. Its work is driven by
+        synchronous calls from api_server.py and market_data_refresh.py.
+        The empty register() declares phased-lifecycle membership and
+        prevents fall-through to the legacy start() shim. No-op by design.
+        """
+        pass
 
     def stop(self):
         log.info("  [invest_store] Stopped")

@@ -495,18 +495,20 @@ class InvestStore:
     Implementation class - instantiated by the InvestStore_Plugin wrapper in plugins.py:
         from invest_store import InvestStore
         self._store = InvestStore(config, products)
-        self._store.start(schedule)
 
-    No scheduled tasks: passive store. CRUD methods exposed as module-level
+    No scheduled tasks: passive CRUD store. Schema creation happens in
+    __init__ via _init_schema(). CRUD methods exposed as module-level
     functions so api_server.py can call them without needing the instance.
+    Phased lifecycle (v6.1.20) — wrapper uses init() + no-op register().
     """
     def __init__(self, config: dict, products: list):
         self.config = config
         _init_schema()
         log.info("[invest_store] initialized")
 
-    def start(self, schedule) -> None:
-        log.info("[invest_store] ready (no scheduled tasks)")
+    # v6.1.20: dead start(schedule) method removed (was a no-op log line).
+    # InvestStore is service-style; the wrapper class uses init() + no-op
+    # register(). Tombstone preserved as an applied_marker for future audit.
 
     # CRUD passthrough (also available as module functions)
     list_purchases     = staticmethod(list_purchases)
