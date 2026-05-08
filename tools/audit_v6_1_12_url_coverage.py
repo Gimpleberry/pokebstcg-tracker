@@ -38,7 +38,8 @@ if sys.version_info[:2] < MIN_PYTHON_VERSION:
     print(f"ERROR: requires Python {MIN_PYTHON_VERSION[0]}.{MIN_PYTHON_VERSION[1]}+")
     sys.exit(1)
 
-ROOT = os.path.dirname(os.path.abspath(__file__))
+_HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.dirname(_HERE) if os.path.basename(_HERE) == "tools" else _HERE
 TRACKER = os.path.join(ROOT, "tracker.py")
 LOG_FILE = os.path.join(ROOT, "data", "tcg_tracker.log")
 
