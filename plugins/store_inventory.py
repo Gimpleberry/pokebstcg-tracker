@@ -44,7 +44,7 @@ if _root not in _sys.path:
 if _here not in _sys.path:
     _sys.path.insert(0, _here)
 # ─────────────────────────────────────────────────────────────────────────────
-from shared import OUTPUT_DIR, HEADERS, HEADERS_JSON, get_msrp, parse_price, send_ntfy, load_history, save_history, open_browser
+from shared import OUTPUT_DIR, DATA_DIR, HEADERS, HEADERS_JSON, get_msrp, parse_price, send_ntfy, load_history, save_history, open_browser
 
 
 # ─────────────────────────────────────────────
@@ -375,7 +375,7 @@ def run_store_check(products: list, config: dict, zip_code: str = None):
         "zip_code": zip_code,
         "findings": all_findings,
     }
-    with open(os.path.join(OUTPUT_DIR, "store_inventory.json"), "w") as f:
+    with open(os.path.join(DATA_DIR, "store_inventory.json"), "w") as f:
         json.dump(output, f, indent=2)
 
     if all_findings:
