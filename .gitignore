@@ -84,3 +84,5 @@ sweep_*.txt
 actual_block.txt
 bb_productive.txt
 interval_state.txt
+tcg_tracker.log 
+*.log 

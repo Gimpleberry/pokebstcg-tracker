@@ -106,6 +106,75 @@ main{padding:40px;max-width:1200px;margin:0 auto}
 
 
 
+<!-- ═══ v6.1.16 — v6.1.19 ═══════════════════════════════════════════ -->
+<div class="version-block">
+  <div class="version-header">
+    <div class="version-number">v6.1.16 — v6.1.19</div>
+    <div class="version-date">May 5, 2026</div>
+    <span class="version-tag tag-feature">Observability</span>
+    <span class="version-tag tag-feature">Lifecycle</span>
+    <span class="version-tag tag-fix">Hotfix</span>
+    <div class="version-line"></div>
+  </div>
+  <div class="change-list">
+
+    <div class="change-item">
+      <div class="change-icon">&#128279;</div>
+      <div class="change-body">
+        <div class="change-title">Scheduler introspection endpoint &mdash; v6.1.16</div>
+        <div class="change-desc">New <code>GET /api/scheduler/health</code> exposes every registered job, its cadence, kickoff settings, last-run status, and next-run timestamp. Three failure modes are explicit: 503 if the scheduler isn&apos;t wired, 500 if jobs() raises, 200 with the full job table on success. This endpoint is the live-verification source for any future scheduler-affecting patch.</div>
+        <div class="change-file">api_server.py, tracker.py</div>
+      </div>
+    </div>
+
+    <div class="change-item">
+      <div class="change-icon">&#128202;</div>
+      <div class="change-body">
+        <div class="change-title">Dashboard scheduler health panel &mdash; v6.1.17</div>
+        <div class="change-desc">Collapsible panel at the top of the dashboard polls <code>/api/scheduler/health</code> every 60 seconds. Each job renders as a row with a color-coded status pill: gray for never-run, green for ok, red for error with the full error message in the tooltip. The one-line summary stays visible when the panel is collapsed. This is the panel that caught the v6.1.18.1 cadence bug below.</div>
+        <div class="change-file">dashboard/dashboard.html</div>
+      </div>
+    </div>
+
+    <div class="change-item">
+      <div class="change-icon">&#128203;</div>
+      <div class="change-body">
+        <div class="change-title">Phased lifecycle &mdash; Batch 1 migrated &mdash; v6.1.18</div>
+        <div class="change-desc">NewsScraper, StoreInventory, and AltRetailer plugins moved from legacy <code>start(config, products, schedule)</code> to phased <code>init() + register()</code>. The unified Scheduler picked up 4 new jobs. NewsScraper preserves its boot-time scrape via <code>kickoff=True, kickoff_delay=60</code>.</div>
+        <div class="change-file">plugins.py</div>
+      </div>
+    </div>
+
+    <div class="change-item">
+      <div class="change-icon">&#128295;</div>
+      <div class="change-body">
+        <div class="change-title">Weekly cadence regex hotfix &mdash; v6.1.18.1</div>
+        <div class="change-desc">AltRetailer used <code>weekly tuesday 09:00</code> / <code>weekly friday 09:00</code> but the scheduler&apos;s weekly regex only accepts 3-letter day abbreviations. Both jobs failed silently &mdash; CadenceError was swallowed by register&apos;s try/except. The v6.1.17 health panel surfaced it instantly: job_count showed 9 instead of the expected 11. Fix: short-form day codes, plus a regression test that re-checks every cadence string in plugins.py against the scheduler&apos;s four regex patterns.</div>
+        <div class="change-file">plugins.py, tests/test_v6_1_18_lifecycle_migration.py</div>
+      </div>
+    </div>
+
+    <div class="change-item">
+      <div class="change-icon">&#128203;</div>
+      <div class="change-body">
+        <div class="change-title">Phased lifecycle &mdash; Batch 2 (service-style) &mdash; v6.1.19</div>
+        <div class="change-desc">MSRPAlert and CartPreloader migrated. These are service-style plugins with no periodic schedule &mdash; their work fires from event hooks (on_post_check) or a boot-time monkey-patch. They override <code>init()</code> AND no-op <code>register()</code> to declare phased-lifecycle membership without registering a job. Net job_count change: zero. Phased plugin total: 9 of 15.</div>
+        <div class="change-file">plugins.py</div>
+      </div>
+    </div>
+
+    <div class="change-item">
+      <div class="change-icon">&#129514;</div>
+      <div class="change-body">
+        <div class="change-title">Brittle test rewritten to plugin-specific assertions &mdash; v6.1.19</div>
+        <div class="change-desc">v6.1.18 shipped a structural test that compared the absolute count of legacy <code>start()</code> methods to a hardcoded number. Each future migration would have broken it. v6.1.19 rewrote the assertion to pin only the specific classes v6.1.18 changed (NewsScraper, StoreInventory, AltRetailer), making it stable across all future batches.</div>
+        <div class="change-file">tests/test_v6_1_18_lifecycle_migration.py</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
 <!-- ═══ v6.1.1 — v6.1.15 ════════════════════════════════════════════ -->
 <div class="version-block">
   <div class="version-header">
