@@ -591,20 +591,43 @@ class MarketDataRefresh_Plugin(Plugin):
 
 class ApiServer_Plugin(Plugin):
     name = "api_server"
-    version = "1.0"
+    version = "1.1"  # v6.1.21: phased lifecycle (init + register)
     description = "Local HTTP API on 127.0.0.1:8765 -- serves the invest dashboard"
 
-    def start(self, config, products, schedule):
+    def init(self, config, products):
+        """Phase 0 (v6.1.21): cold init. Spawns the daemon HTTP server
+        thread via ApiServer.__init__ — port bind happens inside the
+        thread (run()), so this returns within ~ms.
+
+        ApiServer is a service-style plugin: no scheduled jobs, runs an
+        async daemon thread that serves the Invest dashboard endpoints.
+        The init() body is functionally identical to legacy start(),
+        minus the unused self._api.start(schedule) call (whose body has
+        been merged into ApiServer.__init__ in v6.1.21).
+
+        Boot order matters: api_server depends on invest_store and
+        market_data_refresh schemas being on disk. Both must load before
+        this plugin in ENABLED_PLUGINS — they do.
+        """
         try:
             from api_server import ApiServer
             self._api = ApiServer(config, products)
-            self._api.start(schedule)
-            log.info("  [api_server] Started -- listening on http://127.0.0.1:8765")
+            log.info("  [api_server] Initialized -- listening on http://127.0.0.1:8765")
         except Exception as e:
-            log.warning(f"  [api_server] Failed to start: {e}")
+            self._api = None
+            log.warning(f"  [api_server] Failed to init: {e}")
+
+    def register(self, scheduler):
+        """Phase 1 (v6.1.21): no periodic work to register.
+
+        ApiServer runs as a daemon HTTP thread, not as scheduled jobs.
+        The empty register() declares phased-lifecycle membership and
+        prevents fall-through to the legacy start() shim. No-op by design.
+        """
+        pass
 
     def stop(self):
-        if hasattr(self, "_api"):
+        if hasattr(self, "_api") and self._api is not None:
             self._api.stop()
         log.info("  [api_server] Stopped")
 

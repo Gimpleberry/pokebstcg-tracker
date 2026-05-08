@@ -435,17 +435,24 @@ class ApiServer:
     Implementation class - instantiated by ApiServer_Plugin in plugins.py:
         from api_server import ApiServer
         self._api = ApiServer(config, products)
-        self._api.start(schedule)
+
+    Phased lifecycle (v6.1.21) — wrapper uses init() + no-op register().
+    The daemon HTTP thread is spawned in __init__; expects invest_store
+    and market_data_refresh to already be initialized (their schemas
+    exist on disk) by the time this runs.
+
+    No scheduled jobs: passive HTTP service. Module-level _scheduler is
+    wired post-load by tracker.py via set_scheduler() for the v6.1.16
+    introspection endpoint.
     """
     def __init__(self, config: dict, products: list):
+        # v6.1.21: thread spawn moved here from removed start() method.
+        # No scheduled jobs - this plugin runs an async server thread instead.
+        # We expect invest_store and market_data_refresh to already be initialized
+        # by the time this runs (their schemas exist on disk).
         self.config = config
         self._thread = None
         log.info(f"[api_server] initialized (will bind {API_HOST}:{API_PORT})")
-
-    def start(self, schedule) -> None:
-        # No scheduled jobs - this plugin runs an async server thread instead.
-        # We expect invest_store and market_data_refresh to already be initialized
-        # by the time this starts (their schemas exist on disk).
         self._thread = _ApiServerThread()
         self._thread.start()
         # Wait briefly so log lines appear in the right order on startup
