@@ -535,19 +535,37 @@ def export_csv() -> dict:
 
 
 class PriceHistoryTracker:
-    """Plugin wrapper -- registered via plugins.py PriceHistory_Plugin."""
+    """Plugin wrapper -- registered via plugins.py PriceHistory_Plugin.
+
+    Phased lifecycle (v6.1.23) -- declares one recurring job (every 60 min)
+    plus a kickoff fire at T+45s. Replaces legacy inline-at-boot run
+    pattern: schema init still synchronous in __init__, first hourly log
+    deferred to kickoff after boot_ready() so plugin load isn't blocked
+    by ~200ms of DB writes.
+    """
 
     def __init__(self, config: dict, products: list):
         self.config   = config
         self.products = products
         init_db()
 
-    def start(self, schedule) -> None:
-        # Log prices and update JSON once per hour on the hour
-        schedule.every(LOG_INTERVAL).minutes.do(self._hourly_log)
-        # Also run immediately so data is available right away
-        self._hourly_log()
-        log.info(f"[price_history] Scheduled hourly logging to {DB_PATH}")
+    def register(self, scheduler) -> None:
+        # v6.1.23: replaces legacy start(schedule). Declares the hourly
+        # log job + kickoff at T+45s (which replaces the legacy inline
+        # boot-time run). Keyword is `fn=` per scheduler.register_job
+        # signature (v6.1.22 v2 lesson banked).
+        scheduler.register_job(
+            name="price_history.hourly_log",
+            fn=self._hourly_log,
+            cadence=f"every {LOG_INTERVAL} minutes",
+            kickoff=True,
+            kickoff_delay=45,
+            owner="price_history",
+        )
+        log.info(
+            f"[price_history] Registered (every {LOG_INTERVAL} min, "
+            f"kickoff @ T+45s, db={DB_PATH})"
+        )
 
     def _hourly_log(self) -> None:
         log_prices(self.products)

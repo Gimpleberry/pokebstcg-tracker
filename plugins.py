@@ -430,17 +430,37 @@ class AmazonMonitor_Plugin(Plugin):
 
 class RestockReminder_Plugin(Plugin):
     name = "restock_reminder"
-    version = "1.0"
+    version = "1.1"  # v6.1.22 v2: phased lifecycle (init + register)
     description = "Daily 8:30 AM restock reminder with day-aware messaging"
 
-    def start(self, config, products, schedule):
+    def init(self, config, products):
+        """Phase 0 (v6.1.22 v2): cold init — instantiate the inner reminder.
+
+        Single daily cadence; the inner RestockReminder.register() will
+        declare the job with the unified Scheduler. Net jobs added: +1.
+        First cadenced migration of the v6.1.20+ chain.
+        """
         try:
             from restock_reminder import RestockReminder
             self._reminder = RestockReminder(config)
-            self._reminder.start(schedule)
+            log.info("  [restock_reminder] Initialized")
+        except Exception as e:
+            self._reminder = None
+            log.warning(f"  [restock_reminder] Failed to init: {e}")
+
+    def register(self, scheduler):
+        """Phase 1 (v6.1.22 v2): hand off to the unified Scheduler.
+
+        Inner RestockReminder.register() calls scheduler.register_job()
+        with cadence='daily 08:30' (FIRE_TIME constant). No kickoff.
+        """
+        if self._reminder is None:
+            return
+        try:
+            self._reminder.register(scheduler)
             log.info("  [restock_reminder] Scheduled daily at 08:30")
         except Exception as e:
-            log.warning(f"  [restock_reminder] Failed to start: {e}")
+            log.warning(f"  [restock_reminder] Failed to register: {e}")
 
     def stop(self):
         log.info("  [restock_reminder] Stopped")
@@ -448,17 +468,43 @@ class RestockReminder_Plugin(Plugin):
 
 class PriceHistory_Plugin(Plugin):
     name = "price_history"
-    version = "1.0"
+    version = "1.1"  # v6.1.23: phased lifecycle (init + register)
     description = "Hourly price logging to SQLite + Excel export + 90-day retention"
 
-    def start(self, config, products, schedule):
+    def init(self, config, products):
+        """Phase 0 (v6.1.23): cold init. Creates SQLite schema if needed.
+
+        Schema init happens inside PriceHistoryTracker.__init__ via the
+        init_db() call. The legacy inline first-run (~200ms of DB writes
+        during plugin load) is replaced by a kickoff job at T+45s, set
+        up by the inner module's register() in Phase 1.
+
+        Net jobs added: +1 (hourly logging job).
+        """
         try:
             from price_history import PriceHistoryTracker
             self._tracker = PriceHistoryTracker(config, products)
-            self._tracker.start(schedule)
-            log.info("  [price_history] Started -- logging prices hourly to SQLite")
+            log.info("  [price_history] Initialized")
         except Exception as e:
-            log.warning(f"  [price_history] Failed to start: {e}")
+            self._tracker = None
+            log.warning(f"  [price_history] Failed to init: {e}")
+
+    def register(self, scheduler):
+        """Phase 1 (v6.1.23): hand off to the unified Scheduler.
+
+        Inner PriceHistoryTracker.register() declares one job:
+          cadence='every 60 minutes', kickoff=True, kickoff_delay=45s.
+        The kickoff replaces the legacy "inline first run during plugin
+        load" pattern. First DB log fires after boot_ready() instead of
+        during plugin loading.
+        """
+        if self._tracker is None:
+            return
+        try:
+            self._tracker.register(scheduler)
+            log.info("  [price_history] Registered (every 60 min, kickoff @ T+45s)")
+        except Exception as e:
+            log.warning(f"  [price_history] Failed to register: {e}")
 
     def stop(self):
         log.info("  [price_history] Stopped")
