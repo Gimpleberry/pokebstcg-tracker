@@ -344,20 +344,44 @@ class AltRetailer_Plugin(Plugin):
 
 class WalmartQueue_Plugin(Plugin):
     name = "walmart_queue"
-    version = "1.0"
+    version = "1.1"  # v6.1.24: phased lifecycle (init + register)
     description = "Walmart Wednesday drop monitor + restock/clearance/rollback alerts with direct links"
 
-    def start(self, config, products, schedule):
+    def init(self, config, products):
+        """Phase 0 (v6.1.24): cold init — instantiate the inner monitor.
+
+        Net jobs added: +6 (largest single migration of the v6.1.x chain).
+        Two weekly Wednesday window markers + 4 daily scans (new
+        listings AM/PM, clearance AM/PM). All declared in register()
+        below.
+        """
         try:
             from walmart_queue import WalmartQueueMonitor
             self._monitor = WalmartQueueMonitor(config, products)
-            self._monitor.start(schedule)
-            log.info("  [walmart_queue] Started — monitoring all Walmart drops, restocks, clearance")
+            log.info("  [walmart_queue] Initialized")
         except Exception as e:
-            log.warning(f"  [walmart_queue] Failed to start: {e}")
+            self._monitor = None
+            log.warning(f"  [walmart_queue] Failed to init: {e}")
+
+    def register(self, scheduler):
+        """Phase 1 (v6.1.24): hand off to the unified Scheduler.
+
+        Inner WalmartQueueMonitor.register() declares 6 jobs with
+        scheduler.register_job(). Failures of individual register_job
+        calls bubble up here as warnings; already-registered jobs persist
+        in the Scheduler's metadata (eager registration).
+        """
+        if self._monitor is None:
+            return
+        try:
+            self._monitor.register(scheduler)
+            log.info("  [walmart_queue] Registered (6 jobs: wed window x2, daily scans x4)")
+        except Exception as e:
+            log.warning(f"  [walmart_queue] Failed to register: {e}")
 
     def on_stock_change(self, product, status):
-        if hasattr(self, "_monitor") and product.get("retailer", "").lower() == "walmart":
+        if (hasattr(self, "_monitor") and self._monitor is not None
+                and product.get("retailer", "").lower() == "walmart"):
             try:
                 self._monitor.on_stock_change(product, status)
             except Exception as e:
@@ -619,17 +643,43 @@ class InvestStore_Plugin(Plugin):
 
 class MarketDataRefresh_Plugin(Plugin):
     name = "market_data_refresh"
-    version = "1.0"
+    version = "1.1"  # v6.1.25: phased lifecycle (init + register) — closes Phase 2/2e
     description = "12-hour market value refresh: pokemontcg.io + sealed MSRP estimates"
 
-    def start(self, config, products, schedule):
+    def init(self, config, products):
+        """Phase 0 (v6.1.25): cold init — instantiate inner refresher.
+
+        Schema init happens in MarketDataRefresh.__init__ via
+        _init_cache_schema(). Net jobs added: +3 (startup_fetch
+        kickoff-only, scheduled_refresh every 12h, weekly_prune Mon 03:00).
+        """
         try:
             from market_data_refresh import MarketDataRefresh
             self._refresher = MarketDataRefresh(config, products)
-            self._refresher.start(schedule)
-            log.info("  [market_data_refresh] Started -- every 12h, weekly prune Mon 03:00")
+            log.info("  [market_data_refresh] Initialized")
         except Exception as e:
-            log.warning(f"  [market_data_refresh] Failed to start: {e}")
+            self._refresher = None
+            log.warning(f"  [market_data_refresh] Failed to init: {e}")
+
+    def register(self, scheduler):
+        """Phase 1 (v6.1.25): hand off to the unified Scheduler.
+
+        Inner MarketDataRefresh.register() declares 3 jobs:
+        - market_data_refresh.startup_fetch    (kickoff T+300s, no recurring)
+        - market_data_refresh.scheduled_refresh (every 12h)
+        - market_data_refresh.weekly_prune     (weekly mon 03:00)
+
+        The startup_fetch kickoff replaces the legacy threading.Timer
+        boot-delayed fetch. Audit-log triggered_by labels preserved
+        ("startup" vs "scheduled") via separate register_job calls.
+        """
+        if self._refresher is None:
+            return
+        try:
+            self._refresher.register(scheduler)
+            log.info("  [market_data_refresh] Registered (every 12h, weekly prune Mon 03:00, startup @ T+5min)")
+        except Exception as e:
+            log.warning(f"  [market_data_refresh] Failed to register: {e}")
 
     def stop(self):
         log.info("  [market_data_refresh] Stopped")

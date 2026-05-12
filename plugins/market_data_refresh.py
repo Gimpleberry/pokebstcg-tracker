@@ -530,7 +530,11 @@ class MarketDataRefresh:
     Implementation class - instantiated by MarketDataRefresh_Plugin in plugins.py:
         from market_data_refresh import MarketDataRefresh
         self._refresher = MarketDataRefresh(config, products)
-        self._refresher.start(schedule)
+
+    Phased lifecycle (v6.1.25) — declares 3 jobs:
+      - startup_fetch     (kickoff T+STARTUP_DELAY_SEC, no recurring)
+      - scheduled_refresh (every CACHE_TTL_HOURS hours)
+      - weekly_prune      (weekly mon 03:00)
 
     Manual refresh and cooldown live at module level (callable from api_server).
     """
@@ -540,15 +544,38 @@ class MarketDataRefresh:
         _init_cache_schema()
         log.info("[market_data_refresh] initialized")
 
-    def start(self, schedule) -> None:
-        # Initial refresh after STARTUP_DELAY_SEC - other plugins boot first
-        threading.Timer(
-            STARTUP_DELAY_SEC,
-            lambda: _run_safely("startup"),
-        ).start()
+    def register(self, scheduler) -> None:
+        # v6.1.25: replaces legacy start(schedule). Declares 3 distinct
+        # jobs with the unified Scheduler. Net jobs added: +3.
+        # The threading.Timer-based "startup" call is replaced by a
+        # kickoff-only job; the every-12h schedule and weekly Mon prune
+        # are preserved as their own jobs. Keyword is `fn=` per
+        # scheduler.register_job signature (v22 v2 lesson banked).
+        # Audit-log triggered_by labels ("startup" vs "scheduled") are
+        # preserved via separate lambdas.
 
-        schedule.every(CACHE_TTL_HOURS).hours.do(lambda: _run_safely("scheduled"))
-        schedule.every().monday.at("03:00").do(self._run_prune)
+        # Startup fetch — one-shot at T+STARTUP_DELAY_SEC (no recurring)
+        scheduler.register_job(
+            name="market_data_refresh.startup_fetch",
+            fn=lambda: _run_safely("startup"),
+            kickoff=True,
+            kickoff_delay=STARTUP_DELAY_SEC,
+            owner="market_data_refresh",
+        )
+        # Recurring refresh — every CACHE_TTL_HOURS hours
+        scheduler.register_job(
+            name="market_data_refresh.scheduled_refresh",
+            fn=lambda: _run_safely("scheduled"),
+            cadence=f"every {CACHE_TTL_HOURS} hours",
+            owner="market_data_refresh",
+        )
+        # Weekly prune — Monday 03:00
+        scheduler.register_job(
+            name="market_data_refresh.weekly_prune",
+            fn=self._run_prune,
+            cadence="weekly mon 03:00",
+            owner="market_data_refresh",
+        )
 
         log.info(
             f"[market_data_refresh] scheduled: every {CACHE_TTL_HOURS}h refresh, "
