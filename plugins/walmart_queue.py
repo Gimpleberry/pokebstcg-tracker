@@ -63,18 +63,55 @@ class WalmartQueueMonitor:
 
     # ── Plugin lifecycle ──────────────────────────────────────────────
 
-    def start(self, schedule) -> None:
-        """Register all scheduled jobs."""
+    def register(self, scheduler) -> None:
+        """Register all 6 scheduled jobs with the unified Scheduler.
+
+        v6.1.24: replaces legacy start(schedule). Declares 6 distinct
+        jobs (2 weekly Wed markers + 4 daily scans) so the introspection
+        panel shows next_run independently for each. Net jobs added: +6.
+        Keyword is `fn=` per scheduler.register_job signature
+        (v6.1.22 v2 lesson banked).
+        """
         # Wednesday drop window: alert 15 min early, stop at 2 PM
-        schedule.every().wednesday.at("11:45").do(self._start_wednesday_watch)
-        schedule.every().wednesday.at("14:00").do(self._stop_wednesday_watch)
+        scheduler.register_job(
+            name="walmart_queue.start_wednesday_watch",
+            fn=self._start_wednesday_watch,
+            cadence="weekly wed 11:45",
+            owner="walmart_queue",
+        )
+        scheduler.register_job(
+            name="walmart_queue.stop_wednesday_watch",
+            fn=self._stop_wednesday_watch,
+            cadence="weekly wed 14:00",
+            owner="walmart_queue",
+        )
         # New listing scans - twice daily
-        schedule.every().day.at("07:00").do(self._scan_new_listings)
-        schedule.every().day.at("13:00").do(self._scan_new_listings)
+        scheduler.register_job(
+            name="walmart_queue.scan_new_listings_morning",
+            fn=self._scan_new_listings,
+            cadence="daily 07:00",
+            owner="walmart_queue",
+        )
+        scheduler.register_job(
+            name="walmart_queue.scan_new_listings_afternoon",
+            fn=self._scan_new_listings,
+            cadence="daily 13:00",
+            owner="walmart_queue",
+        )
         # Clearance/rollback scans - twice daily
-        schedule.every().day.at("09:00").do(self._scan_clearance)
-        schedule.every().day.at("18:00").do(self._scan_clearance)
-        log.info("[walmart_queue] All schedules registered")
+        scheduler.register_job(
+            name="walmart_queue.scan_clearance_morning",
+            fn=self._scan_clearance,
+            cadence="daily 09:00",
+            owner="walmart_queue",
+        )
+        scheduler.register_job(
+            name="walmart_queue.scan_clearance_evening",
+            fn=self._scan_clearance,
+            cadence="daily 18:00",
+            owner="walmart_queue",
+        )
+        log.info("[walmart_queue] All 6 schedules registered with unified Scheduler")
 
     def on_stock_change(self, product: dict, status) -> None:
         """
