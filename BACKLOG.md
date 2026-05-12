@@ -54,39 +54,14 @@ debt inherit the debt. **Stay disciplined about the phase order.**
 
 ---
 
-## Phase 2 / 2e remaining batches
+## Phase 2 / 2e — COMPLETE (v6.1.25, May 12, 2026)
 
-After v6.1.19 the remaining 6 plugins are all "delegating" —
-each has a thin wrapper class in plugins.py that imports an inner
-module from plugins/X.py, plus the inner module sets up its own
-schedule (often via the `schedule` library passed in via `start()`).
-Migration shape per batch:
+All 15 plugins migrated to phased lifecycle. Final state: 22 scheduler
+jobs, 7 kickoffs, 0 legacy. The unified Scheduler is the single source
+of truth for every cadenced job. See PROJECT_KNOWLEDGE.txt PATCH SUMMARIES
+for v6.1.20 → v6.1.25 details.
 
-  1. Inner module gets a new `register(scheduler)` API
-     (or equivalent) that takes the unified Scheduler instead of
-     the legacy `schedule` library
-  2. Wrapper class in plugins.py: `start()` body splits into
-     `init()` (instantiate / hold inner-module ref) +
-     `register()` (delegate to inner module's new API)
-  3. Tests for both layers
-
-Sized estimates (subject to revision per inner-module review):
-  - WalmartQueue        ~2-3 hr   (multiple cadences, complex inner module)
-  - RestockReminder     ~1 hr     (single daily cadence)
-  - PriceHistory        ~1.5 hr   (hourly cadence, SQLite-backed)
-  - InvestStore         ~1 hr     (no schedule — service-style like v6.1.19)
-  - MarketDataRefresh   ~2 hr     (every 12h + Mon 03:00 prune)
-  - ApiServer           ~1 hr     (no schedule — daemon thread service)
-
-Each batch is independently shippable. Order by smallest first
-(InvestStore + ApiServer if they're truly service-style) or by
-risk (RestockReminder is simplest delegation).
-
-**Verification tool:** the v6.1.17 introspection panel.
-job_count climbs from current 11 toward ~13-14 as plugins with
-periodic schedules migrate. Service-style migrations (InvestStore,
-ApiServer if they have no schedule) add +0 jobs.
-
+Next phase per phase ordering: high-priority technical debt cleanup.
 ---
 
 ## Deferred
