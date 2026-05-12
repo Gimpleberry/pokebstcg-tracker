@@ -291,14 +291,28 @@ def send_reminder(config: dict) -> None:
 # ── Plugin class (used by plugins.py) ────────────────────────────────────────
 
 class RestockReminder:
-    """Plugin wrapper - registered via plugins.py RestockReminder_Plugin."""
+    """Plugin wrapper - registered via plugins.py RestockReminder_Plugin.
+
+    Phased lifecycle (v6.1.22 v2) — declares one daily job with the unified
+    Scheduler. Lambda closure preserves call-time self.config resolution
+    (same semantics as legacy schedule.do(send_reminder, self.config)).
+    """
 
     def __init__(self, config: dict):
         self.config = config
 
-    def start(self, schedule) -> None:
-        schedule.every().day.at(FIRE_TIME).do(send_reminder, self.config)
-        log.info(f"[restock_reminder] Scheduled daily at {FIRE_TIME}")
+    def register(self, scheduler) -> None:
+        # v6.1.22 v2: replaces legacy start(schedule). Declares a single
+        # daily job with the unified Scheduler. Net jobs added: +1.
+        # Keyword is `fn=` (matches scheduler.register_job signature).
+        scheduler.register_job(
+            name="restock_reminder.send_reminder",
+            fn=lambda: send_reminder(self.config),
+            cadence=f"daily {FIRE_TIME}",
+            kickoff=False,
+            owner="restock_reminder",
+        )
+        log.info(f"[restock_reminder] Registered (daily {FIRE_TIME})")
 
     def stop(self) -> None:
         log.info("[restock_reminder] Stopped")
